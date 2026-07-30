@@ -1,0 +1,37 @@
+# Normalise line endings to LF in the repository; check out as LF everywhere.
+# On Windows with core.autocrlf=true Git would otherwise convert LF → CRLF on
+# checkout and produce the "LF will be replaced by CRLF" noise seen in git-add.
+* text=auto eol=lf
+
+# Source files — always LF
+*.cs        text eol=lf
+*.csproj    text eol=lf
+*.sln       text eol=lf
+*.props     text eol=lf
+*.targets   text eol=lf
+*.json      text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.xml       text eol=lf
+*.md        text eol=lf
+*.txt       text eol=lf
+*.sh        text eol=lf
+*.ps1       text eol=lf
+*.http      text eol=lf
+*.dockerfile text eol=lf
+Dockerfile  text eol=lf
+
+# Binary files — never diff or mangle
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.zip       binary
+*.7z        binary
+*.tar       binary
+*.gz        binary
+*.dll       binary
+*.exe       binary
+*.pdb       binary

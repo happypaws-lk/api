@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyPaws.Api", "src\HappyPaws.Api\HappyPaws.Api.csproj", "{F4BC9D69-02BE-4F46-9CE2-2939B6087917}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyPaws.Core", "src\HappyPaws.Core\HappyPaws.Core.csproj", "{87564C98-F1DF-455E-B956-B9E6167E8E7E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyPaws.Infrastructure", "src\HappyPaws.Infrastructure\HappyPaws.Infrastructure.csproj", "{99B578C5-A895-4686-A246-9497E5118197}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7E615032-652A-4E0E-A799-4DB73B16914D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{FFBC90B2-E0A6-4B5F-B304-DF87DAF5231D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyPaws.Tests", "tests\HappyPaws.Tests\HappyPaws.Tests.csproj", "{A7D29DED-B0D7-4149-BA3E-A4CF51C38FEF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F4BC9D69-02BE-4F46-9CE2-2939B6087917}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4BC9D69-02BE-4F46-9CE2-2939B6087917}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4BC9D69-02BE-4F46-9CE2-2939B6087917}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4BC9D69-02BE-4F46-9CE2-2939B6087917}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87564C98-F1DF-455E-B956-B9E6167E8E7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87564C98-F1DF-455E-B956-B9E6167E8E7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87564C98-F1DF-455E-B956-B9E6167E8E7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87564C98-F1DF-455E-B956-B9E6167E8E7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99B578C5-A895-4686-A246-9497E5118197}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99B578C5-A895-4686-A246-9497E5118197}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99B578C5-A895-4686-A246-9497E5118197}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99B578C5-A895-4686-A246-9497E5118197}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7D29DED-B0D7-4149-BA3E-A4CF51C38FEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7D29DED-B0D7-4149-BA3E-A4CF51C38FEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7D29DED-B0D7-4149-BA3E-A4CF51C38FEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7D29DED-B0D7-4149-BA3E-A4CF51C38FEF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F4BC9D69-02BE-4F46-9CE2-2939B6087917} = {7E615032-652A-4E0E-A799-4DB73B16914D}
+		{87564C98-F1DF-455E-B956-B9E6167E8E7E} = {7E615032-652A-4E0E-A799-4DB73B16914D}
+		{99B578C5-A895-4686-A246-9497E5118197} = {7E615032-652A-4E0E-A799-4DB73B16914D}
+		{A7D29DED-B0D7-4149-BA3E-A4CF51C38FEF} = {FFBC90B2-E0A6-4B5F-B304-DF87DAF5231D}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: happypaws-db
+    environment:
+      POSTGRES_USER: happypaws
+      POSTGRES_PASSWORD: happypaws_dev
+      POSTGRES_DB: happypaws
+    ports:
+      - "5432:5432"
+    volumes:
+      - happypaws-pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  happypaws-pgdata:

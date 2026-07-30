@@ -1,0 +1,1865 @@
+{
+  "info": {
+    "_postman_id": "hp-api-collection-v1",
+    "name": "HappyPaws API",
+    "description": "Comprehensive API testing suite for the HappyPaws platform. Covers all endpoints across Auth, Users, Rescues, Listings, Applications, Conversations, Pledges, Transports, Notifications, and Admin.\n\n**Setup:**\n1. Select the `HappyPaws - Local` environment.\n2. Run `POST /auth/register` or `POST /auth/login` — the test script will auto-populate `accessToken`, `refreshToken`, and `userId`.\n3. All subsequent requests use the Bearer token automatically via the collection-level auth.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "{{baseUrl}}"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints: register, login, token refresh, revoke, and OTP verification.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"role\": \"Adopter\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Register a new user. Available roles: Adopter, Foster, Transporter, Sponsor, Veterinarian."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+                  "",
+                  "pm.test('Response has auth tokens', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('accessToken').that.is.a('string').and.not.empty;",
+                  "    pm.expect(body).to.have.property('refreshToken').that.is.a('string').and.not.empty;",
+                  "    pm.expect(body).to.have.property('expiresAt').that.is.a('string');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('accessToken', body.accessToken);",
+                  "    pm.environment.set('refreshToken', body.refreshToken);",
+                  "    // Decode the JWT payload to extract userId",
+                  "    try {",
+                  "        const payload = JSON.parse(atob(body.accessToken.split('.')[1]));",
+                  "        pm.environment.set('userId', payload.sub);",
+                  "    } catch (e) { console.log('Could not decode JWT', e); }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Login with credentials. Auto-saves accessToken, refreshToken, and userId to the environment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Response has auth tokens', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('accessToken').that.is.a('string').and.not.empty;",
+                  "    pm.expect(body).to.have.property('refreshToken').that.is.a('string').and.not.empty;",
+                  "    pm.expect(body).to.have.property('expiresAt');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('accessToken', body.accessToken);",
+                  "    pm.environment.set('refreshToken', body.refreshToken);",
+                  "    try {",
+                  "        const payload = JSON.parse(atob(body.accessToken.split('.')[1]));",
+                  "        pm.environment.set('userId', payload.sub);",
+                  "    } catch (e) { console.log('Could not decode JWT', e); }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Admin",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Login as admin user. Overwrites the accessToken/refreshToken env vars with admin credentials."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('accessToken', body.accessToken);",
+                  "    pm.environment.set('refreshToken', body.refreshToken);",
+                  "    try {",
+                  "        const payload = JSON.parse(atob(body.accessToken.split('.')[1]));",
+                  "        pm.environment.set('userId', payload.sub);",
+                  "        pm.test('Token has Admin role', () => pm.expect(payload.role).to.include('Admin'));",
+                  "    } catch (e) { console.log('Could not decode JWT', e); }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "refresh"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Exchange a refresh token for a new access/refresh token pair."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Returns new token pair', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.accessToken).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.refreshToken).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('accessToken', body.accessToken);",
+                  "    pm.environment.set('refreshToken', body.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke Token (Logout)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/revoke", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "revoke"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Revoke the current refresh token (logout). Requires Bearer auth."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204 No Content', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/otp/send", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "otp", "send"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Trigger an OTP email for account verification. Rate-limited to 3 requests per 10 minutes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/otp/verify", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "otp", "verify"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"code\": \"123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Verify the OTP code. Returns a new AuthResponse with a token that carries is_verified=True."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('accessToken', body.accessToken);",
+                  "    pm.environment.set('refreshToken', body.refreshToken);",
+                  "    pm.test('New token is for a verified user', () => {",
+                  "        try {",
+                  "            const payload = JSON.parse(atob(body.accessToken.split('.')[1]));",
+                  "            pm.expect(payload.is_verified).to.equal('True');",
+                  "        } catch (e) { pm.expect.fail('Could not decode JWT'); }",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User profile management: view/update own profile, manage FCM devices, lifestyle profile, and KYC document upload.",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "me"] },
+            "description": "Retrieve the authenticated user's full profile including badges and reputation."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Profile has required fields', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('name').that.is.a('string');",
+                  "    pm.expect(body).to.have.property('email').that.is.a('string');",
+                  "    pm.expect(body).to.have.property('isVerified').that.is.a('boolean');",
+                  "    pm.expect(body).to.have.property('reputationPoints').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('badges').that.is.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "me"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Updated Test User", "type": "text" },
+                { "key": "latitude", "value": "6.9271", "type": "text" },
+                { "key": "longitude", "value": "79.8612", "type": "text" },
+                { "key": "avatar", "type": "file", "src": [], "disabled": true, "description": "Optional: attach an image file" }
+              ]
+            },
+            "description": "Update name, location, and optionally avatar (multipart/form-data)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Response is updated profile', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('name');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Public User Profile",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "{{userId}}"] },
+            "description": "Fetch a public user profile by ID. Response is cached for 30 seconds. No auth required."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK or 404 if ID not set', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Public profile has required fields', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body).to.have.property('name');",
+                  "        pm.expect(body).to.have.property('reputationPoints').that.is.a('number');",
+                  "        pm.expect(body).to.have.property('badges').that.is.an('array');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Devices",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me/devices", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "me", "devices"] },
+            "description": "List all registered FCM push notification devices for the current user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Device",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me/devices", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "me", "devices"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fcmToken\": \"sample-fcm-token-abc123\",\n  \"deviceName\": \"My Test Phone\",\n  \"platform\": \"Android\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Register or update an FCM device token. Platform: Android or Web."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Device response has required fields', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('fcmToken');",
+                  "    pm.expect(body).to.have.property('platform');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Lifestyle Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me/profile", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "me", "profile"] },
+            "description": "Fetch the current user's lifestyle profile used for pet matching."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Lifestyle profile has required fields', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('homeSize');",
+                  "        pm.expect(body).to.have.property('activityLevel');",
+                  "        pm.expect(body).to.have.property('hasChildren').that.is.a('boolean');",
+                  "        pm.expect(body).to.have.property('hasYard').that.is.a('boolean');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upsert Lifestyle Profile",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me/profile", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "me", "profile"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"homeSize\": \"House\",\n  \"activityLevel\": \"Moderate\",\n  \"existingPetTypes\": [\"Cat\"],\n  \"hasChildren\": false,\n  \"hasYard\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Create or replace the lifestyle profile. Requires Verified policy (account must be OTP-verified). HomeSize: Apartment|House|Estate. ActivityLevel: Low|Moderate|High."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Profile saved correctly', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('updatedAt');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload KYC Document",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me/kyc", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "me", "kyc"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "document", "type": "file", "src": [], "description": "Attach an image file (NIC, licence, etc.)" },
+                { "key": "documentType", "value": "Nic", "type": "text", "description": "DocumentType: Nic | License | ClinicReg" }
+              ]
+            },
+            "description": "Upload a KYC document for identity verification. DocumentType: Nic, License, ClinicReg."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('kycDocumentId', body.id);",
+                  "    pm.test('KYC document response is valid', () => {",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body).to.have.property('status');",
+                  "        pm.expect(body).to.have.property('documentType');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rescues",
+      "description": "Rescue case lifecycle: report, accept, post updates, resolve, and filter cases.",
+      "item": [
+        {
+          "name": "Get All Rescue Cases",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rescues?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rescues"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "status", "value": "Open", "disabled": true, "description": "CaseStatus: Open | InProgress | Resolved" },
+                { "key": "urgency", "value": "Critical", "disabled": true, "description": "Urgency: Low | Moderate | Critical" }
+              ]
+            },
+            "description": "Paginated list of rescue cases. Filter by status and/or urgency. No auth required."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Paged result structure is valid', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('items').that.is.an('array');",
+                  "    pm.expect(body).to.have.property('totalCount').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('page').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('pageSize').that.is.a('number');",
+                  "});",
+                  "",
+                  "if (pm.response.json().items.length > 0) {",
+                  "    pm.environment.set('rescueCaseId', pm.response.json().items[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Rescue Case by ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/rescues/{{rescueCaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "rescues", "{{rescueCaseId}}"] },
+            "description": "Fetch full details of a specific rescue case."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Rescue case has required fields', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body).to.have.property('urgency');",
+                  "        pm.expect(body).to.have.property('status');",
+                  "        pm.expect(body).to.have.property('locationName');",
+                  "        pm.expect(body).to.have.property('photoUrl');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Report a Rescue Case",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/rescues", "host": ["{{baseUrl}}"], "path": ["api", "v1", "rescues"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "latitude", "value": "6.9271", "type": "text" },
+                { "key": "longitude", "value": "79.8612", "type": "text" },
+                { "key": "locationName", "value": "Colombo 07, Sri Lanka", "type": "text" },
+                { "key": "description", "value": "Found an injured stray dog near the park entrance.", "type": "text" },
+                { "key": "conditionNotes", "value": "Limping, appears malnourished", "type": "text" },
+                { "key": "photo", "type": "file", "src": [], "description": "Required: attach an animal photo" }
+              ]
+            },
+            "description": "Report a new rescue case. Requires Verified policy. Photo is required (multipart/form-data). Urgency is set automatically via AI."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('rescueCaseId', body.id);",
+                  "    pm.test('New rescue case has required fields', () => {",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body).to.have.property('urgency');",
+                  "        pm.expect(body).to.have.property('status');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Accept Rescue Case",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/rescues/{{rescueCaseId}}/accept", "host": ["{{baseUrl}}"], "path": ["api", "v1", "rescues", "{{rescueCaseId}}", "accept"] },
+            "description": "Claim a rescue case as the assigned foster. Requires Verified policy."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200, 404, 409, or 403', () => pm.expect(pm.response.code).to.be.oneOf([200, 404, 409, 403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Post Case Update",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/rescues/{{rescueCaseId}}/updates", "host": ["{{baseUrl}}"], "path": ["api", "v1", "rescues", "{{rescueCaseId}}", "updates"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "updateType", "value": "ConditionUpdate", "type": "text", "description": "UpdateType: StatusUpdate | ConditionUpdate | MedicalGuidance | Note" },
+                { "key": "updateText", "value": "Dog has been fed and given water. Condition is stable.", "type": "text" },
+                { "key": "photo", "type": "file", "src": [], "disabled": true, "description": "Optional photo attachment" }
+              ]
+            },
+            "description": "Post a status/condition update to a rescue case. Requires Verified policy."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('Update response is valid', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body).to.have.property('updateType');",
+                  "        pm.expect(body).to.have.property('updateText');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Case Updates",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/rescues/{{rescueCaseId}}/updates", "host": ["{{baseUrl}}"], "path": ["api", "v1", "rescues", "{{rescueCaseId}}", "updates"] },
+            "description": "Fetch all updates for a rescue case. No auth required."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));",
+                  "if (pm.response.code === 200) pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resolve Rescue Case",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/rescues/{{rescueCaseId}}/resolve", "host": ["{{baseUrl}}"], "path": ["api", "v1", "rescues", "{{rescueCaseId}}", "resolve"] },
+            "description": "Mark a rescue case as resolved. Requires Verified policy. Only the assigned foster or reporter can resolve."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200, 403, 404, or 409', () => pm.expect(pm.response.code).to.be.oneOf([200, 403, 404, 409]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Override Case Urgency",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/rescues/{{rescueCaseId}}/urgency", "host": ["{{baseUrl}}"], "path": ["api", "v1", "rescues", "{{rescueCaseId}}", "urgency"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"urgency\": \"Critical\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Override the AI-assigned urgency. Requires Verified + Admin or Vet role. Urgency: Low | Moderate | Critical."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Listings",
+      "description": "Pet adoption listings: CRUD, photo management, AI-powered matching, and application review.",
+      "item": [
+        {
+          "name": "Get All Listings",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/listings?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "listings"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "species", "value": "Dog", "disabled": true },
+                { "key": "size", "value": "Medium", "disabled": true, "description": "AnimalSize: Small | Medium | Large" },
+                { "key": "gender", "value": "Male", "disabled": true, "description": "Gender: Male | Female | Unknown" },
+                { "key": "status", "value": "Available", "disabled": true, "description": "ListingStatus: Available | Pending | Adopted" },
+                { "key": "locationName", "value": "Colombo", "disabled": true }
+              ]
+            },
+            "description": "Paginated listing feed. Response is cached for 30 seconds. No auth required."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Paged result structure is valid', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('items').that.is.an('array');",
+                  "    pm.expect(body).to.have.property('totalCount');",
+                  "});",
+                  "",
+                  "if (pm.response.json().items.length > 0) {",
+                  "    pm.environment.set('listingId', pm.response.json().items[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Listing by ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "listings", "{{listingId}}"] },
+            "description": "Get full listing details including photos and owner info. Cached for 30 seconds."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Listing detail has required fields', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body).to.have.property('name');",
+                  "        pm.expect(body).to.have.property('species');",
+                  "        pm.expect(body).to.have.property('status');",
+                  "        pm.expect(body).to.have.property('photos').that.is.an('array');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Listing",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/listings", "host": ["{{baseUrl}}"], "path": ["api", "v1", "listings"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rescueCaseId\": null,\n  \"name\": \"Buddy\",\n  \"species\": \"Dog\",\n  \"breed\": \"Labrador Mix\",\n  \"ageMonths\": 18,\n  \"ageLabel\": \"1.5 years\",\n  \"gender\": \"Male\",\n  \"size\": \"Medium\",\n  \"activityLevel\": \"High\",\n  \"description\": \"Friendly, energetic dog looking for an active family.\",\n  \"latitude\": 6.9271,\n  \"longitude\": 79.8612,\n  \"locationName\": \"Colombo 07, Sri Lanka\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Create a new pet adoption listing. Requires Verified policy. Optionally link to a rescue case via rescueCaseId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.environment.set('listingId', pm.response.json().id);",
+                  "    pm.test('Listing created with correct fields', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body.name).to.equal('Buddy');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Listing",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "listings", "{{listingId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Buddy (Updated)\",\n  \"species\": \"Dog\",\n  \"breed\": \"Labrador Mix\",\n  \"ageMonths\": 19,\n  \"ageLabel\": \"~1.5 years\",\n  \"gender\": \"Male\",\n  \"size\": \"Medium\",\n  \"activityLevel\": \"High\",\n  \"description\": \"Updated description — still looking for a loving home.\",\n  \"latitude\": 6.9271,\n  \"longitude\": 79.8612,\n  \"locationName\": \"Colombo 07, Sri Lanka\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Update listing details. Requires Verified policy. Only the listing owner can update."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 403, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Listing Status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/listings/{{listingId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "v1", "listings", "{{listingId}}", "status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Available\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Update the status of a listing. Requires Verified policy. Status: Available | Pending | Adopted."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 403, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Listing",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "listings", "{{listingId}}"] },
+            "description": "Delete a listing. Requires Verified policy. Only the listing owner can delete."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 403, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get AI Matches",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/listings/matches", "host": ["{{baseUrl}}"], "path": ["api", "v1", "listings", "matches"] },
+            "description": "Get AI-matched listings based on the current user's lifestyle profile. Requires Verified policy with a saved lifestyle profile."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));",
+                  "if (pm.response.code === 200) pm.test('Matches is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Listing Photos",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/listings/{{listingId}}/photos", "host": ["{{baseUrl}}"], "path": ["api", "v1", "listings", "{{listingId}}", "photos"] },
+            "description": "Get all photos for a listing. Cached. No auth required."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));",
+                  "if (pm.response.code === 200) pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Listing Photo",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/listings/{{listingId}}/photos", "host": ["{{baseUrl}}"], "path": ["api", "v1", "listings", "{{listingId}}", "photos"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "photo", "type": "file", "src": [], "description": "Attach an image file" }
+              ]
+            },
+            "description": "Upload a photo for a listing. Requires Verified policy. Only the listing owner can upload."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201, 400, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([201, 400, 403, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Applications for Listing",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/listings/{{listingId}}/applications", "host": ["{{baseUrl}}"], "path": ["api", "v1", "listings", "{{listingId}}", "applications"] },
+            "description": "Fetch all applications for a listing. Only the listing owner can view."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]));",
+                  "if (pm.response.code === 200) pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "description": "Adoption applications: submit, view your own, and accept/decline as the listing owner.",
+      "item": [
+        {
+          "name": "Apply for Adoption",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/applications", "host": ["{{baseUrl}}"], "path": ["api", "v1", "applications"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"listingId\": \"{{listingId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Submit an adoption application for a listing. Requires Verified policy. Returns 409 if you have already applied."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201, 404, or 409', () => pm.expect(pm.response.code).to.be.oneOf([201, 404, 409]));",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.environment.set('applicationId', pm.response.json().id);",
+                  "    pm.test('Application has required fields', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body).to.have.property('status').that.equals('Pending');",
+                  "        pm.expect(body).to.have.property('listingId');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Applications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/applications/me?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "applications", "me"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            },
+            "description": "Paginated list of the current user's submitted applications."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is paged result', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('items').that.is.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Accept Application",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/v1/applications/{{applicationId}}/accept", "host": ["{{baseUrl}}"], "path": ["api", "v1", "applications", "{{applicationId}}", "accept"] },
+            "description": "Accept an adoption application. Requires Verified policy. Only the listing owner can accept."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Decline Application",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/v1/applications/{{applicationId}}/decline", "host": ["{{baseUrl}}"], "path": ["api", "v1", "applications", "{{applicationId}}", "decline"] },
+            "description": "Decline an adoption application. Requires Verified policy. Only the listing owner can decline."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "description": "Messaging: list conversations, start new ones, fetch messages, and mark as read.",
+      "item": [
+        {
+          "name": "Get My Conversations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/conversations?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "conversations"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            },
+            "description": "Paginated inbox of the current user's conversations."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Response is paged result', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('items').that.is.an('array');",
+                  "});",
+                  "",
+                  "if (pm.response.json().items.length > 0) {",
+                  "    const conv = pm.response.json().items[0];",
+                  "    pm.environment.set('conversationId', conv.id);",
+                  "    pm.environment.set('participantId', conv.participantId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start Conversation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/conversations", "host": ["{{baseUrl}}"], "path": ["api", "v1", "conversations"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"participantId\": \"{{participantId}}\",\n  \"listingId\": \"{{listingId}}\",\n  \"caseId\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Create a new conversation with another user. Requires Verified policy. Returns 409 if conversation already exists."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201 or 409', () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.environment.set('conversationId', pm.response.json().id);",
+                  "    pm.test('Conversation has required fields', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body).to.have.property('participantId');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages?page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "conversations", "{{conversationId}}", "messages"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            },
+            "description": "Fetch paginated messages for a conversation. Only participants can read."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]));",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Messages are paged', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('items').that.is.an('array');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark Conversation as Read",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/read", "host": ["{{baseUrl}}"], "path": ["api", "v1", "conversations", "{{conversationId}}", "read"] },
+            "description": "Mark all messages in a conversation as read. Requires Verified policy."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 403, 404]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pledges",
+      "description": "Sponsorship pledges: create financial pledges for rescue cases or adoption listings.",
+      "item": [
+        {
+          "name": "Create Pledge",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/pledge", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pledge"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"caseId\": \"{{rescueCaseId}}\",\n  \"listingId\": null,\n  \"amount\": 5000.00,\n  \"note\": \"Happy to help with veterinary costs.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Create a pledge for a rescue case or listing. Requires Verified policy + Sponsor role. Amount is in LKR."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([201, 403, 404]));",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.environment.set('pledgeId', pm.response.json().id);",
+                  "    pm.test('Pledge has required fields', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body).to.have.property('amount').that.is.a('number');",
+                  "        pm.expect(body).to.have.property('status');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Pledges",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pledge/me?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "pledge", "me"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            },
+            "description": "Paginated list of the current user's pledges."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is paged result', () => pm.expect(pm.response.json()).to.have.property('items').that.is.an('array'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transports",
+      "description": "Transport task management: create, list, claim, and update transport status.",
+      "item": [
+        {
+          "name": "Create Transport Task",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/transports", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transports"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"caseId\": \"{{rescueCaseId}}\",\n  \"pickupLatitude\": 6.9271,\n  \"pickupLongitude\": 79.8612,\n  \"pickupLocation\": \"Viharamahadevi Park, Colombo\",\n  \"dropoffLatitude\": 6.8965,\n  \"dropoffLongitude\": 79.8528,\n  \"dropoffLocation\": \"Animal Welfare Clinic, Dehiwala\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Create a transport task for a rescue case. Requires Verified policy + Foster role."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([201, 403, 404]));",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.environment.set('transportId', pm.response.json().id);",
+                  "    pm.test('Transport task has required fields', () => {",
+                  "        const body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('id');",
+                  "        pm.expect(body).to.have.property('status').that.equals('Pending');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Available Transports",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/transports", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transports"] },
+            "description": "List available transport tasks. Requires auth."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Claim Transport Task",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/transports/{{transportId}}/claim", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transports", "{{transportId}}", "claim"] },
+            "description": "Claim a transport task. Requires Verified policy + Transporter role. Returns 409 if already claimed."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200, 403, 404, or 409', () => pm.expect(pm.response.code).to.be.oneOf([200, 403, 404, 409]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Transport Status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/transports/{{transportId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transports", "{{transportId}}", "status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PickedUp\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Update the status of a transport task. Status flow: Pending → Assigned → PickedUp → InTransit → Delivered."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200, 403, 404, or 409', () => pm.expect(pm.response.code).to.be.oneOf([200, 403, 404, 409]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "In-app notifications: list, mark individual/all as read, and get unread count.",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notification?page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "notification"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            },
+            "description": "Paginated list of the current user's notifications."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Response is paged result', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('items').that.is.an('array');",
+                  "});",
+                  "",
+                  "if (pm.response.json().items.length > 0) {",
+                  "    pm.environment.set('notificationId', pm.response.json().items[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/notification/unread-count", "host": ["{{baseUrl}}"], "path": ["api", "v1", "notification", "unread-count"] },
+            "description": "Get the count of unread notifications for the current user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response has count', () => pm.expect(pm.response.json()).to.have.property('count').that.is.a('number'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/v1/notification/{{notificationId}}/read", "host": ["{{baseUrl}}"], "path": ["api", "v1", "notification", "{{notificationId}}", "read"] },
+            "description": "Mark a single notification as read."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204, 403, or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 403, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/v1/notification/read-all", "host": ["{{baseUrl}}"], "path": ["api", "v1", "notification", "read-all"] },
+            "description": "Mark all notifications as read for the current user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204 No Content', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Admin-only endpoints. Requires Admin role. Run 'Login as Admin' first to get an admin token.",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/dashboard", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "dashboard"] },
+            "description": "Get platform-level stats: pending KYC count, open rescue cases, total users, and recent moderation activity."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('Dashboard has required fields', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('pendingKycCount').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('openRescueCasesCount').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('totalUsersCount').that.is.a('number');",
+                  "    pm.expect(body).to.have.property('recentActivity').that.is.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Cases (Admin)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/cases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "cases"] },
+            "description": "Get all rescue cases with location data for the admin map view."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "name", "value": "", "disabled": true },
+                { "key": "email", "value": "", "disabled": true },
+                { "key": "role", "value": "Adopter", "disabled": true },
+                { "key": "isSuspended", "value": "false", "disabled": true }
+              ]
+            },
+            "description": "Paginated user list with filtering. Filter by name, email, role, or suspension status."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is paged result', () => pm.expect(pm.response.json()).to.have.property('items').that.is.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Suspend User",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/users/{{userId}}/suspend", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "users", "{{userId}}", "suspend"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Violation of community guidelines.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Suspend a user account. Uses the userId env variable — update it before running."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204 or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unsuspend User",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/users/{{userId}}/unsuspend", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "users", "{{userId}}", "unsuspend"] },
+            "description": "Lift the suspension from a user account."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204 or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Moderation Action",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/moderation", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "moderation"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"Listing\",\n  \"targetId\": \"{{listingId}}\",\n  \"actionType\": \"Removed\",\n  \"reason\": \"Content violates animal welfare guidelines.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Log a moderation action. TargetType: Listing | Message | User. ActionType: Removed | Suspended | Warned."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204, 400, or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 400, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Moderation Log",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/moderation?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "moderation"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            },
+            "description": "Paginated moderation action history."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is paged result', () => pm.expect(pm.response.json()).to.have.property('items').that.is.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adjust User Reputation",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/reputation/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "reputation", "{{userId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pointsToAdjust\": 50,\n  \"reason\": \"Exceptional community contribution.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Manually adjust a user's reputation points. Use negative values to deduct points."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204 or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Pending KYC",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/kyc/pending", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "kyc", "pending"] },
+            "description": "List all KYC documents awaiting admin review."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Approve KYC",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/kyc/{{kycDocumentId}}/approve", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "kyc", "{{kycDocumentId}}", "approve"] },
+            "description": "Approve a pending KYC document. This verifies the user's account."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204 or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject KYC",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/kyc/{{kycDocumentId}}/reject", "host": ["{{baseUrl}}"], "path": ["api", "v1", "admin", "kyc", "{{kycDocumentId}}", "reject"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Document image is too blurry to verify.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Reject a KYC document with a reason that is sent to the user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204 or 404', () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "description": "Infrastructure health check endpoint.",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/healthz", "host": ["{{baseUrl}}"], "path": ["healthz"] },
+            "description": "Returns 200 OK when the API and its dependencies are healthy."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time is under 2000ms', () => pm.expect(pm.response.responseTime).to.be.below(2000));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

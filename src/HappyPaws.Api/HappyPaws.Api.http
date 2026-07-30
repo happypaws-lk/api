@@ -1,0 +1,6 @@
+@HappyPaws.Api_HostAddress = http://localhost:5047
+
+GET {{HappyPaws.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
