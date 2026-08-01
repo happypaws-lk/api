@@ -19,50 +19,75 @@ public class UsersEndpoints : IEndpointGroup
         group.MapGet("/me", GetMeAsync)
             .RequireAuthorization()
             .WithName("GetCurrentUser")
-            .WithSummary("Get the authenticated user's profile");
+            .WithSummary("Get the authenticated user's profile")
+            .WithDescription("Returns the authenticated user's profile including avatar URL, verification status, reputation points, and earned badges.")
+            .Produces<UserProfileResponse>();
 
         group.MapPut("/me", UpdateMeAsync)
             .RequireAuthorization()
             .WithName("UpdateCurrentUser")
             .WithSummary("Update name, avatar, or location for the authenticated user")
+            .WithDescription("Updates name, avatar image, or last known location. Accepts multipart/form-data. All fields are optional.")
+            .Produces<UserProfileResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .DisableAntiforgery();
 
         group.MapGet("/{id:guid}", GetPublicUserAsync)
             .CacheOutput("UserProfile30")
             .WithName("GetPublicUser")
-            .WithSummary("Get a user's public profile");
+            .WithSummary("Get a user's public profile")
+            .WithDescription("Returns the public-facing profile for any user: name, reputation points, and badges. Results are cached for 30 seconds.")
+            .Produces<PublicUserResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/me/devices", GetDevicesAsync)
             .RequireAuthorization()
             .WithName("GetDevices")
-            .WithSummary("List registered FCM devices for the authenticated user");
+            .WithSummary("List registered FCM devices for the authenticated user")
+            .WithDescription("Returns all FCM device tokens registered to the authenticated user.")
+            .Produces<List<DeviceResponse>>();
 
         group.MapPost("/me/devices", RegisterDeviceAsync)
             .RequireAuthorization()
             .AddEndpointFilter<ValidationFilter<DeviceRequest>>()
             .WithName("RegisterDevice")
-            .WithSummary("Register or refresh an FCM device token");
+            .WithSummary("Register or refresh an FCM device token")
+            .WithDescription("Registers a new FCM device or refreshes an existing one. If the FCM token already exists, it updates the device name and last active timestamp instead of creating a duplicate.")
+            .Produces<DeviceResponse>()
+            .ProducesValidationProblem();
 
         group.MapDelete("/me/devices/{id:guid}", RemoveDeviceAsync)
             .RequireAuthorization()
             .WithName("RemoveDevice")
-            .WithSummary("Remove a registered FCM device");
+            .WithSummary("Remove a registered FCM device")
+            .WithDescription("Unregisters a device so it no longer receives push notifications.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/me/profile", GetLifestyleProfileAsync)
             .RequireAuthorization()
             .WithName("GetLifestyleProfile")
-            .WithSummary("Get the authenticated user's lifestyle profile");
+            .WithSummary("Get the authenticated user's lifestyle profile")
+            .WithDescription("Returns the user's lifestyle compatibility profile used for the animal matching algorithm.")
+            .Produces<LifestyleProfileResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/me/profile", UpsertLifestyleProfileAsync)
             .RequireAuthorization("Verified")
             .AddEndpointFilter<ValidationFilter<LifestyleProfileRequest>>()
             .WithName("UpsertLifestyleProfile")
-            .WithSummary("Create or update the authenticated user's lifestyle profile");
+            .WithSummary("Create or update the authenticated user's lifestyle profile")
+            .WithDescription("Creates or replaces the lifestyle profile. This data powers the GET /listings/matches endpoint.")
+            .Produces<LifestyleProfileResponse>()
+            .ProducesValidationProblem();
 
         group.MapPost("/me/kyc", UploadKycAsync)
             .RequireAuthorization()
             .WithName("UploadKyc")
             .WithSummary("Upload a KYC identity document")
+            .WithDescription("Uploads an identity document for KYC verification. The document is stored privately and only accessible to admins via a short-lived presigned URL.")
+            .Produces<KycDocumentResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .RequireRateLimiting("UploadLimiter")
             .AddEndpointFilter(new RequestSizeLimitFilter(10_485_760))
             .DisableAntiforgery();

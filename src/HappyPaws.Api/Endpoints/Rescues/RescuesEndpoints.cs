@@ -24,20 +24,34 @@ public class RescuesEndpoints : IEndpointGroup
             .AddEndpointFilter<HtmlSanitizationFilter<CreateRescueRequest>>()
             .AddEndpointFilter<ValidationFilter<CreateRescueRequest>>()
             .WithName("CreateRescue")
-            .WithSummary("Report a new animal rescue case with AI urgency classification");
+            .WithSummary("Report a new animal rescue case with AI urgency classification")
+            .WithDescription("Reports an animal in distress. Requires a photo (up to 10 MB). Gemini AI classifies urgency automatically. Nearby verified responders (Foster, Transporter, Veterinarian) within the configured alert radius receive a push notification.")
+            .Produces<RescueCaseResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesValidationProblem();
 
         group.MapGet("/", ListRescuesAsync)
             .WithName("ListRescues")
-            .WithSummary("List active rescue cases with optional status and urgency filters");
+            .WithSummary("List active rescue cases with optional status and urgency filters")
+            .WithDescription("Returns a paginated list of active rescue cases. Filter by status (Open, InProgress, Resolved) or urgency level.")
+            .Produces<PagedResult<RescueCaseSummaryResponse>>();
 
         group.MapGet("/{id:guid}", GetRescueAsync)
             .WithName("GetRescue")
-            .WithSummary("Get full details of a rescue case");
+            .WithSummary("Get full details of a rescue case")
+            .WithDescription("Returns the full details of a rescue case, including the reporter, assigned foster, coordinates, and AI urgency data.")
+            .Produces<RescueCaseResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/{id:guid}/accept", AcceptRescueAsync)
             .RequireAuthorization("Verified")
             .WithName("AcceptRescue")
-            .WithSummary("Accept a rescue case as the assigned foster");
+            .WithSummary("Accept a rescue case as the assigned foster")
+            .WithDescription("Assigns the authenticated foster to the case and moves its status to InProgress. A case can only be accepted once.")
+            .Produces<RescueCaseResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapPost("/{id:guid}/updates", PostUpdateAsync)
             .RequireAuthorization("Verified")
@@ -45,22 +59,41 @@ public class RescuesEndpoints : IEndpointGroup
             .AddEndpointFilter<HtmlSanitizationFilter<PostCaseUpdateRequest>>()
             .AddEndpointFilter<ValidationFilter<PostCaseUpdateRequest>>()
             .WithName("PostCaseUpdate")
-            .WithSummary("Post a progress update on a rescue case");
+            .WithSummary("Post a progress update on a rescue case")
+            .WithDescription("Posts a progress update on a case. Veterinarians who post a MedicalGuidance update earn 10 reputation points. All updates notify the other involved party.")
+            .Produces<CaseUpdateResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesValidationProblem();
 
         group.MapGet("/{id:guid}/updates", GetUpdatesAsync)
             .WithName("GetCaseUpdates")
-            .WithSummary("Get all updates for a rescue case");
+            .WithSummary("Get all updates for a rescue case")
+            .WithDescription("Returns all progress updates for a case in chronological order.")
+            .Produces<List<CaseUpdateResponse>>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/{id:guid}/resolve", ResolveRescueAsync)
             .RequireAuthorization("Verified")
             .WithName("ResolveRescue")
-            .WithSummary("Mark a rescue case as resolved");
+            .WithSummary("Mark a rescue case as resolved")
+            .WithDescription("Marks the case as Resolved. Only the assigned foster can do this. Awards 20 reputation points and evaluates badge eligibility.")
+            .Produces<RescueCaseResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}/urgency", OverrideUrgencyAsync)
             .RequireAuthorization("Verified")
             .AddEndpointFilter<ValidationFilter<OverrideUrgencyRequest>>()
             .WithName("OverrideUrgency")
-            .WithSummary("Override the AI-assigned urgency level (Admin/Vet only)");
+            .WithSummary("Override the AI-assigned urgency level (Admin/Vet only)")
+            .WithDescription("Overrides the AI-assigned urgency level. Only Admins and Veterinarians can call this. Awards 10 reputation points to the original reporter.")
+            .Produces<RescueCaseResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesValidationProblem();
     }
 
     private static async Task<Results<Created<RescueCaseResponse>, BadRequest<string>>> CreateRescueAsync(

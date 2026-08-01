@@ -19,12 +19,19 @@ public class PledgeEndpoints : IEndpointGroup
             .RequireAuthorization("Verified")
             .AddEndpointFilter<ValidationFilter<CreatePledgeRequest>>()
             .WithName("CreatePledge")
-            .WithSummary("Create a financial pledge for a rescue case or listing");
+            .WithSummary("Create a financial pledge for a rescue case or listing")
+            .WithDescription("Creates a financial pledge tied to a rescue case or a listing. Exactly one of CaseId or ListingId must be provided. Awards 5 reputation points on creation. Only users with the Sponsor role can call this.")
+            .Produces<PledgeResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesValidationProblem();
 
         group.MapGet("/me", GetMyPledgesAsync)
             .RequireAuthorization()
             .WithName("GetMyPledges")
-            .WithSummary("List all pledges made by the authenticated user");
+            .WithSummary("List all pledges made by the authenticated user")
+            .WithDescription("Returns a paginated list of all pledges made by the authenticated user.")
+            .Produces<PagedResult<PledgeResponse>>();
     }
 
     private static async Task<Results<Created<PledgeResponse>, NotFound<string>, ForbidHttpResult>> CreatePledgeAsync(

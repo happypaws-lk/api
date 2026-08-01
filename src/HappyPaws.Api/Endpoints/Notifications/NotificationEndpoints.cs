@@ -17,19 +17,29 @@ public class NotificationEndpoints : IEndpointGroup
 
         group.MapGet("/", GetNotifications)
             .WithName("GetNotifications")
-            .WithSummary("Get current user's notifications");
+            .WithSummary("Get current user's notifications")
+            .WithDescription("Returns a paginated list of notifications for the authenticated user, most recent first.")
+            .Produces<PagedResult<NotificationResponse>>();
 
         group.MapPut("/{id:guid}/read", MarkAsRead)
             .WithName("MarkNotificationAsRead")
-            .WithSummary("Mark a specific notification as read");
+            .WithSummary("Mark a specific notification as read")
+            .WithDescription("Marks a specific notification as read. Returns 403 if the notification belongs to a different user.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapPut("/read-all", MarkAllAsRead)
             .WithName("MarkAllNotificationsAsRead")
-            .WithSummary("Mark all notifications as read");
+            .WithSummary("Mark all notifications as read")
+            .WithDescription("Marks every unread notification as read for the authenticated user in a single bulk update.")
+            .Produces(StatusCodes.Status204NoContent);
 
         group.MapGet("/unread-count", GetUnreadCount)
             .WithName("GetUnreadNotificationCount")
-            .WithSummary("Get count of unread notifications");
+            .WithSummary("Get count of unread notifications")
+            .WithDescription("Returns the count of unread notifications for the authenticated user.")
+            .Produces<UnreadCountResponse>();
     }
 
     private static async Task<Ok<PagedResult<NotificationResponse>>> GetNotifications(

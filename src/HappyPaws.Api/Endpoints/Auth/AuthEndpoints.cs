@@ -20,37 +20,62 @@ public class AuthEndpoints : IEndpointGroup
             .AddEndpointFilter<ValidationFilter<RegisterRequest>>()
             .RequireRateLimiting("RegisterLimiter")
             .WithName("Register")
-            .WithSummary("Register a new user account");
+            .WithSummary("Register a new user account")
+            .WithDescription("Creates an account and returns an access token and refresh token. The role field sets the user's initial platform role (Adopter, Foster, Transporter, or Veterinarian). Returns 409 if the email is already taken.")
+            .Produces<AuthResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesValidationProblem();
 
         group.MapPost("/login", LoginAsync)
             .AddEndpointFilter<ValidationFilter<LoginRequest>>()
             .RequireRateLimiting("AuthLimiter")
             .WithName("Login")
-            .WithSummary("Authenticate with email and password");
+            .WithSummary("Authenticate with email and password")
+            .WithDescription("Verifies the email and password. Returns 403 if the account is suspended.")
+            .Produces<AuthResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesValidationProblem();
 
         group.MapPost("/refresh", RefreshAsync)
             .AddEndpointFilter<ValidationFilter<RefreshRequest>>()
             .RequireRateLimiting("AuthLimiter")
             .WithName("RefreshToken")
-            .WithSummary("Rotate refresh token and get new access token");
+            .WithSummary("Rotate refresh token and get new access token")
+            .WithDescription("Rotates the refresh token. If the supplied token was already revoked, every active token for that user is immediately revoked to contain potential token theft.")
+            .Produces<AuthResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesValidationProblem();
 
         group.MapPost("/revoke", RevokeAsync)
             .RequireAuthorization()
             .WithName("RevokeToken")
-            .WithSummary("Revoke a refresh token");
+            .WithSummary("Revoke a refresh token")
+            .WithDescription("Marks the supplied refresh token as revoked. Call this on sign-out.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/otp/send", SendOtpAsync)
             .RequireAuthorization()
             .RequireRateLimiting("OtpLimiter")
             .AddEndpointFilter<ValidationFilter<OtpRequest>>()
             .WithName("SendOtp")
-            .WithSummary("Send OTP code via email for elevated access");
+            .WithSummary("Send OTP code via email for elevated access")
+            .WithDescription("Sends a 6-digit OTP to the specified email. Only available to Admin and Veterinarian roles. The code expires in 5 minutes.")
+            .Produces(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesValidationProblem();
 
         group.MapPost("/otp/verify", VerifyOtpAsync)
             .RequireAuthorization()
             .AddEndpointFilter<ValidationFilter<OtpVerifyRequest>>()
             .WithName("VerifyOtp")
-            .WithSummary("Verify OTP code and get elevated access token");
+            .WithSummary("Verify OTP code and get elevated access token")
+            .WithDescription("Validates the OTP code and returns a fresh access and refresh token pair on success.")
+            .Produces<AuthResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesValidationProblem();
     }
 
     private static async Task<Results<Created<AuthResponse>, Conflict<string>>> RegisterAsync(

@@ -22,22 +22,36 @@ public class ConversationsEndpoints : IEndpointGroup
 
         group.MapGet("/", GetConversationsAsync)
             .WithName("GetConversations")
-            .WithSummary("List conversations for the authenticated user");
+            .WithSummary("List conversations for the authenticated user")
+            .WithDescription("Returns a paginated list of the authenticated user's conversations, including the other participant's name, unread count, and a 50-character snippet of the last message.")
+            .Produces<PagedResult<ConversationResponse>>();
 
         group.MapPost("/", CreateConversationAsync)
             .AddEndpointFilter<ValidationFilter<CreateConversationRequest>>()
             .RequireAuthorization("Verified")
             .WithName("CreateConversation")
-            .WithSummary("Start a new conversation");
+            .WithSummary("Start a new conversation")
+            .WithDescription("Starts a new conversation with another user. Optionally links to a rescue case or a listing (not both). Returns a conflict if a conversation between the same two users for the same context already exists.")
+            .Produces<ConversationResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesValidationProblem();
 
         group.MapGet("/{id:guid}/messages", GetMessagesAsync)
             .WithName("GetMessages")
-            .WithSummary("Get messages in a conversation");
+            .WithSummary("Get messages in a conversation")
+            .WithDescription("Returns messages in a conversation in reverse chronological order. Only participants can fetch messages.")
+            .Produces<PagedResult<MessageResponse>>()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPut("/{id:guid}/read", MarkAsReadAsync)
             .RequireAuthorization("Verified")
             .WithName("MarkConversationAsRead")
-            .WithSummary("Mark all messages in a conversation as read");
+            .WithSummary("Mark all messages in a conversation as read")
+            .WithDescription("Marks all messages as read and broadcasts a read receipt to the other participant via SignalR.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static async Task<Ok<PagedResult<ConversationResponse>>> GetConversationsAsync(

@@ -19,23 +19,41 @@ public class TransportsEndpoints : IEndpointGroup
             .RequireAuthorization("Verified")
             .AddEndpointFilter<ValidationFilter<CreateTransportRequest>>()
             .WithName("CreateTransport")
-            .WithSummary("Create a transport task for a rescue case");
+            .WithSummary("Create a transport task for a rescue case")
+            .WithDescription("Creates a transport task for an active rescue case. Only users with the Foster role can create transport tasks.")
+            .Produces<TransportTaskResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesValidationProblem();
 
         group.MapGet("/", ListTransportsAsync)
             .RequireAuthorization()
             .WithName("ListTransports")
-            .WithSummary("List all pending transport tasks available to claim");
+            .WithSummary("List all pending transport tasks available to claim")
+            .WithDescription("Returns all pending transport tasks available to claim.")
+            .Produces<List<TransportTaskResponse>>();
 
         group.MapPost("/{id:guid}/claim", ClaimTransportAsync)
             .RequireAuthorization("Verified")
             .WithName("ClaimTransport")
-            .WithSummary("Claim a pending transport task");
+            .WithSummary("Claim a pending transport task")
+            .WithDescription("Claims a pending transport task. Only users with the Transporter role can claim tasks. Claiming an already-assigned task returns 200 if the caller owns it, or 409 otherwise.")
+            .Produces<TransportTaskResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}/status", UpdateStatusAsync)
             .RequireAuthorization("Verified")
             .AddEndpointFilter<ValidationFilter<TransportStatusUpdateRequest>>()
             .WithName("UpdateTransportStatus")
-            .WithSummary("Update the status of a claimed transport task");
+            .WithSummary("Update the status of a claimed transport task")
+            .WithDescription("Advances a claimed task through its lifecycle (Assigned, PickedUp, InTransit, Delivered). Status must advance exactly one step at a time. Awards 10 reputation points on delivery.")
+            .Produces<TransportTaskResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesValidationProblem();
     }
 
     private static async Task<Results<Created<TransportTaskResponse>, NotFound<string>, ForbidHttpResult>> CreateTransportAsync(

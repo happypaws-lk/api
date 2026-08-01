@@ -25,45 +25,75 @@ public class ListingsEndpoints : IEndpointGroup
             .AddEndpointFilter<HtmlSanitizationFilter<CreateListingRequest>>()
             .AddEndpointFilter<ValidationFilter<CreateListingRequest>>()
             .WithName("CreateListing")
-            .WithSummary("Create a new animal adoption listing");
+            .WithSummary("Create a new animal adoption listing")
+            .WithDescription("Creates a listing for an adoptable animal. Optionally links to a resolved rescue case, but only the assigned foster of that case can make the link.")
+            .Produces<ListingDetailResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem();
 
         group.MapGet("/", BrowseListingsAsync)
             .CacheOutput("Listings30")
             .WithName("BrowseListings")
-            .WithSummary("Browse active animal listings with filters");
+            .WithSummary("Browse active animal listings with filters")
+            .WithDescription("Returns a paginated list of active listings. Supports filtering by species, size, gender, status, and location name. Results are cached for 30 seconds.")
+            .Produces<PagedResult<ListingResponse>>();
 
         group.MapGet("/{id:guid}", GetListingAsync)
             .CacheOutput("Listings30")
             .WithName("GetListing")
-            .WithSummary("Get full details of a single listing");
+            .WithSummary("Get full details of a single listing")
+            .WithDescription("Returns all details for a single listing, including the full ordered photo list. Results are cached for 30 seconds.")
+            .Produces<ListingDetailResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPut("/{id:guid}", UpdateListingAsync)
             .RequireAuthorization("Verified")
             .AddEndpointFilter<HtmlSanitizationFilter<UpdateListingRequest>>()
             .AddEndpointFilter<ValidationFilter<UpdateListingRequest>>()
             .WithName("UpdateListing")
-            .WithSummary("Update a listing owned by the authenticated user");
+            .WithSummary("Update a listing owned by the authenticated user")
+            .WithDescription("Replaces all editable fields on a listing. Only the listing owner can do this.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesValidationProblem();
 
         group.MapPut("/{id:guid}/status", UpdateStatusAsync)
             .RequireAuthorization("Verified")
             .AddEndpointFilter<ValidationFilter<UpdateListingStatusRequest>>()
             .WithName("UpdateListingStatus")
-            .WithSummary("Update the adoption status of a listing");
+            .WithSummary("Update the adoption status of a listing")
+            .WithDescription("Changes the adoption status. Awards 15 reputation points to the owner when the status moves to Adopted for the first time.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesValidationProblem();
 
         group.MapDelete("/{id:guid}", DeleteListingAsync)
             .RequireAuthorization("Verified")
             .WithName("DeleteListing")
-            .WithSummary("Soft-delete a listing");
+            .WithSummary("Soft-delete a listing")
+            .WithDescription("Marks the listing as inactive by setting IsActive to false. Only the listing owner can do this.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapGet("/matches", GetMatchesAsync)
             .RequireAuthorization("Verified")
             .WithName("GetListingMatches")
-            .WithSummary("Get animal listings matched to the user's lifestyle profile");
+            .WithSummary("Get animal listings matched to the user's lifestyle profile")
+            .WithDescription("Runs the lifestyle match algorithm against the user's profile and returns ranked compatible listings. Requires a lifestyle profile to exist.")
+            .Produces<List<ListingResponse>>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/{id:guid}/photos", GetPhotosAsync)
             .CacheOutput("Listings30")
             .WithName("GetListingPhotos")
-            .WithSummary("Get all photos for a listing");
+            .WithSummary("Get all photos for a listing")
+            .WithDescription("Returns the ordered list of photos for a listing. Results are cached for 30 seconds.")
+            .Produces<List<ListingPhotoResponse>>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/{id:guid}/photos", UploadPhotoAsync)
             .RequireAuthorization("Verified")
@@ -71,17 +101,30 @@ public class ListingsEndpoints : IEndpointGroup
             .RequireRateLimiting("UploadLimiter")
             .AddEndpointFilter(new RequestSizeLimitFilter(10_485_760))
             .WithName("UploadListingPhoto")
-            .WithSummary("Upload a photo to a listing");
+            .WithSummary("Upload a photo to a listing")
+            .WithDescription("Uploads a photo to a listing. Accepts image files up to 10 MB. A listing can have at most 10 photos.")
+            .Produces<ListingPhotoResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapDelete("/{id:guid}/photos/{photoId:guid}", DeletePhotoAsync)
             .RequireAuthorization("Verified")
             .WithName("DeleteListingPhoto")
-            .WithSummary("Delete a photo from a listing");
+            .WithSummary("Delete a photo from a listing")
+            .WithDescription("Removes a photo from the listing and deletes it from storage. Only the listing owner can do this.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapGet("/{id:guid}/applications", GetListingApplicationsAsync)
             .RequireAuthorization()
             .WithName("GetListingApplications")
-            .WithSummary("Get all adoption applications for a listing (owner only)");
+            .WithSummary("Get all adoption applications for a listing (owner only)")
+            .WithDescription("Returns all adoption applications for a listing. Only the listing owner can call this.")
+            .Produces<List<ApplicationResponse>>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 
     private static async Task<Results<Created<ListingDetailResponse>, ForbidHttpResult, NotFound<string>>> CreateListingAsync(

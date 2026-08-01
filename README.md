@@ -180,11 +180,18 @@ The table below covers every configuration key the API reads. Set them via `dotn
 | `Ses:FromAddress` | No | Defaults to `noreply@happypaws.lk`. Must be a verified SES identity. |
 | `Cors:AllowedOrigins` | Production only | Array of allowed origins. Empty = all browser requests blocked. Set as `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1`, etc. |
 | `RateLimiting:Disabled` | No | Set to `true` to bypass rate limits during automated testing. Defaults to `false`. |
+| `Features:EnableApiDocs` | No | Set to `true` to expose the Scalar API documentation UI in production (e.g. for evaluation board). Defaults to `false` in production. |
 
-## Deployment
+## Deployment & Architecture
 
-The API is containerized using a multi-stage Dockerfile and deployed to AWS (Elastic Beanstalk / EC2) with an Amazon RDS PostgreSQL database.
-A GitHub Actions CI/CD pipeline automatically builds, tests, and deploys the application upon pushes to the `main` branch.
+The API backend is deployed exclusively on **AWS for Production Only** using a containerized multi-stage Dockerfile. Our infrastructure relies on:
+- **AWS Elastic Beanstalk** as the compute host (64bit Amazon Linux 2023 running Docker).
+- **Amazon RDS (PostgreSQL 16.3)** for the database.
+- **Amazon ECR** for storing immutable Docker images.
+
+All Infrastructure as Code (IaC) is written in Terraform. See [./infra/README.md](./infra/README.md) for deep technical infrastructure details and S3 backend configuration.
+
+A GitHub Actions CI/CD pipeline automatically builds, tests, and deploys the application on merges to the `main` branch.
 
 ## Contact
 

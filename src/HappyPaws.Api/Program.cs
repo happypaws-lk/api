@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Enrichers.Sensitive;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -173,12 +174,17 @@ app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
     app.UseStaticFiles();
 }
 else
 {
     app.UseHsts();
+}
+
+if (app.Configuration.GetValue<bool>("Features:EnableApiDocs"))
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();

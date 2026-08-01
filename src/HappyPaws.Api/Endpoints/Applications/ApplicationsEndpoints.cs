@@ -19,22 +19,37 @@ public class ApplicationsEndpoints : IEndpointGroup
             .RequireAuthorization("Verified")
             .AddEndpointFilter<ValidationFilter<CreateApplicationRequest>>()
             .WithName("CreateApplication")
-            .WithSummary("Submit an adoption application for a listing");
+            .WithSummary("Submit an adoption application for a listing")
+            .WithDescription("Submits an adoption application. The listing owner cannot apply to their own listing, and duplicate applications are rejected.")
+            .Produces<ApplicationResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem();
 
         group.MapGet("/me", GetMyApplicationsAsync)
             .RequireAuthorization()
             .WithName("GetMyApplications")
-            .WithSummary("List all adoption applications submitted by the authenticated user");
+            .WithSummary("List all adoption applications submitted by the authenticated user")
+            .WithDescription("Returns a paginated list of all applications the authenticated user has submitted.")
+            .Produces<PagedResult<ApplicationResponse>>();
 
         group.MapPut("/{id:guid}/accept", AcceptApplicationAsync)
             .RequireAuthorization("Verified")
             .WithName("AcceptApplication")
-            .WithSummary("Accept an adoption application");
+            .WithSummary("Accept an adoption application")
+            .WithDescription("Accepts the application, moves the listing status to Pending, and notifies the applicant. Only the listing owner can do this.")
+            .Produces<ApplicationResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{id:guid}/decline", DeclineApplicationAsync)
             .RequireAuthorization("Verified")
             .WithName("DeclineApplication")
-            .WithSummary("Decline an adoption application");
+            .WithSummary("Decline an adoption application")
+            .WithDescription("Declines the application and notifies the applicant. Only the listing owner can do this.")
+            .Produces<ApplicationResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 
     private static async Task<Results<Created<ApplicationResponse>, Conflict<string>, NotFound<string>>> CreateApplicationAsync(

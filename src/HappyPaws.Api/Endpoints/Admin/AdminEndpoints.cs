@@ -19,51 +19,84 @@ public class AdminEndpoints : IEndpointGroup
 
         group.MapGet("/dashboard", GetDashboardAsync)
             .WithName("GetAdminDashboard")
-            .WithSummary("Get admin dashboard statistics");
+            .WithSummary("Get admin dashboard statistics")
+            .WithDescription("Returns counts of pending KYC documents, open rescue cases, and total users, plus the 5 most recent moderation actions.")
+            .Produces<DashboardResponse>();
 
         group.MapGet("/cases", GetCasesAsync)
             .WithName("GetAdminCases")
-            .WithSummary("Get all active rescue cases for the live map");
+            .WithSummary("Get all active rescue cases for the live map")
+            .WithDescription("Returns all active rescue cases with coordinates for the admin live map view.")
+            .Produces<List<AdminCaseResponse>>();
 
         group.MapGet("/users", GetUsersAsync)
             .WithName("GetAdminUsers")
-            .WithSummary("Get a paginated list of users");
+            .WithSummary("Get a paginated list of users")
+            .WithDescription("Returns a paginated list of users. Supports filtering by name, email, role, and suspension status.")
+            .Produces<PagedResult<AdminUserResponse>>();
 
         group.MapPut("/users/{id:guid}/suspend", SuspendUserAsync)
             .AddEndpointFilter<ValidationFilter<SuspendRequest>>()
             .WithName("SuspendUser")
-            .WithSummary("Suspend a user");
+            .WithSummary("Suspend a user")
+            .WithDescription("Sets the suspension flag and records a moderation action. Safe to call on an already-suspended user.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem();
 
         group.MapPut("/users/{id:guid}/unsuspend", UnsuspendUserAsync)
             .WithName("UnsuspendUser")
-            .WithSummary("Unsuspend a user");
+            .WithSummary("Unsuspend a user")
+            .WithDescription("Clears the suspension flag. Safe to call on an active user.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/moderation", CreateModerationActionAsync)
             .AddEndpointFilter<ValidationFilter<ModerationRequest>>()
             .WithName("CreateModerationAction")
-            .WithSummary("Perform a moderation action");
+            .WithSummary("Perform a moderation action")
+            .WithDescription("Creates a moderation action. Supported combinations: remove a Listing, remove a Message, suspend a User, or warn a User.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesValidationProblem();
 
         group.MapGet("/moderation", GetModerationLogAsync)
             .WithName("GetModerationLog")
-            .WithSummary("Get paginated moderation log");
+            .WithSummary("Get paginated moderation log")
+            .WithDescription("Returns a full paginated history of moderation actions, most recent first.")
+            .Produces<PagedResult<ModerationLogResponse>>();
 
         group.MapPut("/reputation/{userId:guid}", AdjustReputationAsync)
             .AddEndpointFilter<ValidationFilter<ReputationAdjustRequest>>()
             .WithName("AdjustReputation")
-            .WithSummary("Adjust a user's reputation points directly");
+            .WithSummary("Adjust a user's reputation points directly")
+            .WithDescription("Directly adjusts a user's reputation points. Pass a positive value to add points or a negative value to deduct them. Re-evaluates badge eligibility after the adjustment.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem();
 
         group.MapGet("/kyc/pending", GetPendingKycAsync)
             .WithName("GetPendingKyc")
-            .WithSummary("List all pending KYC documents for review");
+            .WithSummary("List all pending KYC documents for review")
+            .WithDescription("Returns all KYC documents awaiting review. Each entry includes a 15-minute presigned URL to view the document securely.")
+            .Produces<List<KycPendingResponse>>();
 
         group.MapPost("/kyc/{id:guid}/approve", ApproveKycAsync)
             .WithName("ApproveKyc")
-            .WithSummary("Approve a KYC document and verify the user");
+            .WithSummary("Approve a KYC document and verify the user")
+            .WithDescription("Approves the document, marks the user as verified, sends a confirmation email, and evaluates badge eligibility.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/kyc/{id:guid}/reject", RejectKycAsync)
             .AddEndpointFilter<ValidationFilter<KycRejectRequest>>()
             .WithName("RejectKyc")
-            .WithSummary("Reject a KYC document with a reason");
+            .WithSummary("Reject a KYC document with a reason")
+            .WithDescription("Rejects the document with a reason and notifies the user by email and push notification.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem();
     }
 
     private static async Task<Ok<DashboardResponse>> GetDashboardAsync(
