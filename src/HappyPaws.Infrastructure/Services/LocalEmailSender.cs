@@ -24,4 +24,16 @@ public sealed class LocalEmailSender : IEmailSender
         _logger.LogInformation("[DEV EMAIL] KYC verification for {Email}: {Decision}", toEmail, decision);
         return Task.CompletedTask;
     }
+
+    public Task SendPasswordResetOtpAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("[DEV EMAIL] Password reset OTP for {Email}: {Code}", toEmail, otpCode);
+        return Task.CompletedTask;
+    }
+
+    public Task SendSignupOtpAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("[DEV EMAIL] Signup OTP for {Email}: {Code}", toEmail, otpCode);
+        return Task.CompletedTask;
+    }
 }

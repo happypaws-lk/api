@@ -75,4 +75,44 @@ public sealed class SesEmailSender : IEmailSender
         await _sesClient.SendEmailAsync(request, cancellationToken);
         _logger.LogInformation("Sent verification decision email via SES to {Email}", toEmail);
     }
+
+    public async Task SendPasswordResetOtpAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
+    {
+        var request = new SendEmailRequest
+        {
+            Source = _fromAddress,
+            Destination = new Destination { ToAddresses = new List<string> { toEmail } },
+            Message = new Message
+            {
+                Subject = new Content("Reset your HappyPaws.lk password"),
+                Body = new Body
+                {
+                    Text = new Content($"Your password reset code is: {otpCode}. It expires in 15 minutes. If you did not request this, ignore this email.")
+                }
+            }
+        };
+
+        await _sesClient.SendEmailAsync(request, cancellationToken);
+        _logger.LogInformation("Sent password reset OTP email via SES to {Email}", toEmail);
+    }
+
+    public async Task SendSignupOtpAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
+    {
+        var request = new SendEmailRequest
+        {
+            Source = _fromAddress,
+            Destination = new Destination { ToAddresses = new List<string> { toEmail } },
+            Message = new Message
+            {
+                Subject = new Content("Verify your email for HappyPaws.lk"),
+                Body = new Body
+                {
+                    Text = new Content($"Your sign-up verification code is: {otpCode}. It expires in 10 minutes. If you did not request this, ignore this email.")
+                }
+            }
+        };
+
+        await _sesClient.SendEmailAsync(request, cancellationToken);
+        _logger.LogInformation("Sent signup OTP email via SES to {Email}", toEmail);
+    }
 }

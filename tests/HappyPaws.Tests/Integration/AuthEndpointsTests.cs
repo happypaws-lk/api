@@ -9,21 +9,38 @@ namespace HappyPaws.Tests.Integration;
 public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly CustomWebApplicationFactory _factory;
 
     public AuthEndpointsTests(CustomWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
     [Fact]
-    public async Task Register_ValidRequest_ReturnsCreatedWithTokens()
+    public async Task SignupFlow_ValidRequest_ReturnsCreatedWithTokens()
     {
-        var request = new RegisterRequest("Test User", $"test{Guid.NewGuid():N}@example.com", "Password123!", Role.Adopter);
+        var email = $"signup{Guid.NewGuid():N}@example.com";
 
-        var response = await _client.PostAsJsonAsync("/api/v1/auth/register", request);
+        var sendResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/signup/send-code", new SignupSendCodeRequest(email));
+        sendResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>();
+        var otp = _factory.EmailSender.GetSignupOtp(email);
+        otp.Should().NotBeNullOrEmpty();
+
+        var verifyResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/signup/verify-code", new SignupVerifyCodeRequest(email, otp));
+        verifyResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var verifyResult = await verifyResponse.Content.ReadFromJsonAsync<SignupVerifyCodeResponse>();
+        verifyResult!.SignupToken.Should().NotBeNullOrEmpty();
+
+        var completeResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/signup/complete",
+            new SignupCompleteRequest(verifyResult.SignupToken, "Test User", "Password123!"));
+        completeResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var auth = await completeResponse.Content.ReadFromJsonAsync<AuthResponse>();
         auth.Should().NotBeNull();
         auth!.AccessToken.Should().NotBeNullOrEmpty();
         auth.RefreshToken.Should().NotBeNullOrEmpty();
@@ -31,24 +48,48 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Register_DuplicateEmail_ReturnsConflict()
+    public async Task SignupSendCode_DuplicateEmail_ReturnsConflict()
     {
         var email = $"dup{Guid.NewGuid():N}@example.com";
-        var request = new RegisterRequest("User One", email, "Password123!", Role.Adopter);
 
-        await _client.PostAsJsonAsync("/api/v1/auth/register", request);
-        var response = await _client.PostAsJsonAsync("/api/v1/auth/register", request);
+        await _factory.SignupAsync(_client, "User One", email, "Password123!");
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/signup/send-code", new SignupSendCodeRequest(email));
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task SignupVerifyCode_WrongOtp_ReturnsUnauthorized()
+    {
+        var email = $"wrong{Guid.NewGuid():N}@example.com";
+        await _client.PostAsJsonAsync(
+            "/api/v1/auth/signup/send-code", new SignupSendCodeRequest(email));
+
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/signup/verify-code", new SignupVerifyCodeRequest(email, "000000"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task SignupComplete_InvalidToken_ReturnsUnauthorized()
+    {
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/signup/complete",
+            new SignupCompleteRequest("not-a-valid-token", "Name", "Password123!"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task Login_ValidCredentials_ReturnsTokens()
     {
         var email = $"login{Guid.NewGuid():N}@example.com";
-        await _client.PostAsJsonAsync("/api/v1/auth/register", new RegisterRequest("Login User", email, "Password123!", Role.Adopter));
+        await _factory.SignupAsync(_client, "Login User", email, "Password123!");
 
-        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, "Password123!"));
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/login", new LoginRequest(email, "Password123!"));
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var auth = await response.Content.ReadFromJsonAsync<AuthResponse>();
@@ -59,9 +100,10 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Login_InvalidPassword_ReturnsUnauthorized()
     {
         var email = $"bad{Guid.NewGuid():N}@example.com";
-        await _client.PostAsJsonAsync("/api/v1/auth/register", new RegisterRequest("Bad User", email, "Password123!", Role.Adopter));
+        await _factory.SignupAsync(_client, "Bad User", email, "Password123!");
 
-        var response = await _client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, "WrongPassword!"));
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/login", new LoginRequest(email, "WrongPassword!"));
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
@@ -70,10 +112,10 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Refresh_ValidToken_ReturnsNewTokens()
     {
         var email = $"refresh{Guid.NewGuid():N}@example.com";
-        var registerResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", new RegisterRequest("Refresh User", email, "Password123!", Role.Adopter));
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        var auth = await _factory.SignupAsync(_client, "Refresh User", email, "Password123!");
 
-        var response = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new RefreshRequest(auth!.RefreshToken));
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh", new RefreshRequest(auth.RefreshToken));
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var newAuth = await response.Content.ReadFromJsonAsync<AuthResponse>();
@@ -85,21 +127,23 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Refresh_RevokedToken_RevokesFamily()
     {
         var email = $"stolen{Guid.NewGuid():N}@example.com";
-        var registerResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", new RegisterRequest("Stolen User", email, "Password123!", Role.Adopter));
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>();
-        var originalRefreshToken = auth!.RefreshToken;
+        var auth = await _factory.SignupAsync(_client, "Stolen User", email, "Password123!");
+        var originalRefreshToken = auth.RefreshToken;
 
         // Use the refresh token once (rotates it)
-        var firstRefresh = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new RefreshRequest(originalRefreshToken));
+        var firstRefresh = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh", new RefreshRequest(originalRefreshToken));
         firstRefresh.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Reuse the now-revoked token (should trigger family revocation)
-        var secondRefresh = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new RefreshRequest(originalRefreshToken));
+        var secondRefresh = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh", new RefreshRequest(originalRefreshToken));
         secondRefresh.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
         // The new token from firstRefresh should also be revoked
         var newAuth = await firstRefresh.Content.ReadFromJsonAsync<AuthResponse>();
-        var thirdRefresh = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new RefreshRequest(newAuth!.RefreshToken));
+        var thirdRefresh = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh", new RefreshRequest(newAuth!.RefreshToken));
         thirdRefresh.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -107,17 +151,17 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Revoke_ValidToken_ReturnsNoContent()
     {
         var email = $"revoke{Guid.NewGuid():N}@example.com";
-        var registerResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", new RegisterRequest("Revoke User", email, "Password123!", Role.Adopter));
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        var auth = await _factory.SignupAsync(_client, "Revoke User", email, "Password123!");
 
-        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", auth!.AccessToken);
-        var response = await _client.PostAsJsonAsync("/api/v1/auth/revoke", new RevokeRequest(auth.RefreshToken));
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/revoke", new RevokeRequest(auth.RefreshToken));
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        // Token should no longer work
         _client.DefaultRequestHeaders.Authorization = null;
-        var refreshResponse = await _client.PostAsJsonAsync("/api/v1/auth/refresh", new RefreshRequest(auth.RefreshToken));
+        var refreshResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh", new RefreshRequest(auth.RefreshToken));
         refreshResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }

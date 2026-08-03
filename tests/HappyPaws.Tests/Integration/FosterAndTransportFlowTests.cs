@@ -104,11 +104,7 @@ public class FosterAndTransportFlowTests : IClassFixture<CustomWebApplicationFac
     private async Task<string> RegisterAndVerifyUserAsync(Role role)
     {
         var email = $"user{Guid.NewGuid():N}@example.com";
-        var registerResponse = await _client.PostAsJsonAsync(
-            "/api/v1/auth/register",
-            new RegisterRequest($"Test {role}", email, "Password123!", role));
-
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        var auth = await _factory.SignupAsync(_client, $"Test {role}", email, "Password123!", role);
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<HappyPaws.Infrastructure.Data.HappyPawsDbContext>();

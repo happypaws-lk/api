@@ -24,6 +24,12 @@ variable "instance_class" {
   default     = "db.t3.micro"
 }
 
+variable "engine_version" {
+  description = "The PostgreSQL engine version"
+  type        = string
+  default     = "16"
+}
+
 variable "allocated_storage" {
   description = "The allocated storage in gigabytes"
   type        = number

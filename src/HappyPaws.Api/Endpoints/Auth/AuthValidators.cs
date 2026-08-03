@@ -1,15 +1,35 @@
 using FluentValidation;
+using HappyPaws.Core.Enums;
 
 namespace HappyPaws.Api.Endpoints.Auth;
 
-public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
+public class SignupSendCodeRequestValidator : AbstractValidator<SignupSendCodeRequest>
 {
-    public RegisterRequestValidator()
+    public SignupSendCodeRequestValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MinimumLength(2).MaximumLength(100);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(320);
+    }
+}
+
+public class SignupVerifyCodeRequestValidator : AbstractValidator<SignupVerifyCodeRequest>
+{
+    public SignupVerifyCodeRequestValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+        RuleFor(x => x.Code).NotEmpty().Length(6).Matches(@"^\d{6}$");
+    }
+}
+
+public class SignupCompleteRequestValidator : AbstractValidator<SignupCompleteRequest>
+{
+    public SignupCompleteRequestValidator()
+    {
+        RuleFor(x => x.SignupToken).NotEmpty();
+        RuleFor(x => x.Name).NotEmpty().MinimumLength(2).MaximumLength(100);
         RuleFor(x => x.Password).NotEmpty().MinimumLength(8).MaximumLength(128);
-        RuleFor(x => x.Role).IsInEnum();
+        RuleFor(x => x.Role).IsInEnum()
+            .Must(r => r != Role.Admin && r != Role.Veterinarian)
+            .WithMessage("Sign-up is not available for the Admin and Veterinarian roles.");
     }
 }
 
@@ -44,5 +64,32 @@ public class OtpVerifyRequestValidator : AbstractValidator<OtpVerifyRequest>
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
         RuleFor(x => x.Code).NotEmpty().Length(6).Matches(@"^\d{6}$");
+    }
+}
+
+public class ForgotPasswordRequestValidator : AbstractValidator<ForgotPasswordRequest>
+{
+    public ForgotPasswordRequestValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(320);
+    }
+}
+
+public class VerifyResetCodeRequestValidator : AbstractValidator<VerifyResetCodeRequest>
+{
+    public VerifyResetCodeRequestValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+        RuleFor(x => x.Code).NotEmpty().Length(6).Matches(@"^\d{6}$");
+    }
+}
+
+public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequest>
+{
+    public ResetPasswordRequestValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+        RuleFor(x => x.ResetToken).NotEmpty();
+        RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(8).MaximumLength(128);
     }
 }

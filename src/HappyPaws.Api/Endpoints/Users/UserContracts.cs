@@ -35,10 +35,6 @@ public record PublicUserResponse(
     int ReputationPoints,
     IEnumerable<BadgeResponse> Badges);
 
-/// <summary>Data submitted when updating the authenticated user's profile name.</summary>
-/// <param name="Name">The new display name. Optional.</param>
-public record UpdateProfileRequest(string? Name);
-
 /// <summary>Data submitted when registering an FCM device for push notifications.</summary>
 /// <param name="FcmToken">The Firebase Cloud Messaging device token.</param>
 /// <param name="DeviceName">A friendly label for the device (for example, "My iPhone"). Optional.</param>
@@ -85,6 +81,59 @@ public record LifestyleProfileResponse(
     bool HasChildren,
     bool HasYard,
     DateTimeOffset UpdatedAt);
+
+/// <summary>A 2D geographic coordinate.</summary>
+/// <param name="Latitude">The latitude in decimal degrees (WGS 84).</param>
+/// <param name="Longitude">The longitude in decimal degrees (WGS 84).</param>
+public record LocationResponse(double Latitude, double Longitude);
+
+/// <summary>A role assigned to a user.</summary>
+/// <param name="Role">The role name.</param>
+/// <param name="AssignedAt">UTC timestamp when the role was assigned.</param>
+public record RoleResponse(string Role, DateTimeOffset AssignedAt);
+
+/// <summary>The authenticated user's full account profile.</summary>
+/// <param name="Id">Unique identifier of the user.</param>
+/// <param name="Name">The user's display name.</param>
+/// <param name="Email">The user's email address.</param>
+/// <param name="AvatarKey">Storage key of the user's avatar image. Null if no avatar has been uploaded.</param>
+/// <param name="IsVerified">Whether the user has completed KYC verification.</param>
+/// <param name="ReputationPoints">The user's total reputation score.</param>
+/// <param name="IsSuspended">Whether the account is currently suspended.</param>
+/// <param name="SuspendedAt">UTC timestamp when the account was suspended. Null if not suspended.</param>
+/// <param name="SuspendedReason">The reason the account was suspended. Null if not suspended.</param>
+/// <param name="CreatedAt">UTC timestamp when the account was created.</param>
+/// <param name="UpdatedAt">UTC timestamp when the account was last updated.</param>
+/// <param name="LastKnownLocation">The user's most recently reported location. Null if never reported.</param>
+/// <param name="Roles">All roles assigned to the user.</param>
+public record MeProfileResponse(
+    Guid Id,
+    string Name,
+    string Email,
+    string? AvatarKey,
+    bool IsVerified,
+    int ReputationPoints,
+    bool IsSuspended,
+    DateTimeOffset? SuspendedAt,
+    string? SuspendedReason,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    LocationResponse? LastKnownLocation,
+    IEnumerable<RoleResponse> Roles);
+
+/// <summary>Data submitted to update the authenticated user's display name.</summary>
+/// <param name="Name">New display name. Must be between 2 and 100 characters.</param>
+public record UpdateMeProfileRequest(string Name);
+
+/// <summary>Response returned after a successful avatar upload.</summary>
+/// <param name="AvatarKey">The object storage key where the avatar is saved (for example, <c>avatars/user-id/guid.webp</c>).</param>
+/// <param name="AvatarUrl">Public URL to display the new avatar image.</param>
+public record AvatarUploadResponse(string AvatarKey, string AvatarUrl);
+
+/// <summary>Credentials required to change the authenticated user's password.</summary>
+/// <param name="CurrentPassword">The user's current plain-text password.</param>
+/// <param name="NewPassword">The new plain-text password. Must be at least 8 characters.</param>
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
 /// <summary>A KYC identity document uploaded by the user.</summary>
 /// <param name="Id">Unique identifier of the document record.</param>

@@ -24,9 +24,7 @@ public class ConversationEndpointsTests : IClassFixture<CustomWebApplicationFact
     private async Task<(string accessToken, Guid userId)> CreateUserAsync(string name)
     {
         var email = $"{name.ToLower().Replace(" ", "")}{Guid.NewGuid():N}@example.com";
-        var request = new RegisterRequest(name, email, "Password123!", Role.Adopter);
-        var registerResponse = await _client.PostAsJsonAsync("/api/v1/auth/register", request);
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        var auth = await _factory.SignupAsync(_client, name, email, "Password123!");
         
         // Approve KYC to get verified
         using var scope = _factory.Services.CreateScope();

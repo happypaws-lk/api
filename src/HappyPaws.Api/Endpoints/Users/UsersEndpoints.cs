@@ -6,6 +6,7 @@ using HappyPaws.Core.Enums;
 using HappyPaws.Core.Interfaces;
 using HappyPaws.Infrastructure.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
@@ -64,7 +65,44 @@ public class UsersEndpoints : IEndpointGroup
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        group.MapGet("/me/profile", GetLifestyleProfileAsync)
+        group.MapGet("/me/profile", GetMeProfileAsync)
+            .RequireAuthorization()
+            .WithName("GetMeProfile")
+            .WithSummary("Get the authenticated user's account profile")
+            .WithDescription("Returns the full account profile including all user fields, roles, and suspension status.")
+            .Produces<MeProfileResponse>();
+
+        group.MapPut("/me/profile", UpdateMeProfileAsync)
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<UpdateMeProfileRequest>>()
+            .WithName("UpdateMeProfile")
+            .WithSummary("Update the authenticated user's display name")
+            .WithDescription("Updates the user's display name. To change the avatar, use POST /me/avatar instead.")
+            .Produces<MeProfileResponse>()
+            .ProducesValidationProblem();
+
+        group.MapPost("/me/avatar", UploadAvatarAsync)
+            .RequireAuthorization()
+            .WithName("UploadAvatar")
+            .WithSummary("Upload or replace the authenticated user's avatar")
+            .WithDescription("Accepts a single image file (jpg, jpeg, png, or webp, max 5 MB). If the user already has an avatar, the old file is deleted from storage before the new one is saved. Returns the storage key and public URL of the new avatar.")
+            .Produces<AvatarUploadResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .RequireRateLimiting("UploadLimiter")
+            .AddEndpointFilter(new RequestSizeLimitFilter(5_242_880))
+            .DisableAntiforgery();
+
+        group.MapPost("/me/change-password", ChangePasswordAsync)
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<ChangePasswordRequest>>()
+            .WithName("ChangePassword")
+            .WithSummary("Change the authenticated user's password")
+            .WithDescription("Verifies the current password and replaces it with the new one. Returns 400 if the current password is incorrect.")
+            .Produces(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesValidationProblem();
+
+        group.MapGet("/me/lifestyle-profile", GetLifestyleProfileAsync)
             .RequireAuthorization()
             .WithName("GetLifestyleProfile")
             .WithSummary("Get the authenticated user's lifestyle profile")
@@ -72,7 +110,7 @@ public class UsersEndpoints : IEndpointGroup
             .Produces<LifestyleProfileResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        group.MapPost("/me/profile", UpsertLifestyleProfileAsync)
+        group.MapPost("/me/lifestyle-profile", UpsertLifestyleProfileAsync)
             .RequireAuthorization("Verified")
             .AddEndpointFilter<ValidationFilter<LifestyleProfileRequest>>()
             .WithName("UpsertLifestyleProfile")
@@ -284,6 +322,130 @@ public class UsersEndpoints : IEndpointGroup
         await db.SaveChangesAsync(ct);
 
         return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<MeProfileResponse>> GetMeProfileAsync(
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+
+        var user = await db.Users
+            .AsNoTracking()
+            .Include(u => u.Roles)
+            .FirstAsync(u => u.Id == userId, ct);
+
+        var location = user.LastKnownLocation is not null
+            ? new LocationResponse(user.LastKnownLocation.Y, user.LastKnownLocation.X)
+            : null;
+
+        return TypedResults.Ok(new MeProfileResponse(
+            user.Id,
+            user.Name,
+            user.Email,
+            user.AvatarKey,
+            user.IsVerified,
+            user.ReputationPoints,
+            user.IsSuspended,
+            user.SuspendedAt,
+            user.SuspendedReason,
+            user.CreatedAt,
+            user.UpdatedAt,
+            location,
+            user.Roles.Select(r => new RoleResponse(r.Role.ToString(), r.AssignedAt))));
+    }
+
+    private static async Task<Ok<MeProfileResponse>> UpdateMeProfileAsync(
+        UpdateMeProfileRequest request,
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+
+        var user = await db.Users
+            .Include(u => u.Roles)
+            .FirstAsync(u => u.Id == userId, ct);
+
+        user.Name = request.Name;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(ct);
+
+        var location = user.LastKnownLocation is not null
+            ? new LocationResponse(user.LastKnownLocation.Y, user.LastKnownLocation.X)
+            : null;
+
+        return TypedResults.Ok(new MeProfileResponse(
+            user.Id,
+            user.Name,
+            user.Email,
+            user.AvatarKey,
+            user.IsVerified,
+            user.ReputationPoints,
+            user.IsSuspended,
+            user.SuspendedAt,
+            user.SuspendedReason,
+            user.CreatedAt,
+            user.UpdatedAt,
+            location,
+            user.Roles.Select(r => new RoleResponse(r.Role.ToString(), r.AssignedAt))));
+    }
+
+    private static readonly HashSet<string> AllowedAvatarExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+
+    private static async Task<Results<Ok<AvatarUploadResponse>, BadRequest<string>>> UploadAvatarAsync(
+        IFormFile file,
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        IStorageService storageService,
+        CancellationToken ct)
+    {
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!AllowedAvatarExtensions.Contains(extension))
+            return TypedResults.BadRequest("File must be .jpg, .jpeg, .png, or .webp");
+
+        if (file.Length > 5 * 1024 * 1024)
+            return TypedResults.BadRequest("Avatar must not exceed 5 MB");
+
+        var userId = principal.GetUserId();
+        var user = await db.Users.FirstAsync(u => u.Id == userId, ct);
+
+        if (user.AvatarKey is not null)
+            await storageService.DeleteAsync(user.AvatarKey, ct);
+
+        var key = $"avatars/{userId}/{Guid.NewGuid()}{extension}";
+
+        await using var stream = file.OpenReadStream();
+        await storageService.UploadAsync(key, stream, file.ContentType, cancellationToken: ct);
+
+        user.AvatarKey = key;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(ct);
+
+        return TypedResults.Ok(new AvatarUploadResponse(key, storageService.GetPublicUrl(key)));
+    }
+
+    private static async Task<Results<Ok, BadRequest<string>>> ChangePasswordAsync(
+        ChangePasswordRequest request,
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        IPasswordHasher<User> passwordHasher,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+
+        var user = await db.Users.FirstAsync(u => u.Id == userId, ct);
+
+        var verifyResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
+        if (verifyResult == PasswordVerificationResult.Failed)
+            return TypedResults.BadRequest("Current password is incorrect");
+
+        user.PasswordHash = passwordHasher.HashPassword(user, request.NewPassword);
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(ct);
+
+        return TypedResults.Ok();
     }
 
     private static async Task<Results<Ok<LifestyleProfileResponse>, NotFound>> GetLifestyleProfileAsync(

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 using HappyPaws.Api.Extensions;
 using HappyPaws.Api.Filters;
 using HappyPaws.Core.Entities;
@@ -16,14 +17,34 @@ public class AuthEndpoints : IEndpointGroup
 {
     public void Map(RouteGroupBuilder group)
     {
-        group.MapPost("/register", RegisterAsync)
-            .AddEndpointFilter<ValidationFilter<RegisterRequest>>()
-            .RequireRateLimiting("RegisterLimiter")
-            .WithName("Register")
-            .WithSummary("Register a new user account")
-            .WithDescription("Creates an account and returns an access token and refresh token. The role field sets the user's initial platform role (Adopter, Foster, Transporter, or Veterinarian). Returns 409 if the email is already taken.")
-            .Produces<AuthResponse>(StatusCodes.Status201Created)
+        group.MapPost("/signup/send-code", SendSignupCodeAsync)
+            .AddEndpointFilter<ValidationFilter<SignupSendCodeRequest>>()
+            .RequireRateLimiting("SignupLimiter")
+            .WithName("SignupSendCode")
+            .WithSummary("Start sign-up by sending a verification code")
+            .WithDescription("Sends a 6-digit OTP to the supplied email. Returns 409 if the address already has a completed account. Always returns 200 otherwise.")
+            .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesValidationProblem();
+
+        group.MapPost("/signup/verify-code", VerifySignupCodeAsync)
+            .AddEndpointFilter<ValidationFilter<SignupVerifyCodeRequest>>()
+            .RequireRateLimiting("SignupLimiter")
+            .WithName("SignupVerifyCode")
+            .WithSummary("Verify the sign-up OTP and get a signup token")
+            .WithDescription("Validates the 6-digit OTP. On success returns a short-lived signup token (valid for 10 minutes) to use with the signup/complete endpoint.")
+            .Produces<SignupVerifyCodeResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesValidationProblem();
+
+        group.MapPost("/signup/complete", CompleteSignupAsync)
+            .AddEndpointFilter<ValidationFilter<SignupCompleteRequest>>()
+            .RequireRateLimiting("RegisterLimiter")
+            .WithName("SignupComplete")
+            .WithSummary("Complete sign-up with name and password")
+            .WithDescription("Creates the account using the verified signup token. The token is single-use and expires in 10 minutes. Returns an access token and refresh token on success.")
+            .Produces<AuthResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesValidationProblem();
 
         group.MapPost("/login", LoginAsync)
@@ -76,54 +97,177 @@ public class AuthEndpoints : IEndpointGroup
             .Produces<AuthResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesValidationProblem();
+
+        group.MapPost("/forgot-password", ForgotPasswordAsync)
+            .AddEndpointFilter<ValidationFilter<ForgotPasswordRequest>>()
+            .RequireRateLimiting("ForgotPasswordLimiter")
+            .WithName("ForgotPassword")
+            .WithSummary("Send a password reset OTP to an email address")
+            .WithDescription("Sends a 6-digit reset code to the supplied email. Always returns 200 OK regardless of whether the email exists, to prevent email enumeration.")
+            .Produces(StatusCodes.Status200OK)
+            .ProducesValidationProblem();
+
+        group.MapPost("/verify-reset-code", VerifyResetCodeAsync)
+            .AddEndpointFilter<ValidationFilter<VerifyResetCodeRequest>>()
+            .RequireRateLimiting("ForgotPasswordLimiter")
+            .WithName("VerifyResetCode")
+            .WithSummary("Verify the OTP code from the reset email")
+            .WithDescription("Validates the 6-digit reset OTP. On success returns a short-lived reset token (valid for 10 minutes) to use with the reset-password endpoint. The OTP is not consumed until the password is changed.")
+            .Produces<VerifyResetCodeResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesValidationProblem();
+
+        group.MapPost("/reset-password", ResetPasswordAsync)
+            .AddEndpointFilter<ValidationFilter<ResetPasswordRequest>>()
+            .RequireRateLimiting("ForgotPasswordLimiter")
+            .WithName("ResetPassword")
+            .WithSummary("Set a new password using the verified reset token")
+            .WithDescription("Resets the user's password. Invalidates all active refresh tokens (signs out every device). The reset token is single-use and expires in 10 minutes.")
+            .Produces(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesValidationProblem();
     }
 
-    private static async Task<Results<Created<AuthResponse>, Conflict<string>>> RegisterAsync(
-        RegisterRequest request,
+    private static async Task<Results<Ok, Conflict<string>>> SendSignupCodeAsync(
+        SignupSendCodeRequest request,
+        HappyPawsDbContext db,
+        IPasswordHasher<User> passwordHasher,
+        IEmailSender emailSender,
+        CancellationToken ct)
+    {
+        var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Email == request.Email, ct);
+
+        // A completed account has a non-empty password hash. Reject it outright.
+        if (existingUser is not null && !string.IsNullOrEmpty(existingUser.PasswordHash))
+            return TypedResults.Conflict("A user with this email already exists");
+
+        // Reuse the pending placeholder if one already exists from a previous send-code call.
+        var pendingUser = existingUser;
+        if (pendingUser is null)
+        {
+            pendingUser = new User
+            {
+                Id = Guid.NewGuid(),
+                Name = string.Empty,
+                Email = request.Email,
+                PasswordHash = string.Empty
+            };
+            db.Users.Add(pendingUser);
+        }
+
+        var code = GenerateOtpCode();
+        var hashedCode = passwordHasher.HashPassword(pendingUser, code);
+
+        db.OtpCodes.Add(new OtpCode
+        {
+            Id = Guid.NewGuid(),
+            UserId = pendingUser.Id,
+            Code = hashedCode,
+            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(10)
+        });
+
+        await db.SaveChangesAsync(ct);
+
+        await emailSender.SendSignupOtpAsync(request.Email, code, ct);
+
+        return TypedResults.Ok();
+    }
+
+    private static async Task<Results<Ok<SignupVerifyCodeResponse>, UnauthorizedHttpResult>> VerifySignupCodeAsync(
+        SignupVerifyCodeRequest request,
+        HappyPawsDbContext db,
+        IPasswordHasher<User> passwordHasher,
+        CancellationToken ct)
+    {
+        // Only a pending user (no password set yet) can be verified through this flow.
+        var pendingUser = await db.Users.FirstOrDefaultAsync(
+            u => u.Email == request.Email && u.PasswordHash == string.Empty, ct);
+
+        if (pendingUser is null)
+            return TypedResults.Unauthorized();
+
+        var otpCodes = await db.OtpCodes
+            .Where(o => o.UserId == pendingUser.Id && !o.IsUsed && o.ExpiresAt > DateTimeOffset.UtcNow)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync(ct);
+
+        var matched = otpCodes.Any(otp =>
+            passwordHasher.VerifyHashedPassword(pendingUser, otp.Code, request.Code) != PasswordVerificationResult.Failed);
+
+        if (!matched)
+            return TypedResults.Unauthorized();
+
+        // Generate a one-time signup token, hashed before storage so a DB leak cannot
+        // be replayed to complete registrations without going through the OTP step.
+        var signupToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        var hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(signupToken)));
+
+        db.OtpCodes.Add(new OtpCode
+        {
+            Id = Guid.NewGuid(),
+            UserId = pendingUser.Id,
+            Code = hashedToken,
+            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(10)
+        });
+
+        await db.SaveChangesAsync(ct);
+
+        return TypedResults.Ok(new SignupVerifyCodeResponse(signupToken));
+    }
+
+    private static async Task<Results<Created<AuthResponse>, UnauthorizedHttpResult>> CompleteSignupAsync(
+        SignupCompleteRequest request,
         HappyPawsDbContext db,
         IPasswordHasher<User> passwordHasher,
         ITokenService tokenService,
         CancellationToken ct)
     {
-        var emailExists = await db.Users.AnyAsync(u => u.Email == request.Email, ct);
-        if (emailExists)
-            return TypedResults.Conflict("A user with this email already exists");
+        var hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(request.SignupToken)));
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Name = request.Name,
-            Email = request.Email,
-            PasswordHash = string.Empty
-        };
+        var tokenRecord = await db.OtpCodes
+            .FirstOrDefaultAsync(o =>
+                !o.IsUsed &&
+                o.ExpiresAt > DateTimeOffset.UtcNow &&
+                o.Code == hashedToken, ct);
+
+        if (tokenRecord is null)
+            return TypedResults.Unauthorized();
+
+        var user = await db.Users.FindAsync([tokenRecord.UserId], ct);
+
+        // Guard: only complete a pending account, not an existing one.
+        if (user is null || !string.IsNullOrEmpty(user.PasswordHash))
+            return TypedResults.Unauthorized();
+
+        tokenRecord.IsUsed = true;
+        user.Name = request.Name;
         user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
 
-        var userRole = new UserRole
+        var role = request.Role;
+
+        var accessToken = tokenService.GenerateAccessToken(user.Id, user.Email, [role.ToString()], false);
+        var refreshTokenValue = tokenService.GenerateRefreshToken();
+
+        db.UserRoles.Add(new UserRole
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
-            Role = request.Role,
+            Role = role,
             AssignedAt = DateTimeOffset.UtcNow
-        };
+        });
 
-        var accessToken = tokenService.GenerateAccessToken(user.Id, user.Email, [request.Role.ToString()], false);
-        var refreshTokenValue = tokenService.GenerateRefreshToken();
-
-        var refreshToken = new RefreshToken
+        db.RefreshTokens.Add(new RefreshToken
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
             Token = refreshTokenValue,
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(7)
-        };
+        });
 
-        db.Users.Add(user);
-        db.UserRoles.Add(userRole);
-        db.RefreshTokens.Add(refreshToken);
         await db.SaveChangesAsync(ct);
 
-        var response = new AuthResponse(accessToken, refreshTokenValue, DateTimeOffset.UtcNow.AddMinutes(15));
-        return TypedResults.Created($"/api/v1/users/{user.Id}", response);
+        return TypedResults.Created($"/api/v1/users/{user.Id}",
+            new AuthResponse(accessToken, refreshTokenValue, DateTimeOffset.UtcNow.AddMinutes(15)));
     }
 
     private static async Task<Results<Ok<AuthResponse>, UnauthorizedHttpResult, ProblemHttpResult>> LoginAsync(
@@ -137,7 +281,7 @@ public class AuthEndpoints : IEndpointGroup
             .Include(u => u.Roles)
             .FirstOrDefaultAsync(u => u.Email == request.Email, ct);
 
-        if (user is null)
+        if (user is null || string.IsNullOrEmpty(user.PasswordHash))
             return TypedResults.Unauthorized();
 
         if (user.IsSuspended)
@@ -330,5 +474,131 @@ public class AuthEndpoints : IEndpointGroup
     private static string GenerateOtpCode()
     {
         return RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+    }
+
+    private static async Task<Ok> ForgotPasswordAsync(
+        ForgotPasswordRequest request,
+        HappyPawsDbContext db,
+        IPasswordHasher<User> passwordHasher,
+        IEmailSender emailSender,
+        CancellationToken ct)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == request.Email, ct);
+
+        // Always return 200 OK regardless of whether the address is registered,
+        // pending signup, or unknown. Never leak that information to callers.
+        // The random delay prevents timing-based email enumeration.
+        if (user is null || string.IsNullOrEmpty(user.PasswordHash))
+        {
+            await Task.Delay(RandomNumberGenerator.GetInt32(50, 150), ct);
+            return TypedResults.Ok();
+        }
+
+        var code = GenerateOtpCode();
+        var hashedCode = passwordHasher.HashPassword(user, code);
+
+        var otpCode = new OtpCode
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Code = hashedCode,
+            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(15)
+        };
+
+        db.OtpCodes.Add(otpCode);
+        await db.SaveChangesAsync(ct);
+
+        await emailSender.SendPasswordResetOtpAsync(user.Email, code, ct);
+
+        return TypedResults.Ok();
+    }
+
+    private static async Task<Results<Ok<VerifyResetCodeResponse>, UnauthorizedHttpResult>> VerifyResetCodeAsync(
+        VerifyResetCodeRequest request,
+        HappyPawsDbContext db,
+        IPasswordHasher<User> passwordHasher,
+        CancellationToken ct)
+    {
+        // Only let completed accounts (non-empty password hash) go through the reset flow.
+        // Pending signup placeholders are excluded to prevent the forgot-password flow
+        // from interfering with an in-progress signup on the same email address.
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == request.Email, ct);
+        if (user is null || string.IsNullOrEmpty(user.PasswordHash))
+            return TypedResults.Unauthorized();
+
+        var otpCodes = await db.OtpCodes
+            .Where(o => o.UserId == user.Id && !o.IsUsed && o.ExpiresAt > DateTimeOffset.UtcNow)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync(ct);
+
+        var matched = otpCodes.Any(otp =>
+            passwordHasher.VerifyHashedPassword(user, otp.Code, request.Code) != PasswordVerificationResult.Failed);
+
+        if (!matched)
+            return TypedResults.Unauthorized();
+
+        // Generate a one-time reset token. We hash it with SHA-256 before storing so
+        // a database leak cannot be used to reset accounts directly.
+        var resetToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        var hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(resetToken)));
+
+        var tokenRecord = new OtpCode
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Code = hashedToken,
+            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(10)
+        };
+
+        db.OtpCodes.Add(tokenRecord);
+        await db.SaveChangesAsync(ct);
+
+        return TypedResults.Ok(new VerifyResetCodeResponse(resetToken));
+    }
+
+    private static async Task<Results<Ok, UnauthorizedHttpResult>> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        HappyPawsDbContext db,
+        IPasswordHasher<User> passwordHasher,
+        CancellationToken ct)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == request.Email, ct);
+        if (user is null || string.IsNullOrEmpty(user.PasswordHash))
+            return TypedResults.Unauthorized();
+
+        var hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(request.ResetToken)));
+
+        var tokenRecord = await db.OtpCodes
+            .FirstOrDefaultAsync(o =>
+                o.UserId == user.Id &&
+                !o.IsUsed &&
+                o.ExpiresAt > DateTimeOffset.UtcNow &&
+                o.Code == hashedToken, ct);
+
+        if (tokenRecord is null)
+            return TypedResults.Unauthorized();
+
+        tokenRecord.IsUsed = true;
+
+        // Invalidate any remaining numeric OTP codes for this user so they cannot
+        // be replayed to generate another reset token after the password is changed.
+        var remainingOtps = await db.OtpCodes
+            .Where(o => o.UserId == user.Id && !o.IsUsed && o.ExpiresAt > DateTimeOffset.UtcNow && o.Code != hashedToken)
+            .ToListAsync(ct);
+
+        foreach (var otp in remainingOtps)
+            otp.IsUsed = true;
+
+        user.PasswordHash = passwordHasher.HashPassword(user, request.NewPassword);
+
+        // Revoke every active session. A password reset is a security event —
+        // anyone who had access to the old password must re-authenticate.
+        await db.RefreshTokens
+            .Where(rt => rt.UserId == user.Id && rt.RevokedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(rt => rt.RevokedAt, DateTimeOffset.UtcNow), ct);
+
+        await db.SaveChangesAsync(ct);
+
+        return TypedResults.Ok();
     }
 }

@@ -28,11 +28,11 @@ resource "aws_security_group" "rds" {
 resource "aws_db_instance" "postgres" {
   identifier                  = var.identifier
   engine                      = "postgres"
-  engine_version              = "16.3"
+  engine_version              = var.engine_version
   instance_class              = var.instance_class
   allocated_storage           = var.allocated_storage
   manage_master_user_password = true
-  master_username             = var.db_username
+  username                    = var.db_username
   db_name                     = var.db_name
 
   multi_az                   = false

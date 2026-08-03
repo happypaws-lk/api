@@ -34,7 +34,7 @@ public static class ServiceCollectionExtensions
         services.AddKeyedScoped<IUrgencyClassifier, RuleBasedUrgencyClassifier>("ruleBased");
         services.AddScoped<IUrgencyClassificationService, ResilientUrgencyClassificationService>();
         services.AddScoped<INotificationService, NotificationService>();
-        services.AddScoped<IStorageService, R2StorageService>();
+        services.AddScoped<IStorageService, S3StorageService>();
         services.AddScoped<IEmailSender, SesEmailSender>();
         services.AddScoped<IPushNotificationService, FcmPushNotificationService>();
         services.AddScoped<IReputationService, ReputationService>();
@@ -45,7 +45,6 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddDevServices(this IServiceCollection services)
     {
-        services.AddScoped<IStorageService, LocalStorageService>();
         services.AddScoped<IEmailSender, LocalEmailSender>();
         services.AddScoped<IPushNotificationService, LocalPushNotificationService>();
         return services;

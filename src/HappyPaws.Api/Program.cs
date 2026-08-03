@@ -128,6 +128,26 @@ builder.Services.AddRateLimiter(options =>
         });
     });
 
+    options.AddPolicy("ForgotPasswordLimiter", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+        {
+            Window = TimeSpan.FromMinutes(10),
+            PermitLimit = rateLimitingDisabled ? 10000 : 3
+        });
+    });
+
+    options.AddPolicy("SignupLimiter", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter($"signup:{ip}", _ => new FixedWindowRateLimiterOptions
+        {
+            Window = TimeSpan.FromMinutes(10),
+            PermitLimit = rateLimitingDisabled ? 10000 : 3
+        });
+    });
+
     options.AddSlidingWindowLimiter("UploadLimiter", opt =>
     {
         opt.Window = TimeSpan.FromMinutes(1);
