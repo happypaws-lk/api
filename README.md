@@ -184,6 +184,20 @@ A GitHub Actions CI/CD pipeline automatically builds, tests, and deploys the app
 *   `ci.yml`: Runs on pull requests to the `main` branch. It provisions a temporary PostGIS database, restores dependencies, builds the project, and runs the test suite.
 *   `cd.yml`: Runs on pushes to the `main` branch. It executes the tests, builds the Docker image, pushes it to Amazon ECR, and deploys the new image to Elastic Beanstalk using the `docker-compose.yml` configuration.
 
+### Database Migrations
+
+The production RDS database resides in a private VPC subnet and cannot be reached directly from GitHub Actions. Therefore, EF Core migrations are applied automatically by the application on startup.
+
+**Workflow for database changes:**
+1. Make changes to your C# entity models.
+2. Generate the migration locally:
+   ```bash
+   dotnet ef migrations add <MigrationName> --project src/HappyPaws.Infrastructure --startup-project src/HappyPaws.Api
+   ```
+3. Test locally using `dotnet ef database update`.
+4. Commit the generated migration files in the `Migrations` folder and push to the `main` branch.
+5. During deployment, the new Elastic Beanstalk container will automatically apply the pending migrations via `db.Database.MigrateAsync()` before accepting web traffic.
+
 ### GitHub Secrets setup
 
 To enable the deployment pipeline, you must configure the following repository secrets in GitHub. Go to your repository **Settings** → **Secrets and variables** → **Actions** and create these secrets.
