@@ -28,11 +28,35 @@ public record KycPendingResponse(
 /// <param name="OpenRescueCasesCount">Number of rescue cases currently open.</param>
 /// <param name="TotalUsersCount">Total number of registered users.</param>
 /// <param name="RecentActivity">The 5 most recent moderation actions.</param>
+/// <param name="UserGrowth">Daily user registration and verification counts, with running cumulative totals, bounded by the requested date range.</param>
+/// <param name="AdoptionActivity">Daily adoption application submissions and listings moved to Adopted status, bounded by the requested date range.</param>
 public record DashboardResponse(
     int PendingKycCount,
     int OpenRescueCasesCount,
     int TotalUsersCount,
-    List<ModerationLogResponse> RecentActivity);
+    List<ModerationLogResponse> RecentActivity,
+    List<UserGrowthDataPoint> UserGrowth,
+    List<AdoptionActivityDataPoint> AdoptionActivity);
+
+/// <summary>A single day's user registration and verification snapshot with running cumulative totals.</summary>
+/// <param name="Date">The calendar date this data point represents (ISO 8601, YYYY-MM-DD).</param>
+/// <param name="TotalUsers">Cumulative total of all registered users up to and including this date.</param>
+/// <param name="NewUsers">Number of users who registered on this specific date.</param>
+/// <param name="VerifiedUsers">Cumulative total of verified users (approved KYC) up to and including this date.</param>
+public record UserGrowthDataPoint(
+    DateOnly Date,
+    int TotalUsers,
+    int NewUsers,
+    int VerifiedUsers);
+
+/// <summary>A single day's adoption pipeline activity.</summary>
+/// <param name="Date">The calendar date this data point represents (ISO 8601, YYYY-MM-DD).</param>
+/// <param name="Applications">Number of adoption applications submitted on this date.</param>
+/// <param name="Adoptions">Number of listings that moved to Adopted status on this date.</param>
+public record AdoptionActivityDataPoint(
+    DateOnly Date,
+    int Applications,
+    int Adoptions);
 
 /// <summary>A rescue case entry for the admin live map.</summary>
 /// <param name="Id">Unique identifier of the rescue case.</param>

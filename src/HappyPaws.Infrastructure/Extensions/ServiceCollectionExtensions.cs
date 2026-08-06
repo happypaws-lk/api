@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace HappyPaws.Infrastructure.Extensions;
 
@@ -18,8 +19,17 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContext<HappyPawsDbContext>((sp, options) =>
         {
+            var connectionStringBuilder = new NpgsqlConnectionStringBuilder
+            {
+                Host = configuration["DB_HOST"] ?? "localhost",
+                Port = int.TryParse(configuration["DB_PORT"], out var port) ? port : 5432,
+                Database = configuration["DB_NAME"] ?? "happypaws",
+                Username = configuration["DB_USER"] ?? "happypaws",
+                Password = configuration["DB_PASSWORD"] ?? "happypaws_dev"
+            };
+
             options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection"),
+                connectionStringBuilder.ConnectionString,
                 npgsqlOptions => npgsqlOptions.UseNetTopologySuite());
 
             options.AddInterceptors(sp.GetRequiredService<TimestampInterceptor>());

@@ -20,8 +20,9 @@ public class AdminEndpoints : IEndpointGroup
         group.MapGet("/dashboard", GetDashboardAsync)
             .WithName("GetAdminDashboard")
             .WithSummary("Get admin dashboard statistics")
-            .WithDescription("Returns counts of pending KYC documents, open rescue cases, and total users, plus the 5 most recent moderation actions.")
-            .Produces<DashboardResponse>();
+            .WithDescription("Returns summary counts, recent moderation activity, and historical time-series data for user growth and adoption activity. Use startDate and endDate (YYYY-MM-DD) to bound the time-series arrays. Defaults to the last 30 days when omitted.")
+            .Produces<DashboardResponse>()
+            .ProducesValidationProblem();
 
         group.MapGet("/cases", GetCasesAsync)
             .WithName("GetAdminCases")
@@ -99,10 +100,25 @@ public class AdminEndpoints : IEndpointGroup
             .ProducesValidationProblem();
     }
 
-    private static async Task<Ok<DashboardResponse>> GetDashboardAsync(
+    private static async Task<Results<Ok<DashboardResponse>, ValidationProblem>> GetDashboardAsync(
+        DateOnly? startDate,
+        DateOnly? endDate,
         HappyPawsDbContext db,
         CancellationToken ct)
     {
+        if (startDate.HasValue && endDate.HasValue && startDate > endDate)
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["startDate"] = ["startDate must not be after endDate"]
+            });
+
+        var effectiveEnd = endDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var effectiveStart = startDate ?? effectiveEnd.AddDays(-29);
+
+        var rangeStart = new DateTimeOffset(effectiveStart.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var rangeEnd = new DateTimeOffset(effectiveEnd.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero).AddDays(1);
+
+        // Summary stats
         var pendingKycCount = await db.IdentityDocuments.CountAsync(d => d.Status == DocumentStatus.Pending, ct);
         var openCasesCount = await db.RescueCases.CountAsync(c => c.Status == CaseStatus.Open && c.IsActive, ct);
         var totalUsersCount = await db.Users.CountAsync(ct);
@@ -121,11 +137,80 @@ public class AdminEndpoints : IEndpointGroup
                 m.CreatedAt))
             .ToListAsync(ct);
 
+        // Baselines (cumulative counts before the range window)
+        var userBaseline = await db.Users
+            .CountAsync(u => u.CreatedAt < rangeStart, ct);
+
+        var verifiedBaseline = await db.IdentityDocuments
+            .Where(d => d.Status == DocumentStatus.Approved
+                && d.ReviewedAt.HasValue
+                && d.ReviewedAt < rangeStart)
+            .Select(d => d.UserId)
+            .Distinct()
+            .CountAsync(ct);
+
+        // Daily aggregates within the range
+        var dailyNewUsers = await db.Users
+            .Where(u => u.CreatedAt >= rangeStart && u.CreatedAt < rangeEnd)
+            .GroupBy(u => u.CreatedAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        var dailyNewVerified = await db.IdentityDocuments
+            .Where(d => d.Status == DocumentStatus.Approved
+                && d.ReviewedAt.HasValue
+                && d.ReviewedAt >= rangeStart
+                && d.ReviewedAt < rangeEnd)
+            .GroupBy(d => d.ReviewedAt!.Value.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        var dailyApplications = await db.AdoptionApplications
+            .Where(a => a.AppliedAt >= rangeStart && a.AppliedAt < rangeEnd)
+            .GroupBy(a => a.AppliedAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        var dailyAdoptions = await db.AnimalListings
+            .Where(l => l.Status == ListingStatus.Adopted
+                && l.UpdatedAt >= rangeStart
+                && l.UpdatedAt < rangeEnd)
+            .GroupBy(l => l.UpdatedAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        // Build full date series with zeros for days with no activity
+        var newUsersMap = dailyNewUsers.ToDictionary(x => DateOnly.FromDateTime(x.Date), x => x.Count);
+        var newVerifiedMap = dailyNewVerified.ToDictionary(x => DateOnly.FromDateTime(x.Date), x => x.Count);
+        var applicationsMap = dailyApplications.ToDictionary(x => DateOnly.FromDateTime(x.Date), x => x.Count);
+        var adoptionsMap = dailyAdoptions.ToDictionary(x => DateOnly.FromDateTime(x.Date), x => x.Count);
+
+        var userGrowth = new List<UserGrowthDataPoint>();
+        var adoptionActivity = new List<AdoptionActivityDataPoint>();
+        var runningTotal = userBaseline;
+        var runningVerified = verifiedBaseline;
+
+        for (var day = effectiveStart; day <= effectiveEnd; day = day.AddDays(1))
+        {
+            var newUsers = newUsersMap.GetValueOrDefault(day, 0);
+            var newVerified = newVerifiedMap.GetValueOrDefault(day, 0);
+            runningTotal += newUsers;
+            runningVerified += newVerified;
+
+            userGrowth.Add(new UserGrowthDataPoint(day, runningTotal, newUsers, runningVerified));
+            adoptionActivity.Add(new AdoptionActivityDataPoint(
+                day,
+                applicationsMap.GetValueOrDefault(day, 0),
+                adoptionsMap.GetValueOrDefault(day, 0)));
+        }
+
         return TypedResults.Ok(new DashboardResponse(
             pendingKycCount,
             openCasesCount,
             totalUsersCount,
-            recentActivity));
+            recentActivity,
+            userGrowth,
+            adoptionActivity));
     }
 
     private static async Task<Ok<List<AdminCaseResponse>>> GetCasesAsync(

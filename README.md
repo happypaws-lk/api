@@ -64,7 +64,11 @@ Follow these steps to set up the API locally.
    ```bash
    cd src/HappyPaws.Api
    dotnet user-secrets init
-   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=happypaws;Username=happypaws;Password=happypaws_dev"
+   dotnet user-secrets set "DB_HOST" "localhost"
+   dotnet user-secrets set "DB_PORT" "5432"
+   dotnet user-secrets set "DB_NAME" "happypaws"
+   dotnet user-secrets set "DB_USER" "happypaws"
+   dotnet user-secrets set "DB_PASSWORD" "happypaws_dev"
    dotnet user-secrets set "Jwt:Key" "<paste-generated-key-here>"
    cd ../..
    ```
@@ -107,32 +111,47 @@ Follow these steps to set up the API locally.
 
 ## Application environment
 
-The application uses standard .NET configuration providers. Do not commit secrets to source control. For production, set these as environment variables. Replace `:` with `__` (for example `Jwt:Key` becomes `Jwt__Key`). See `.env.example` for the full production reference.
+The application uses standard .NET configuration providers. Do not commit secrets to source control. 
+
+For production, set these as **Environment Properties** within the AWS Elastic Beanstalk console (Configuration -> Software -> Environment properties). 
+- Variables without colons (e.g., `DB_HOST`) are entered exactly as they are.
+- Nested JSON configurations use `:` locally, but must be replaced with `__` (double underscore) in Elastic Beanstalk (for example, `Jwt:Key` becomes `Jwt__Key`). See `.env.example` for the full production reference.
 
 When `ASPNETCORE_ENVIRONMENT=Development`, email (SES) and push notifications (Firebase) are replaced by local no-op stubs. File storage is handled by a local MinIO container started via `docker-compose up -d`, which replicates the Cloudflare R2 S3 API locally, including presigned URLs and bucket isolation. No storage credentials are needed for local development.
 
+### Environment Variables Reference
+
+
 | Key | Required | Notes |
 |-----|----------|-------|
-| `ConnectionStrings:DefaultConnection` | Yes | PostgreSQL DSN: `Host=...;Port=5432;Database=happypaws;Username=...;Password=...` |
-| `Jwt:Key` | Yes | HMAC-SHA256 signing key. Min 32 bytes. Generate: `openssl rand -base64 32` |
-| `Jwt:Issuer` | No | Defaults to `https://happypaws.lk` |
-| `Jwt:Audience` | No | Defaults to `https://happypaws.lk` |
-| `Gemini:ApiKey` | Yes (for rescue triage) | Google AI API key from aistudio.google.com. |
-| `Firebase:ServiceAccountJson` | Production only | Base64-encoded service account JSON. Firebase Console → Project Settings → Service accounts → Generate new private key. Encode: `openssl base64 -in key.json \| tr -d '\n'` |
-| `Storage:ServiceUrl` | Local/CI only | MinIO S3 endpoint. e.g. `http://localhost:9000`. Leave unset for Cloudflare R2. |
-| `Storage:AccountId` | Production only | Cloudflare account ID (right sidebar of the Cloudflare dashboard). Not required when `Storage:ServiceUrl` is set. |
-| `Storage:AccessKey` | Production only | R2 API token key, or MinIO root user for local development. |
-| `Storage:SecretKey` | Production only | R2 API token secret, or MinIO root password for local development. |
-| `Storage:PublicBucket` | No | Defaults to `happypaws-public` |
-| `Storage:PrivateBucket` | No | Defaults to `happypaws-private` |
-| `Storage:CustomDomain` | No | Defaults to `cdn.happypaws.lk`. R2 custom domain for public URLs (production only). |
-| `Storage:PublicBaseUrl` | No | Override for the public URL base. e.g. `http://localhost:9000/happypaws-public` for MinIO. |
-| `Ses:AccessKey` | Production only | AWS IAM access key ID. User needs `ses:SendEmail` permission. |
-| `Ses:SecretKey` | Production only | AWS IAM secret access key |
-| `Ses:Region` | No | Defaults to `us-east-1`. Use `ap-south-1` for lower latency from Sri Lanka. |
-| `Ses:FromAddress` | No | Defaults to `noreply@happypaws.lk`. Must be a verified SES identity. |
-| `Cors:AllowedOrigins` | Production only | Array of allowed origins. Empty = all browser requests blocked. Set as `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1`, etc. |
-| `RateLimiting:Disabled` | No | Set to `true` to bypass rate limits during automated testing. Defaults to `false`. |
+| `DB_HOST` | Yes | Database host, e.g. `localhost` |
+| `DB_PORT` | Yes | Database port, e.g. `5432` |
+| `DB_NAME` | Yes | Database name, e.g. `happypaws` |
+| `DB_USER` | Yes | Database user, e.g. `happypaws` |
+| `DB_PASSWORD` | Yes | Database password |
+| `Jwt__Key` | Yes | HMAC-SHA256 signing key. Min 32 bytes. Generate: `openssl rand -base64 32` |
+| `Jwt__Issuer` | No | Defaults to `https://happypaws.lk` |
+| `Jwt__Audience` | No | Defaults to `https://happypaws.lk` |
+| `Jwt__ExpiryMinutes` | No | Defaults to `15` |
+| `Gemini__ApiKey` | Yes (for rescue triage) | Google AI API key from aistudio.google.com. |
+| `Gemini__Model` | No | Defaults to `gemini-2.0-flash` |
+| `Gemini__TimeoutSeconds` | No | Defaults to `10` |
+| `Firebase__ServiceAccountJson` | Production only | Base64-encoded service account JSON. Firebase Console → Project Settings → Service accounts → Generate new private key. Encode: `openssl base64 -in key.json \| tr -d '\n'` |
+| `Storage__ServiceUrl` | Local/CI only | MinIO S3 endpoint. e.g. `http://localhost:9000`. Leave unset for Cloudflare R2. |
+| `Storage__AccountId` | Production only | Cloudflare account ID (right sidebar of the Cloudflare dashboard). Not required when `Storage__ServiceUrl` is set. |
+| `Storage__AccessKey` | Production only | R2 API token key, or MinIO root user for local development. |
+| `Storage__SecretKey` | Production only | R2 API token secret, or MinIO root password for local development. |
+| `Storage__PublicBucket` | No | Defaults to `happypaws-public` |
+| `Storage__PrivateBucket` | No | Defaults to `happypaws-private` |
+| `Storage__CustomDomain` | No | Defaults to `cdn.happypaws.lk`. R2 custom domain for public URLs (production only). |
+| `Storage__PublicBaseUrl` | No | Override for the public URL base. e.g. `http://localhost:9000/happypaws-public` for MinIO. |
+| `Ses__AccessKey` | Production only | AWS IAM access key ID. User needs `ses:SendEmail` permission. |
+| `Ses__SecretKey` | Production only | AWS IAM secret access key |
+| `Ses__Region` | No | Defaults to `us-east-1`. Use `ap-south-1` for lower latency from Sri Lanka. |
+| `Ses__FromAddress` | No | Defaults to `noreply@happypaws.lk`. Must be a verified SES identity. |
+| `Cors__AllowedOrigins` | Production only | Array of allowed origins. Empty = all browser requests blocked. Set as `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1`, etc. |
+| `RateLimiting__Disabled` | No | Set to `true` to bypass rate limits during automated testing. Defaults to `false`. |
+| `Features__EnableApiDocs` | No | Set to `true` to enable Swagger UI. Defaults to `false` in production. |
 
 ## API documentation
 
@@ -140,7 +159,7 @@ We use Scalar for OpenAPI documentation UI. This provides a modern, interactive 
 
 By default, the documentation UI is enabled in the `Development` environment and disabled in `Production` for security.
 
-To explicitly enable or disable the API documentation, use the `Features:EnableApiDocs` configuration key.
+To explicitly enable or disable the API documentation, use the `Features__EnableApiDocs` configuration key.
 
 ```bash
 # Enable the API documentation in production
