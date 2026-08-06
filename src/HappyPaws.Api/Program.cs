@@ -228,6 +228,11 @@ app.MapEndpoints();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<HappyPaws.Infrastructure.Data.HappyPawsDbContext>();
+    
+    // Automatically apply any pending EF Core migrations to the database on startup.
+    // This is required because GitHub Actions cannot reach the private RDS instance to run it.
+    await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.MigrateAsync(db.Database);
+
     if (app.Environment.IsDevelopment())
     {
         var hasher = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.IPasswordHasher<HappyPaws.Core.Entities.User>>();
