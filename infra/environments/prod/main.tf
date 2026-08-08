@@ -59,6 +59,7 @@ module "elastic_beanstalk" {
   vpc_id               = module.vpc.vpc_id
   subnet_ids           = module.vpc.public_subnet_ids
   eb_security_group_id = aws_security_group.eb_instance.id
+  db_secret_arn        = module.rds.db_secret_arn
 
   environment_variables = {
     "DB_HOST" = module.rds.db_instance_address
@@ -112,4 +113,15 @@ resource "aws_ssm_parameter" "db_secret_arn" {
   name  = "/happypaws/prod/database/secret_arn"
   type  = "SecureString"
   value = module.rds.db_secret_arn
+}
+
+resource "aws_ssm_parameter" "firebase_service_account" {
+  name        = "/happypaws/prod/firebase/service_account_json"
+  type        = "SecureString"
+  value       = "PLACEHOLDER_BASE64_FIREBASE_KEY"
+  description = "Base64 encoded Firebase Service Account JSON"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }

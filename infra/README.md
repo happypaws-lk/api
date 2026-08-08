@@ -50,7 +50,7 @@ Our production environment (`environments/prod`) provisions the following compon
    Runs PostgreSQL 16.x on a `db.t3.micro` instance in the isolated subnets. It includes deletion protection, KMS storage encryption at rest, and automated minor version upgrades. Credentials are automatically managed via AWS Secrets Manager.
 
 4. **AWS Elastic Beanstalk (`modules/aws/elastic_beanstalk`)**
-   Hosts our Minimal API inside a Docker container. It is configured as a `SingleInstance` environment running on a `t3.small` EC2 instance in the public subnets, eliminating Application Load Balancer costs. It securely connects to the RDS instance via an isolated security group configuration.
+   Hosts our Minimal API inside a Docker container. It is configured as a `SingleInstance` environment running on a `t3.small` EC2 instance in the public subnets, eliminating Application Load Balancer costs. It securely connects to the RDS instance via an isolated security group configuration. The instance role includes SSM Session Manager access for secure terminal sessions. CloudWatch log streaming is enabled with a seven-day retention period.
 
 ### AWS SSM Parameter Store
 

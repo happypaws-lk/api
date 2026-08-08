@@ -11,11 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace HappyPaws.Infrastructure.Data.Migrations
+namespace HappyPaws.Infrastructure.Migrations
 {
     [DbContext(typeof(HappyPawsDbContext))]
-    [Migration("20260730044310_MakeTransporterIdNullable")]
-    partial class MakeTransporterIdNullable
+    [Migration("20260806075345_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -508,8 +508,8 @@ namespace HappyPaws.Infrastructure.Data.Migrations
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -848,6 +848,9 @@ namespace HappyPaws.Infrastructure.Data.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<Point>("LastKnownLocation")
+                        .HasColumnType("geography (point, 4326)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -877,6 +880,10 @@ namespace HappyPaws.Infrastructure.Data.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("LastKnownLocation");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("LastKnownLocation"), "gist");
+
                     b.ToTable("users", (string)null);
                 });
 
@@ -890,9 +897,6 @@ namespace HappyPaws.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("AwardedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("AwardedById")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("BadgeType")
                         .IsRequired()
                         .HasMaxLength(25)
@@ -902,8 +906,6 @@ namespace HappyPaws.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AwardedById");
 
                     b.HasIndex("UserId");
 
@@ -1259,18 +1261,11 @@ namespace HappyPaws.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("HappyPaws.Core.Entities.UserBadge", b =>
                 {
-                    b.HasOne("HappyPaws.Core.Entities.User", "AwardedBy")
-                        .WithMany()
-                        .HasForeignKey("AwardedById")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("HappyPaws.Core.Entities.User", "User")
                         .WithMany("Badges")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("AwardedBy");
 
                     b.Navigation("User");
                 });

@@ -5,7 +5,7 @@ using NetTopologySuite.Geometries;
 
 #nullable disable
 
-namespace HappyPaws.Infrastructure.Data.Migrations
+namespace HappyPaws.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -39,6 +39,7 @@ namespace HappyPaws.Infrastructure.Data.Migrations
                     Email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
                     AvatarKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    LastKnownLocation = table.Column<Point>(type: "geography (point, 4326)", nullable: true),
                     IsVerified = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     ReputationPoints = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     IsSuspended = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
@@ -161,7 +162,7 @@ namespace HappyPaws.Infrastructure.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Code = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
+                    Code = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     IsUsed = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
@@ -272,19 +273,12 @@ namespace HappyPaws.Infrastructure.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AwardedById = table.Column<Guid>(type: "uuid", nullable: true),
                     BadgeType = table.Column<string>(type: "character varying(25)", maxLength: 25, nullable: false),
                     AwardedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_user_badges", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_user_badges_users_AwardedById",
-                        column: x => x.AwardedById,
-                        principalTable: "users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_user_badges_users_UserId",
                         column: x => x.UserId,
@@ -411,7 +405,7 @@ namespace HappyPaws.Infrastructure.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     CaseId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TransporterId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TransporterId = table.Column<Guid>(type: "uuid", nullable: true),
                     PickupLocationCoords = table.Column<Point>(type: "geography (point, 4326)", nullable: false),
                     PickupLocation = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     DropoffLocationCoords = table.Column<Point>(type: "geography (point, 4326)", nullable: false),
@@ -826,11 +820,6 @@ namespace HappyPaws.Infrastructure.Data.Migrations
                 column: "TransporterId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_user_badges_AwardedById",
-                table: "user_badges",
-                column: "AwardedById");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_user_badges_UserId",
                 table: "user_badges",
                 column: "UserId");
@@ -857,6 +846,12 @@ namespace HappyPaws.Infrastructure.Data.Migrations
                 table: "users",
                 column: "Email",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_users_LastKnownLocation",
+                table: "users",
+                column: "LastKnownLocation")
+                .Annotation("Npgsql:IndexMethod", "gist");
         }
 
         /// <inheritdoc />
