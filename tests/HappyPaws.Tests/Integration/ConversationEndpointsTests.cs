@@ -10,7 +10,8 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace HappyPaws.Tests.Integration;
 
-public class ConversationEndpointsTests : IClassFixture<CustomWebApplicationFactory>
+[Collection("Integration")]
+public class ConversationEndpointsTests
 {
     private readonly CustomWebApplicationFactory _factory;
     private readonly HttpClient _client;

@@ -32,6 +32,11 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
     {
         builder.UseSetting("RateLimiting:Disabled", "true");
 
+        // Provide a deterministic JWT key for tests. Locally this comes from
+        // User Secrets, but CI runners don't have secrets configured.
+        builder.UseSetting("Jwt:Key", "integration-test-signing-key-that-is-long-enough-for-hmac-sha256!");
+
+
         builder.ConfigureServices(services =>
         {
             var descriptor = services.SingleOrDefault(

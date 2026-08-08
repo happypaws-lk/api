@@ -9,7 +9,8 @@ using NetTopologySuite.Geometries;
 
 namespace HappyPaws.Tests.Integration;
 
-public class BadgeEvaluationServiceTests : IClassFixture<CustomWebApplicationFactory>
+[Collection("Integration")]
+public class BadgeEvaluationServiceTests
 {
     private readonly CustomWebApplicationFactory _factory;
 

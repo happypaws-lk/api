@@ -7,7 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace HappyPaws.Tests.Integration;
 
-public class ReputationServiceTests : IClassFixture<CustomWebApplicationFactory>
+[Collection("Integration")]
+public class ReputationServiceTests
 {
     private readonly CustomWebApplicationFactory _factory;
 

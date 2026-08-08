@@ -4,7 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace HappyPaws.Tests.Integration;
 
-public class StorageServiceTests : IClassFixture<CustomWebApplicationFactory>
+[Collection("Integration")]
+public class StorageServiceTests
 {
     private readonly CustomWebApplicationFactory _factory;
 

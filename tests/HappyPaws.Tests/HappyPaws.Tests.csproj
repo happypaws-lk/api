@@ -23,6 +23,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\..\src\HappyPaws.Api\HappyPaws.Api.csproj" />
       <ProjectReference Include="..\..\src\HappyPaws.Core\HappyPaws.Core.csproj" />
       <ProjectReference Include="..\..\src\HappyPaws.Infrastructure\HappyPaws.Infrastructure.csproj" />

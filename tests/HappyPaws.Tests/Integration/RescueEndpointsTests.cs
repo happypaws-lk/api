@@ -11,7 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace HappyPaws.Tests.Integration;
 
-public class RescueEndpointsTests : IClassFixture<CustomWebApplicationFactory>
+[Collection("Integration")]
+public class RescueEndpointsTests
 {
     private readonly HttpClient _client;
     private readonly CustomWebApplicationFactory _factory;
@@ -251,13 +252,19 @@ public class RescueEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     private async Task<string> RegisterAndVerifyUserAsync(Role role)
     {
         var email = $"user{Guid.NewGuid():N}@example.com";
-        await _factory.SignupAsync(_client, $"Test {role}", email, "Password123!", role);
+        // Always signup via API as Adopter (Admin/Vet are blocked by validation)
+        await _factory.SignupAsync(_client, $"Test {role}", email, "Password123!", Role.Adopter);
 
-        // Directly verify the user in the DB for testing
+        // Directly verify the user in the DB for testing, and add the requested role
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<HappyPaws.Infrastructure.Data.HappyPawsDbContext>();
-        var user = await db.Users.FirstAsync(u => u.Email == email);
+        var user = await db.Users.Include(u => u.Roles).FirstAsync(u => u.Email == email);
         user.IsVerified = true;
+
+        if (role != Role.Adopter)
+        {
+            user.Roles.Add(new HappyPaws.Core.Entities.UserRole { Role = role });
+        }
         await db.SaveChangesAsync();
 
         // Re-login to get a token with IsVerified claim

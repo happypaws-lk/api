@@ -12,7 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace HappyPaws.Tests.Integration;
 
-public class FosterAndTransportFlowTests : IClassFixture<CustomWebApplicationFactory>
+[Collection("Integration")]
+public class FosterAndTransportFlowTests
 {
     private readonly HttpClient _client;
     private readonly CustomWebApplicationFactory _factory;

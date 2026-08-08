@@ -8,28 +8,8 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgis/postgis:16-3.4
-        env:
-          POSTGRES_PASSWORD: happypaws_test
-          POSTGRES_USER: happypaws
-          POSTGRES_DB: happypaws_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
     - uses: actions/checkout@v4
-
-    - name: Start MinIO
-      run: |
-        docker run -d -p 9000:9000 --name minio -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin minio/minio server /data
-        timeout 30s bash -c 'until curl -sf http://localhost:9000/minio/health/live; do sleep 1; done'
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -44,5 +24,4 @@ jobs:
 
     - name: Test
       run: dotnet test HappyPaws.sln --no-build -c Release --logger trx --results-directory "TestResults"
-      env:
-        Storage__ServiceUrl: http://localhost:9000
+

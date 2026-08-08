@@ -6,7 +6,8 @@ using HappyPaws.Core.Enums;
 
 namespace HappyPaws.Tests.Integration;
 
-public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
+[Collection("Integration")]
+public class AuthEndpointsTests
 {
     private readonly HttpClient _client;
     private readonly CustomWebApplicationFactory _factory;

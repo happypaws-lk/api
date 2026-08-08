@@ -52,7 +52,7 @@ public sealed class S3StorageService : IStorageService, IDisposable
             Key = key,
             InputStream = content,
             ContentType = contentType,
-            DisablePayloadSigning = true
+            DisablePayloadSigning = false
         };
 
         await _s3Client.PutObjectAsync(request, cancellationToken).ConfigureAwait(false);
