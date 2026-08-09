@@ -129,6 +129,17 @@ public class UsersEndpoints : IEndpointGroup
             .RequireRateLimiting("UploadLimiter")
             .AddEndpointFilter(new RequestSizeLimitFilter(10_485_760))
             .DisableAntiforgery();
+
+        group.MapPost("/me/roles", AssignRoleAsync)
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<AssignRoleRequest>>()
+            .WithName("AssignRole")
+            .WithSummary("Add a role to the authenticated user's account")
+            .WithDescription("Assigns an additional role to the user. Admin and Veterinarian roles cannot be self-assigned. Roles requiring KYC (Foster, Transporter, Sponsor) require the user to be verified first.")
+            .Produces<RoleResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesValidationProblem();
     }
 
     private static async Task<Ok<UserProfileResponse>> GetMeAsync(
@@ -550,5 +561,45 @@ public class UsersEndpoints : IEndpointGroup
             null);
 
         return TypedResults.Created($"/api/v1/users/me/kyc", response);
+    }
+
+    private static readonly HashSet<Role> KycRequiredRoles = [Role.Foster, Role.Transporter, Role.Sponsor];
+    private static readonly HashSet<Role> NonSelfAssignableRoles = [Role.Admin, Role.Veterinarian];
+
+    private static async Task<Results<Created<RoleResponse>, BadRequest<string>, Conflict<string>>> AssignRoleAsync(
+        AssignRoleRequest request,
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+
+        if (NonSelfAssignableRoles.Contains(request.Role))
+            return TypedResults.BadRequest("Admin and Veterinarian roles cannot be self-assigned.");
+
+        var user = await db.Users
+            .Include(u => u.Roles)
+            .FirstAsync(u => u.Id == userId, ct);
+
+        if (user.Roles.Any(r => r.Role == request.Role))
+            return TypedResults.Conflict("You already have this role.");
+
+        if (KycRequiredRoles.Contains(request.Role) && !user.IsVerified)
+            return TypedResults.BadRequest("KYC verification is required before adding this role. Please submit your identity document first.");
+
+        var userRole = new UserRole
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Role = request.Role,
+            AssignedAt = DateTimeOffset.UtcNow
+        };
+
+        db.UserRoles.Add(userRole);
+        await db.SaveChangesAsync(ct);
+
+        return TypedResults.Created(
+            $"/api/v1/users/me/roles",
+            new RoleResponse(userRole.Role.ToString(), userRole.AssignedAt));
     }
 }

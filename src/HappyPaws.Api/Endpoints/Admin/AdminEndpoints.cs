@@ -52,6 +52,13 @@ public class AdminEndpoints : IEndpointGroup
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapDelete("/users/{id:guid}", DeleteUserAsync)
+            .WithName("DeleteUser")
+            .WithSummary("Delete a user")
+            .WithDescription("Completely deletes a user from the platform.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         group.MapPost("/moderation", CreateModerationActionAsync)
             .AddEndpointFilter<ValidationFilter<ModerationRequest>>()
             .WithName("CreateModerationAction")
@@ -76,6 +83,19 @@ public class AdminEndpoints : IEndpointGroup
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem();
+
+        group.MapGet("/listings", GetAdminListingsAsync)
+            .WithName("GetAdminListings")
+            .WithSummary("Get a paginated list of all listings for admin management")
+            .WithDescription("Returns a paginated list of all animal listings, including inactive (soft-deleted) ones. Supports filtering by status, species, and owner name.")
+            .Produces<PagedResult<AdminListingResponse>>();
+
+        group.MapGet("/users/{id:guid}", GetUserDetailAsync)
+            .WithName("GetAdminUserDetail")
+            .WithSummary("Get full details of a specific user")
+            .WithDescription("Returns all details for a specific user including roles, verification status, suspension info, and reputation.")
+            .Produces<AdminUserDetailResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/kyc/pending", GetPendingKycAsync)
             .WithName("GetPendingKyc")
@@ -275,7 +295,8 @@ public class AdminEndpoints : IEndpointGroup
             u.IsVerified,
             u.IsSuspended,
             u.ReputationPoints,
-            u.Roles.Select(r => r.Role.ToString()).ToList()));
+            u.Roles.Select(r => r.Role.ToString()).ToList(),
+            u.CreatedAt));
 
         return TypedResults.Ok(new PagedResult<AdminUserResponse>(items, totalCount, query.Page, query.PageSize));
     }
@@ -333,6 +354,21 @@ public class AdminEndpoints : IEndpointGroup
 
             await db.SaveChangesAsync(ct);
         }
+
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Results<NoContent, NotFound>> DeleteUserAsync(
+        Guid id,
+        HappyPawsDbContext db,
+        CancellationToken ct)
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
+        if (user is null)
+            return TypedResults.NotFound();
+
+        db.Users.Remove(user);
+        await db.SaveChangesAsync(ct);
 
         return TypedResults.NoContent();
     }
@@ -463,6 +499,81 @@ public class AdminEndpoints : IEndpointGroup
         await badgeEvaluationService.EvaluateAndAwardBadgesAsync(userId, ct);
 
         return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<PagedResult<AdminListingResponse>>> GetAdminListingsAsync(
+        [AsParameters] PaginationQuery query,
+        string? species,
+        string? status,
+        string? ownerName,
+        HappyPawsDbContext db,
+        IStorageService storageService,
+        CancellationToken ct)
+    {
+        var dbQuery = db.AnimalListings
+            .AsNoTracking()
+            .Include(l => l.Owner)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(species))
+            dbQuery = dbQuery.Where(l => EF.Functions.ILike(l.Species, $"%{species}%"));
+
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ListingStatus>(status, true, out var statusEnum))
+            dbQuery = dbQuery.Where(l => l.Status == statusEnum);
+
+        if (!string.IsNullOrWhiteSpace(ownerName))
+            dbQuery = dbQuery.Where(l => EF.Functions.ILike(l.Owner.Name, $"%{ownerName}%"));
+
+        var totalCount = await dbQuery.CountAsync(ct);
+
+        var listings = await dbQuery
+            .OrderByDescending(l => l.CreatedAt)
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .Select(l => new AdminListingResponse(
+                l.Id,
+                l.Name,
+                l.Species,
+                l.Breed,
+                l.OwnerId,
+                l.Owner.Name,
+                l.Status,
+                l.IsActive,
+                l.LocationName,
+                l.CreatedAt,
+                l.UpdatedAt))
+            .ToListAsync(ct);
+
+        return TypedResults.Ok(new PagedResult<AdminListingResponse>(listings, totalCount, query.Page, query.PageSize));
+    }
+
+    private static async Task<Results<Ok<AdminUserDetailResponse>, NotFound>> GetUserDetailAsync(
+        Guid id,
+        HappyPawsDbContext db,
+        CancellationToken ct)
+    {
+        var user = await db.Users
+            .AsNoTracking()
+            .Include(u => u.Roles)
+            .Include(u => u.Badges)
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
+
+        if (user is null)
+            return TypedResults.NotFound();
+
+        return TypedResults.Ok(new AdminUserDetailResponse(
+            user.Id,
+            user.Name,
+            user.Email,
+            user.IsVerified,
+            user.IsSuspended,
+            user.SuspendedAt,
+            user.SuspendedReason,
+            user.ReputationPoints,
+            user.CreatedAt,
+            user.UpdatedAt,
+            user.Roles.Select(r => r.Role.ToString()).ToList(),
+            user.Badges.Select(b => b.BadgeType.ToString()).ToList()));
     }
 
     private static async Task<Ok<List<KycPendingResponse>>> GetPendingKycAsync(

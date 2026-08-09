@@ -1,0 +1,191 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write  # Required to generate an OIDC token
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Lightsail
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    env:
+      SERVICE_NAME: happypaws-api
+      CONTAINER_NAME: api
+      AWS_REGION: ap-southeast-1
+      CONTAINER_PORT: "8080"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Exchange the OIDC token for temporary AWS credentials.
+      # AWS_DEPLOY_ROLE_ARN is the only secret stored in GitHub.
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-southeast-1
+
+      # lightsailctl is the plugin that aws cli uses for push-container-image.
+      # It is not pre-installed on ubuntu-latest.
+      - name: Install lightsailctl
+        run: |
+          curl -sL \
+            https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl \
+            -o /usr/local/bin/lightsailctl
+          chmod +x /usr/local/bin/lightsailctl
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t happypaws-api:${{ github.sha }} \
+            -f src/HappyPaws.Api/Dockerfile \
+            .
+
+      # Push to Lightsail's built-in container registry (no ECR needed).
+      # The command prints the internal image reference on success, e.g.:
+      #   Refer to this image as ":happypaws-api.deploy.5" in deployments.
+      - name: Push image to Lightsail registry
+        id: push
+        run: |
+          OUTPUT=$(aws lightsail push-container-image \
+            --service-name "$SERVICE_NAME" \
+            --label deploy \
+            --image "happypaws-api:${{ github.sha }}" 2>&1)
+          echo "$OUTPUT"
+          IMAGE_REF=$(echo "$OUTPUT" | grep -oP '(?<=as "):[^"]+')
+          echo "image_ref=${IMAGE_REF}" >> "$GITHUB_OUTPUT"
+
+      # Fetch all config from SSM and mask sensitive values so they never
+      # appear in logs. Uses jq to build the deployment JSON, which handles
+      # all escaping correctly regardless of special characters in values.
+      - name: Build deployment manifest
+        run: |
+          fetch() {
+            aws ssm get-parameter \
+              --name "$1" \
+              --with-decryption \
+              --query "Parameter.Value" \
+              --output text
+          }
+
+          DB_URL=$(fetch /happypaws/prod/database_url)
+          echo "::add-mask::$DB_URL"
+
+          JWT_KEY=$(fetch /happypaws/prod/jwt_key)
+          echo "::add-mask::$JWT_KEY"
+
+          GEMINI_API_KEY=$(fetch /happypaws/prod/gemini_api_key)
+          echo "::add-mask::$GEMINI_API_KEY"
+
+          FIREBASE_JSON=$(fetch /happypaws/prod/firebase_service_account_json)
+          echo "::add-mask::$FIREBASE_JSON"
+
+          SES_ACCESS_KEY=$(fetch /happypaws/prod/ses/access_key_id)
+          echo "::add-mask::$SES_ACCESS_KEY"
+
+          SES_SECRET_KEY=$(fetch /happypaws/prod/ses/secret_access_key)
+          echo "::add-mask::$SES_SECRET_KEY"
+
+          STORAGE_ACCOUNT_ID=$(fetch /happypaws/prod/storage/account_id)
+
+          STORAGE_ACCESS_KEY=$(fetch /happypaws/prod/storage/access_key)
+          echo "::add-mask::$STORAGE_ACCESS_KEY"
+
+          STORAGE_SECRET_KEY=$(fetch /happypaws/prod/storage/secret_key)
+          echo "::add-mask::$STORAGE_SECRET_KEY"
+
+          # Build the containers JSON using jq so special characters in values
+          # are properly escaped without any manual quoting gymnastics.
+          jq -n \
+            --arg image "${{ steps.push.outputs.image_ref }}" \
+            --arg db_url "$DB_URL" \
+            --arg jwt_key "$JWT_KEY" \
+            --arg gemini_key "$GEMINI_API_KEY" \
+            --arg firebase_json "$FIREBASE_JSON" \
+            --arg ses_key_id "$SES_ACCESS_KEY" \
+            --arg ses_secret "$SES_SECRET_KEY" \
+            --arg storage_account_id "$STORAGE_ACCOUNT_ID" \
+            --arg storage_key "$STORAGE_ACCESS_KEY" \
+            --arg storage_secret "$STORAGE_SECRET_KEY" \
+            '{
+              "api": {
+                "image": $image,
+                "ports": { "8080": "HTTP" },
+                "environment": {
+                  "ASPNETCORE_ENVIRONMENT":      "Production",
+                  "DATABASE_URL":                $db_url,
+                  "Jwt__Key":                    $jwt_key,
+                  "Jwt__Issuer":                 "https://happypaws.lk",
+                  "Jwt__Audience":               "https://happypaws.lk",
+                  "Jwt__ExpiryMinutes":          "15",
+                  "Gemini__ApiKey":              $gemini_key,
+                  "Gemini__Model":               "gemini-2.0-flash",
+                  "Gemini__TimeoutSeconds":      "10",
+                  "Firebase__ServiceAccountJson": $firebase_json,
+                  "Ses__Region":                 "ap-southeast-1",
+                  "Ses__FromAddress":            "noreply@happypaws.lk",
+                  "Ses__AccessKey":              $ses_key_id,
+                  "Ses__SecretKey":              $ses_secret,
+                  "Storage__AccountId":          $storage_account_id,
+                  "Storage__AccessKey":          $storage_key,
+                  "Storage__SecretKey":          $storage_secret,
+                  "Storage__PublicBucket":       "happypaws-public",
+                  "Storage__PrivateBucket":      "happypaws-private",
+                  "Storage__CustomDomain":       "cdn.happypaws.lk",
+                  "Cors__AllowedOrigins__0":     "https://happypaws.lk",
+                  "Cors__AllowedOrigins__1":     "https://admin.happypaws.lk",
+                  "RateLimiting__Disabled":      "false",
+                  "Features__EnableApiDocs":     "false"
+                }
+              }
+            }' > /tmp/containers.json
+
+          jq -n '{
+            "containerName": "api",
+            "containerPort": 8080,
+            "healthCheck": {
+              "path":               "/healthz",
+              "intervalSeconds":    15,
+              "timeoutSeconds":     5,
+              "healthyThreshold":   2,
+              "unhealthyThreshold": 3,
+              "successCodes":       "200"
+            }
+          }' > /tmp/public-endpoint.json
+
+      - name: Create Lightsail deployment
+        run: |
+          aws lightsail create-container-service-deployment \
+            --service-name "$SERVICE_NAME" \
+            --containers "$(cat /tmp/containers.json)" \
+            --public-endpoint "$(cat /tmp/public-endpoint.json)"
+
+      # Poll until the service reaches RUNNING state (5-minute timeout).
+      - name: Wait for deployment
+        run: |
+          echo "Waiting for service to reach RUNNING state..."
+          for i in $(seq 1 30); do
+            STATE=$(aws lightsail get-container-services \
+              --service-name "$SERVICE_NAME" \
+              --query "containerServices[0].state" \
+              --output text)
+            echo "  [${i}/30] State: ${STATE}"
+            if [ "$STATE" = "RUNNING" ]; then
+              echo "Deployment complete."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Timed out waiting for RUNNING state after 5 minutes."
+          exit 1

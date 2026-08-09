@@ -14,6 +14,24 @@ using Serilog;
 using Serilog.Enrichers.Sensitive;
 using Scalar.AspNetCore;
 
+// Find and load .env.local or .env (searching current and parent directories to support various IDE working directories)
+var envNames = new[] { ".env.local", ".env" };
+foreach (var envName in envNames)
+{
+    var currentDir = new System.IO.DirectoryInfo(System.IO.Directory.GetCurrentDirectory());
+    while (currentDir != null)
+    {
+        var envPath = System.IO.Path.Combine(currentDir.FullName, envName);
+        if (System.IO.File.Exists(envPath))
+        {
+            DotNetEnv.Env.Load(envPath);
+            goto EnvLoaded;
+        }
+        currentDir = currentDir.Parent;
+    }
+}
+EnvLoaded:
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Configure Serilog
@@ -28,7 +46,7 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 // 2. Add Database & Infrastructure Services
 builder.Services.AddInfrastructure(builder.Configuration);
 
-if (builder.Environment.IsDevelopment())
+if (builder.Environment.IsDevelopment() && !builder.Configuration.GetValue<bool>("Features:UseRealServicesInDev"))
 {
     builder.Services.AddDevServices();
 }
@@ -233,12 +251,11 @@ using (var scope = app.Services.CreateScope())
     // This is required because GitHub Actions cannot reach the private RDS instance to run it.
     await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.MigrateAsync(db.Database);
 
-    // TODO: Uncomment after testing the one-time admin setup wizard
-    // if (app.Environment.IsDevelopment())
-    // {
-    //     var hasher = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.IPasswordHasher<HappyPaws.Core.Entities.User>>();
-    //     await HappyPaws.Infrastructure.Data.Seeder.DemoDataSeeder.SeedAsync(db, hasher);
-    // }
+    if (app.Environment.IsDevelopment())
+    {
+        var hasher = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.IPasswordHasher<HappyPaws.Core.Entities.User>>();
+        await HappyPaws.Infrastructure.Data.Seeder.DataSeeder.SeedAsync(db, hasher);
+    }
 }
 
 app.Run();

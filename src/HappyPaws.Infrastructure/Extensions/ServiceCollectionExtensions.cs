@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 
 namespace HappyPaws.Infrastructure.Extensions;
 
@@ -19,19 +18,19 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContext<HappyPawsDbContext>((sp, options) =>
         {
-            var connectionStringBuilder = new NpgsqlConnectionStringBuilder
+            // DATABASE_URL is a standard PostgreSQL connection URL.
+            // Npgsql accepts it directly via UseNpgsql(string).
+            var databaseUrl = configuration["DATABASE_URL"]
+                ?? "postgresql://happypaws:happypaws_dev@localhost:5432/happypaws";
+
+            if (databaseUrl.StartsWith("postgres://") || databaseUrl.StartsWith("postgresql://"))
             {
-                Host = configuration["DB_HOST"] ?? "localhost",
-                Port = int.TryParse(configuration["DB_PORT"], out var port) ? port : 5432,
-                Database = configuration["DB_NAME"] ?? "happypaws",
-                Username = configuration["DB_USER"] ?? "happypaws",
-                Password = configuration["DB_PASSWORD"] ?? "happypaws_dev"
-            };
+                var uri = new Uri(databaseUrl);
+                var userInfo = uri.UserInfo.Split(':');
+                databaseUrl = $"Host={uri.Host};Port={(uri.Port > 0 ? uri.Port : 5432)};Database={uri.LocalPath.TrimStart('/')};Username={(userInfo.Length > 0 ? userInfo[0] : "")};Password={(userInfo.Length > 1 ? userInfo[1] : "")};";
+            }
 
-            options.UseNpgsql(
-                connectionStringBuilder.ConnectionString,
-                npgsqlOptions => npgsqlOptions.UseNetTopologySuite());
-
+            options.UseNpgsql(databaseUrl, npgsqlOptions => npgsqlOptions.UseNetTopologySuite());
             options.AddInterceptors(sp.GetRequiredService<TimestampInterceptor>());
         });
 

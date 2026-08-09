@@ -135,6 +135,10 @@ public record AvatarUploadResponse(string AvatarKey, string AvatarUrl);
 /// <param name="NewPassword">The new plain-text password. Must be at least 8 characters.</param>
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
+/// <summary>Data submitted when assigning an additional role to the authenticated user.</summary>
+/// <param name="Role">The role to add. Admin and Veterinarian cannot be self-assigned.</param>
+public record AssignRoleRequest(Role Role);
+
 /// <summary>A KYC identity document uploaded by the user.</summary>
 /// <param name="Id">Unique identifier of the document record.</param>
 /// <param name="DocumentType">The type of identity document.</param>

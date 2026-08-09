@@ -68,3 +68,8 @@ public record VerifyResetCodeResponse(string ResetToken);
 /// <param name="ResetToken">The token returned by the verify-reset-code endpoint.</param>
 /// <param name="NewPassword">The new plain-text password. Stored as a PBKDF2 hash.</param>
 public record ResetPasswordRequest(string Email, string ResetToken, string NewPassword);
+
+/// <summary>Credentials required to change the authenticated user's password via the auth route.</summary>
+/// <param name="CurrentPassword">The user's current plain-text password.</param>
+/// <param name="NewPassword">The new plain-text password. Must be at least 8 characters.</param>
+public record ChangePasswordAuthRequest(string CurrentPassword, string NewPassword);

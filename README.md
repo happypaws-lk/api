@@ -79,24 +79,51 @@ Follow these steps to set up the API locally.
    ```
 
 5. **Start the development server**
-   ```bash
-   dotnet run --project src/HappyPaws.Api
-   ```
-   The API will be available at `http://localhost:5047`.
+   Choose a launch profile based on your development needs:
+
+   - **HTTP (default):** Runs the API on HTTP only.
+     ```bash
+     dotnet run --project src/HappyPaws.Api --launch-profile http
+     # or simply
+     dotnet run --project src/HappyPaws.Api
+     ```
+     Available at `http://localhost:5047`.
+
+   - **HTTPS:** Runs the API with HTTPS and HTTP endpoints.
+     ```bash
+     dotnet run --project src/HappyPaws.Api --launch-profile https
+     ```
+     Available at `https://localhost:7141` and `http://localhost:5047`.
+
+   - **LAN (local network):** Binds to all network interfaces (`0.0.0.0`), allowing physical mobile devices, emulators, or other machines on your local network to connect.
+     ```bash
+     dotnet run --project src/HappyPaws.Api --launch-profile lan
+     ```
+     Available at `https://0.0.0.0:7141` and `http://0.0.0.0:5047` (replace `0.0.0.0` with your machine's local IP address when connecting from other devices).
+
+   - **Hot reload with `dotnet watch`:** Pass any launch profile to `dotnet watch` for hot reloading during development.
+     ```bash
+     dotnet watch --project src/HappyPaws.Api --launch-profile http
+     ```
 
 6. **Local seed data**
-   On first startup in the `Development` environment, the API automatically seeds demo accounts. No manual step is required.
+   On first startup in the `Development` environment, the API automatically seeds demo accounts for all user roles along with lifestyle profiles, verified documents, badges, registered devices, and interconnected demo entities.
 
-   | Role | Email | Password |
-   |---|---|---|
-   | Admin | `admin@happypaws.lk` | `Admin@123` |
-   | Veterinarian | `vet@happypaws.lk` | `Vet@123` |
-   | Rescuer | `rescuer@happypaws.lk` | `Rescuer@123` |
+   **Default Seed Password for all accounts:** `Password123!`
+
+   | Name | Email | Primary Role(s) | Badges | Location |
+   |---|---|---|---|---|
+   | Nethmina Gunasekara | `nethminagunasekara@outlook.com` | Admin, Adopter | - | Colombo 03 |
+   | Dr. Ashini Chamodya | `ashinichamodya@gmail.com` | Veterinarian, Foster | VerifiedVet | Dehiwala |
+   | Shanuka Ravishan | `shanukaravishan@gmail.com` | Foster, Adopter | TopFoster | Kaduwela / Malabe |
+   | Sachintha Sandaruwan | `sachinthasandaruwan@gmail.com` | Transporter, Adopter | TrustedTransporter | Mount Lavinia |
+   | Chanuka Dilhara | `chanukadilhara@gmail.com` | Sponsor, Adopter | - | Maharagama |
+   | Shehan Anushka | `shehananushka@gmail.com` | Adopter | - | Moratuwa |
 
    **Re-seeding:** The seeder is skipped if any users already exist. To reset and re-seed, clear the relevant rows and restart the server.
    ```bash
    docker exec -it happypaws-db psql -U happypaws -d happypaws \
-     -c "DELETE FROM user_roles; DELETE FROM users;"
+     -c "TRUNCATE users CASCADE;"
    ```
    Restart the API and seed data will be recreated on startup.
 
@@ -181,8 +208,8 @@ All Infrastructure as Code (IaC) is written in Terraform. Review [infra/README.m
 
 A GitHub Actions CI/CD pipeline automatically builds, tests, and deploys the application.
 
-*   `ci.yml`: Runs on pull requests to the `main` branch. It provisions a temporary PostGIS database, restores dependencies, builds the project, and runs the test suite.
-*   `cd.yml`: Runs on pushes to the `main` branch. It executes the tests, builds the Docker image, pushes it to Amazon ECR, and deploys the new image to Elastic Beanstalk using the `docker-compose.yml` configuration.
+*   `ci.yml`: Runs on pull requests and pushes to the `main` branch. It provisions temporary PostGIS and MinIO test containers, restores dependencies, builds the solution, and executes unit and integration tests.
+*   `deploy.yml`: Runs automatically after `CI` completes successfully on the `main` branch (or via manual `workflow_dispatch`). It builds the .NET Docker container, pushes it to Amazon ECR, generates a native `Dockerrun.aws.json` (v1) bundle, and deploys to Elastic Beanstalk using official AWS CLI commands.
 
 ### Database Migrations
 
@@ -206,6 +233,14 @@ To enable the deployment pipeline, you must configure the following repository s
 2.  `AWS_SECRET_ACCESS_KEY`: The corresponding AWS IAM secret key.
 
 No other secrets are required for the pipeline. Elastic Beanstalk securely injects the application environment variables (database credentials, JWT keys, external API keys) into the container at runtime.
+
+### Network security and Cloudflare proxy
+
+Because the Elastic Beanstalk environment runs as a `SingleInstance` to reduce costs, it does not include an Application Load Balancer to terminate HTTPS natively on AWS. Instead, we use Cloudflare as our edge proxy to provide HTTPS and Web Application Firewall (WAF) protections.
+
+To ensure all traffic securely passes through Cloudflare and cannot bypass our security policies by directly accessing the Elastic Beanstalk HTTP endpoint:
+1. You must create a CNAME record in your Cloudflare dashboard pointing to the Elastic Beanstalk environment URL and enable the proxy (orange cloud). Set the SSL/TLS encryption mode to **Flexible**.
+2. Our Terraform infrastructure automatically fetches Cloudflare's official IP ranges using the HTTP provider and restricts the Elastic Beanstalk security group to only allow incoming HTTP traffic from those IPs. Direct HTTP requests from non-Cloudflare IPs are automatically dropped at the AWS network level.
 
 ## Architecture and scaling
 

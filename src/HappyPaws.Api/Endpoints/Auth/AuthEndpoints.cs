@@ -126,6 +126,16 @@ public class AuthEndpoints : IEndpointGroup
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesValidationProblem();
+
+        group.MapPost("/change-password", ChangePasswordAsync)
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<ChangePasswordAuthRequest>>()
+            .WithName("AuthChangePassword")
+            .WithSummary("Change the authenticated user's password")
+            .WithDescription("Verifies the current password and replaces it with the new one. Returns 400 if the current password is incorrect.")
+            .Produces(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesValidationProblem();
     }
 
     private static async Task<Results<Ok, Conflict<string>>> SendSignupCodeAsync(
@@ -597,6 +607,28 @@ public class AuthEndpoints : IEndpointGroup
             .Where(rt => rt.UserId == user.Id && rt.RevokedAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(rt => rt.RevokedAt, DateTimeOffset.UtcNow), ct);
 
+        await db.SaveChangesAsync(ct);
+
+        return TypedResults.Ok();
+    }
+
+    private static async Task<Results<Ok, BadRequest<string>>> ChangePasswordAsync(
+        ChangePasswordAuthRequest request,
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        IPasswordHasher<User> passwordHasher,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+
+        var user = await db.Users.FirstAsync(u => u.Id == userId, ct);
+
+        var verifyResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
+        if (verifyResult == PasswordVerificationResult.Failed)
+            return TypedResults.BadRequest("Current password is incorrect");
+
+        user.PasswordHash = passwordHasher.HashPassword(user, request.NewPassword);
+        user.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
 
         return TypedResults.Ok();

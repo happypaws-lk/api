@@ -88,7 +88,8 @@ public record AdminUserResponse(
     bool IsVerified,
     bool IsSuspended,
     int ReputationPoints,
-    List<string> Roles);
+    List<string> Roles,
+    DateTimeOffset CreatedAt);
 
 /// <summary>Data submitted when suspending a user.</summary>
 /// <param name="Reason">The reason for the suspension, recorded in the moderation log.</param>
@@ -128,3 +129,55 @@ public record ModerationLogResponse(
 public record ReputationAdjustRequest(
     int PointsToAdjust,
     string Reason);
+
+/// <summary>An animal listing entry in the admin management list.</summary>
+/// <param name="Id">Unique identifier of the listing.</param>
+/// <param name="Name">The animal's name.</param>
+/// <param name="Species">The animal's species.</param>
+/// <param name="Breed">The animal's breed.</param>
+/// <param name="OwnerId">ID of the user who created the listing.</param>
+/// <param name="OwnerName">Display name of the listing owner.</param>
+/// <param name="Status">The current adoption status.</param>
+/// <param name="IsActive">Whether the listing is active (false means soft-deleted or moderated).</param>
+/// <param name="LocationName">Human-readable location name.</param>
+/// <param name="CreatedAt">UTC timestamp when the listing was created.</param>
+/// <param name="UpdatedAt">UTC timestamp of the last update.</param>
+public record AdminListingResponse(
+    Guid Id,
+    string Name,
+    string Species,
+    string Breed,
+    Guid OwnerId,
+    string OwnerName,
+    ListingStatus Status,
+    bool IsActive,
+    string LocationName,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+/// <summary>Full details of a user for admin review.</summary>
+/// <param name="Id">Unique identifier of the user.</param>
+/// <param name="Name">The user's display name.</param>
+/// <param name="Email">The user's email address.</param>
+/// <param name="IsVerified">Whether the user has completed KYC verification.</param>
+/// <param name="IsSuspended">Whether the account is currently suspended.</param>
+/// <param name="SuspendedAt">UTC timestamp when the account was suspended. Null if not suspended.</param>
+/// <param name="SuspendedReason">The reason for suspension. Null if not suspended.</param>
+/// <param name="ReputationPoints">The user's total reputation score.</param>
+/// <param name="CreatedAt">UTC timestamp when the account was created.</param>
+/// <param name="UpdatedAt">UTC timestamp when the account was last updated.</param>
+/// <param name="Roles">All roles assigned to the user.</param>
+/// <param name="Badges">All badges earned by the user.</param>
+public record AdminUserDetailResponse(
+    Guid Id,
+    string Name,
+    string Email,
+    bool IsVerified,
+    bool IsSuspended,
+    DateTimeOffset? SuspendedAt,
+    string? SuspendedReason,
+    int ReputationPoints,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    List<string> Roles,
+    List<string> Badges);
