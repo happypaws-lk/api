@@ -233,11 +233,12 @@ using (var scope = app.Services.CreateScope())
     // This is required because GitHub Actions cannot reach the private RDS instance to run it.
     await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.MigrateAsync(db.Database);
 
-    if (app.Environment.IsDevelopment())
-    {
-        var hasher = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.IPasswordHasher<HappyPaws.Core.Entities.User>>();
-        await HappyPaws.Infrastructure.Data.Seeder.DemoDataSeeder.SeedAsync(db, hasher);
-    }
+    // TODO: Uncomment after testing the one-time admin setup wizard
+    // if (app.Environment.IsDevelopment())
+    // {
+    //     var hasher = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.IPasswordHasher<HappyPaws.Core.Entities.User>>();
+    //     await HappyPaws.Infrastructure.Data.Seeder.DemoDataSeeder.SeedAsync(db, hasher);
+    // }
 }
 
 app.Run();
