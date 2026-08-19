@@ -8,6 +8,10 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace HappyPaws.Infrastructure.Services;
 
+/// <summary>
+/// Creates JWT access tokens and cryptographically random refresh tokens.
+/// Reads issuer, audience, signing key, and expiry from <c>Jwt:*</c> configuration.
+/// </summary>
 public sealed class TokenService : ITokenService
 {
     private readonly SymmetricSecurityKey _signingKey;
@@ -28,6 +32,9 @@ public sealed class TokenService : ITokenService
         _expiryMinutes = configuration.GetValue<int>("Jwt:ExpiryMinutes", 15);
     }
 
+    /// <summary>
+    /// Builds and signs a JWT with sub, email, jti, roles, and an <c>is_verified</c> claim.
+    /// </summary>
     public string GenerateAccessToken(Guid userId, string email, IEnumerable<string> roles, bool isVerified)
     {
         List<Claim> claims =
@@ -54,6 +61,9 @@ public sealed class TokenService : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    /// <summary>
+    /// Returns a 64-byte base64-encoded random string suitable for use as a refresh token.
+    /// </summary>
     public string GenerateRefreshToken()
     {
         var bytes = RandomNumberGenerator.GetBytes(64);

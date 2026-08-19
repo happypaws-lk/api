@@ -2,6 +2,9 @@ using FluentValidation;
 
 namespace HappyPaws.Api.Endpoints.Listings;
 
+/// <summary>
+/// Validates all required fields for creating an adoption listing, including species, breed, age, location, and description.
+/// </summary>
 public class CreateListingRequestValidator : AbstractValidator<CreateListingRequest>
 {
     public CreateListingRequestValidator()
@@ -21,6 +24,9 @@ public class CreateListingRequestValidator : AbstractValidator<CreateListingRequ
     }
 }
 
+/// <summary>
+/// Validates all required fields for updating an existing adoption listing.
+/// </summary>
 public class UpdateListingRequestValidator : AbstractValidator<UpdateListingRequest>
 {
     public UpdateListingRequestValidator()
@@ -40,6 +46,9 @@ public class UpdateListingRequestValidator : AbstractValidator<UpdateListingRequ
     }
 }
 
+/// <summary>
+/// Validates that the target listing status is a known enum member.
+/// </summary>
 public class UpdateListingStatusRequestValidator : AbstractValidator<UpdateListingStatusRequest>
 {
     public UpdateListingStatusRequestValidator()

@@ -7,6 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace HappyPaws.Infrastructure.Services;
 
+/// <summary>
+/// Sends transactional emails via Amazon Simple Email Service (SES).
+/// Falls back to instance-profile credentials when no access key is configured.
+/// </summary>
 public sealed class SesEmailSender : IEmailSender
 {
     private readonly AmazonSimpleEmailServiceClient _sesClient;
@@ -34,6 +38,9 @@ public sealed class SesEmailSender : IEmailSender
         }
     }
 
+    /// <summary>
+    /// Sends a plain-text OTP email for identity verification.
+    /// </summary>
     public async Task SendOtpAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
     {
         var request = new SendEmailRequest
@@ -54,6 +61,9 @@ public sealed class SesEmailSender : IEmailSender
         _logger.LogInformation("Sent OTP email via SES to {Email}", toEmail);
     }
 
+    /// <summary>
+    /// Sends a KYC approval or rejection email. Includes the rejection reason when <paramref name="approved"/> is false.
+    /// </summary>
     public async Task SendVerificationDecisionAsync(string toEmail, bool approved, string? reason, CancellationToken cancellationToken = default)
     {
         var subject = approved ? "HappyPaws.lk - KYC Approved" : "HappyPaws.lk - KYC Rejected";
@@ -76,6 +86,9 @@ public sealed class SesEmailSender : IEmailSender
         _logger.LogInformation("Sent verification decision email via SES to {Email}", toEmail);
     }
 
+    /// <summary>
+    /// Sends a password reset OTP email with a 15-minute expiry notice.
+    /// </summary>
     public async Task SendPasswordResetOtpAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
     {
         var request = new SendEmailRequest
@@ -96,6 +109,9 @@ public sealed class SesEmailSender : IEmailSender
         _logger.LogInformation("Sent password reset OTP email via SES to {Email}", toEmail);
     }
 
+    /// <summary>
+    /// Sends an email verification OTP for a new sign-up with a 10-minute expiry notice.
+    /// </summary>
     public async Task SendSignupOtpAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
     {
         var request = new SendEmailRequest

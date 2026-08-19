@@ -3,6 +3,9 @@ using HappyPaws.Core.Enums;
 
 namespace HappyPaws.Core.Interfaces;
 
+/// <summary>
+/// Manages user reputation points and logs reputation events for auditing.
+/// </summary>
 public interface IReputationService
 {
     /// <summary>

@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HappyPaws.Infrastructure.Data;
 
+/// <summary>
+/// The main EF Core database context for HappyPaws. Applies all entity configurations from the Infrastructure assembly
+/// and enables the PostGIS extension for geospatial queries.
+/// </summary>
 public sealed class HappyPawsDbContext : DbContext
 {
     public HappyPawsDbContext(DbContextOptions<HappyPawsDbContext> options) : base(options) { }

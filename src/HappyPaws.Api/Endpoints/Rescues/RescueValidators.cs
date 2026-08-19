@@ -2,6 +2,9 @@ using FluentValidation;
 
 namespace HappyPaws.Api.Endpoints.Rescues;
 
+/// <summary>
+/// Validates the coordinates, location name, description, and optional condition notes for a new rescue case.
+/// </summary>
 public class CreateRescueRequestValidator : AbstractValidator<CreateRescueRequest>
 {
     public CreateRescueRequestValidator()
@@ -14,6 +17,9 @@ public class CreateRescueRequestValidator : AbstractValidator<CreateRescueReques
     }
 }
 
+/// <summary>
+/// Validates the update type and update text for a case progress post.
+/// </summary>
 public class PostCaseUpdateRequestValidator : AbstractValidator<PostCaseUpdateRequest>
 {
     public PostCaseUpdateRequestValidator()
@@ -23,6 +29,9 @@ public class PostCaseUpdateRequestValidator : AbstractValidator<PostCaseUpdateRe
     }
 }
 
+/// <summary>
+/// Validates that the urgency override value is a known enum member.
+/// </summary>
 public class OverrideUrgencyRequestValidator : AbstractValidator<OverrideUrgencyRequest>
 {
     public OverrideUrgencyRequestValidator()

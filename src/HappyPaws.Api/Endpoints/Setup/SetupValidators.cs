@@ -2,6 +2,9 @@ using FluentValidation;
 
 namespace HappyPaws.Api.Endpoints.Setup;
 
+/// <summary>
+/// Validates the admin display name, email address, and password strength for the one-time setup endpoint.
+/// </summary>
 public class SetupCompleteRequestValidator : AbstractValidator<SetupCompleteRequest>
 {
     public SetupCompleteRequestValidator()

@@ -2,6 +2,9 @@ using FluentValidation;
 
 namespace HappyPaws.Api.Endpoints.Pledges;
 
+/// <summary>
+/// Validates a pledge amount greater than zero and that the pledge is linked to exactly one of a case or a listing.
+/// </summary>
 public class CreatePledgeRequestValidator : AbstractValidator<CreatePledgeRequest>
 {
     public CreatePledgeRequestValidator()

@@ -5,11 +5,18 @@ using Microsoft.Extensions.Logging;
 
 namespace HappyPaws.Infrastructure.Services;
 
+/// <summary>
+/// Saves in-app notifications to the database and dispatches a push notification via <see cref="IPushNotificationService"/>.
+/// Push failures are logged but do not roll back the database write.
+/// </summary>
 public sealed class NotificationService(
     HappyPawsDbContext dbContext,
     IPushNotificationService pushNotificationService,
     ILogger<NotificationService> logger) : INotificationService
 {
+    /// <summary>
+    /// Persists a notification for a single user, then attempts to send a push notification.
+    /// </summary>
     public async Task SendNotificationAsync(
         Guid userId,
         string type,
@@ -52,6 +59,10 @@ public sealed class NotificationService(
         }
     }
 
+    /// <summary>
+    /// Bulk-inserts notifications for multiple users and sends a batch push notification.
+    /// Skips the entire operation if <paramref name="userIds"/> is empty.
+    /// </summary>
     public async Task SendNotificationsAsync(
         IEnumerable<Guid> userIds,
         string type,

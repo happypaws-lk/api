@@ -3,6 +3,9 @@ using HappyPaws.Core.Enums;
 
 namespace HappyPaws.Api.Endpoints.Auth;
 
+/// <summary>
+/// Validates the email address for the first step of the sign-up flow.
+/// </summary>
 public class SignupSendCodeRequestValidator : AbstractValidator<SignupSendCodeRequest>
 {
     public SignupSendCodeRequestValidator()
@@ -11,6 +14,9 @@ public class SignupSendCodeRequestValidator : AbstractValidator<SignupSendCodeRe
     }
 }
 
+/// <summary>
+/// Validates the email address and the 6-digit numeric verification code for the sign-up OTP step.
+/// </summary>
 public class SignupVerifyCodeRequestValidator : AbstractValidator<SignupVerifyCodeRequest>
 {
     public SignupVerifyCodeRequestValidator()
@@ -20,6 +26,9 @@ public class SignupVerifyCodeRequestValidator : AbstractValidator<SignupVerifyCo
     }
 }
 
+/// <summary>
+/// Validates the signup token, display name, password strength, and that the selected role is not Admin or Veterinarian.
+/// </summary>
 public class SignupCompleteRequestValidator : AbstractValidator<SignupCompleteRequest>
 {
     public SignupCompleteRequestValidator()
@@ -33,6 +42,9 @@ public class SignupCompleteRequestValidator : AbstractValidator<SignupCompleteRe
     }
 }
 
+/// <summary>
+/// Validates the email address and password for login.
+/// </summary>
 public class LoginRequestValidator : AbstractValidator<LoginRequest>
 {
     public LoginRequestValidator()
@@ -42,6 +54,9 @@ public class LoginRequestValidator : AbstractValidator<LoginRequest>
     }
 }
 
+/// <summary>
+/// Validates that a refresh token is present in the request.
+/// </summary>
 public class RefreshRequestValidator : AbstractValidator<RefreshRequest>
 {
     public RefreshRequestValidator()
@@ -50,6 +65,9 @@ public class RefreshRequestValidator : AbstractValidator<RefreshRequest>
     }
 }
 
+/// <summary>
+/// Validates the email address for an OTP send request.
+/// </summary>
 public class OtpRequestValidator : AbstractValidator<OtpRequest>
 {
     public OtpRequestValidator()
@@ -58,6 +76,9 @@ public class OtpRequestValidator : AbstractValidator<OtpRequest>
     }
 }
 
+/// <summary>
+/// Validates the email address and the 6-digit numeric OTP code.
+/// </summary>
 public class OtpVerifyRequestValidator : AbstractValidator<OtpVerifyRequest>
 {
     public OtpVerifyRequestValidator()
@@ -67,6 +88,9 @@ public class OtpVerifyRequestValidator : AbstractValidator<OtpVerifyRequest>
     }
 }
 
+/// <summary>
+/// Validates the email address for the forgot-password flow.
+/// </summary>
 public class ForgotPasswordRequestValidator : AbstractValidator<ForgotPasswordRequest>
 {
     public ForgotPasswordRequestValidator()
@@ -75,6 +99,9 @@ public class ForgotPasswordRequestValidator : AbstractValidator<ForgotPasswordRe
     }
 }
 
+/// <summary>
+/// Validates the email address and the 6-digit numeric password reset code.
+/// </summary>
 public class VerifyResetCodeRequestValidator : AbstractValidator<VerifyResetCodeRequest>
 {
     public VerifyResetCodeRequestValidator()
@@ -84,6 +111,9 @@ public class VerifyResetCodeRequestValidator : AbstractValidator<VerifyResetCode
     }
 }
 
+/// <summary>
+/// Validates the email, reset token, and new password for the final password reset step.
+/// </summary>
 public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequest>
 {
     public ResetPasswordRequestValidator()
@@ -94,6 +124,9 @@ public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequ
     }
 }
 
+/// <summary>
+/// Validates the current password and the new password strength for an authenticated password change.
+/// </summary>
 public class ChangePasswordAuthRequestValidator : AbstractValidator<ChangePasswordAuthRequest>
 {
     public ChangePasswordAuthRequestValidator()

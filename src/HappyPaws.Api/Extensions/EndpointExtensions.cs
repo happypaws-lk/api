@@ -3,8 +3,15 @@ using HappyPaws.Api.Endpoints;
 
 namespace HappyPaws.Api.Extensions;
 
+/// <summary>
+/// Extension methods for registering endpoint groups via assembly scanning.
+/// </summary>
 public static class EndpointExtensions
 {
+    /// <summary>
+    /// Scans the executing assembly for all <see cref="IEndpointGroup"/> implementations and registers each one
+    /// under <c>/api/v1/{prefix}</c>, where the prefix is derived from the class name.
+    /// </summary>
     public static WebApplication MapEndpoints(this WebApplication app)
     {
         var endpointGroupTypes = Assembly.GetExecutingAssembly()

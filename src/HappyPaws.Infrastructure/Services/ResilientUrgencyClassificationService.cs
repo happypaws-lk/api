@@ -6,12 +6,20 @@ using Microsoft.Extensions.Logging;
 
 namespace HappyPaws.Infrastructure.Services;
 
+/// <summary>
+/// Wraps the Gemini classifier with a timeout and a rule-based fallback.
+/// If Gemini times out or throws, the service rewinds the stream and delegates to the rule-based classifier.
+/// </summary>
 public sealed class ResilientUrgencyClassificationService(
     [FromKeyedServices("gemini")] IUrgencyClassifier gemini,
     [FromKeyedServices("ruleBased")] IUrgencyClassifier ruleBased,
     IConfiguration configuration,
     ILogger<ResilientUrgencyClassificationService> logger) : IUrgencyClassificationService
 {
+    /// <summary>
+    /// Tries Gemini first with a configurable timeout. Falls back to the rule-based classifier on timeout or error.
+    /// Returns a <see cref="UrgencyClassificationResult"/> that records which source produced the result.
+    /// </summary>
     public async Task<UrgencyClassificationResult> ClassifyAsync(Stream photo, CancellationToken cancellationToken = default)
     {
         var timeoutSeconds = configuration.GetValue("Gemini:TimeoutSeconds", 10);

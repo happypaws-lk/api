@@ -79,17 +79,29 @@ jobs:
               --output text
           }
 
+          ASPNETCORE_ENVIRONMENT=$(fetch /happypaws/prod/aspnetcore_environment)
+
           DB_URL=$(fetch /happypaws/prod/database_url)
           echo "::add-mask::$DB_URL"
 
           JWT_KEY=$(fetch /happypaws/prod/jwt_key)
           echo "::add-mask::$JWT_KEY"
 
+          JWT_ISSUER=$(fetch /happypaws/prod/jwt/issuer)
+          JWT_AUDIENCE=$(fetch /happypaws/prod/jwt/audience)
+          JWT_EXPIRY_MINUTES=$(fetch /happypaws/prod/jwt/expiry_minutes)
+
           GEMINI_API_KEY=$(fetch /happypaws/prod/gemini_api_key)
           echo "::add-mask::$GEMINI_API_KEY"
 
+          GEMINI_MODEL=$(fetch /happypaws/prod/gemini/model)
+          GEMINI_TIMEOUT_SECONDS=$(fetch /happypaws/prod/gemini/timeout_seconds)
+
           FIREBASE_JSON=$(fetch /happypaws/prod/firebase_service_account_json)
           echo "::add-mask::$FIREBASE_JSON"
+
+          SES_REGION=$(fetch /happypaws/prod/ses/region)
+          SES_FROM_ADDRESS=$(fetch /happypaws/prod/ses/from_address)
 
           SES_ACCESS_KEY=$(fetch /happypaws/prod/ses/access_key_id)
           echo "::add-mask::$SES_ACCESS_KEY"
@@ -98,6 +110,9 @@ jobs:
           echo "::add-mask::$SES_SECRET_KEY"
 
           STORAGE_ACCOUNT_ID=$(fetch /happypaws/prod/storage/account_id)
+          STORAGE_PUBLIC_BUCKET=$(fetch /happypaws/prod/storage/public_bucket)
+          STORAGE_PRIVATE_BUCKET=$(fetch /happypaws/prod/storage/private_bucket)
+          STORAGE_CUSTOM_DOMAIN=$(fetch /happypaws/prod/storage/custom_domain)
 
           STORAGE_ACCESS_KEY=$(fetch /happypaws/prod/storage/access_key)
           echo "::add-mask::$STORAGE_ACCESS_KEY"
@@ -105,49 +120,69 @@ jobs:
           STORAGE_SECRET_KEY=$(fetch /happypaws/prod/storage/secret_key)
           echo "::add-mask::$STORAGE_SECRET_KEY"
 
+          CORS_ORIGINS=$(fetch /happypaws/prod/cors/allowed_origins)
+          RATE_LIMITING_DISABLED=$(fetch /happypaws/prod/rate_limiting_disabled)
+          FEATURES_ENABLE_API_DOCS=$(fetch /happypaws/prod/features_enable_api_docs)
+
           # Build the containers JSON using jq so special characters in values
           # are properly escaped without any manual quoting gymnastics.
           jq -n \
             --arg image "${{ steps.push.outputs.image_ref }}" \
+            --arg aspnetcore_env "$ASPNETCORE_ENVIRONMENT" \
             --arg db_url "$DB_URL" \
             --arg jwt_key "$JWT_KEY" \
+            --arg jwt_issuer "$JWT_ISSUER" \
+            --arg jwt_audience "$JWT_AUDIENCE" \
+            --arg jwt_expiry "$JWT_EXPIRY_MINUTES" \
             --arg gemini_key "$GEMINI_API_KEY" \
+            --arg gemini_model "$GEMINI_MODEL" \
+            --arg gemini_timeout "$GEMINI_TIMEOUT_SECONDS" \
             --arg firebase_json "$FIREBASE_JSON" \
+            --arg ses_region "$SES_REGION" \
+            --arg ses_from "$SES_FROM_ADDRESS" \
             --arg ses_key_id "$SES_ACCESS_KEY" \
             --arg ses_secret "$SES_SECRET_KEY" \
             --arg storage_account_id "$STORAGE_ACCOUNT_ID" \
+            --arg storage_public_bucket "$STORAGE_PUBLIC_BUCKET" \
+            --arg storage_private_bucket "$STORAGE_PRIVATE_BUCKET" \
+            --arg storage_custom_domain "$STORAGE_CUSTOM_DOMAIN" \
             --arg storage_key "$STORAGE_ACCESS_KEY" \
             --arg storage_secret "$STORAGE_SECRET_KEY" \
+            --arg rate_limiting_disabled "$RATE_LIMITING_DISABLED" \
+            --arg enable_api_docs "$FEATURES_ENABLE_API_DOCS" \
+            --arg cors_origins "$CORS_ORIGINS" \
             '{
               "api": {
                 "image": $image,
                 "ports": { "8080": "HTTP" },
-                "environment": {
-                  "ASPNETCORE_ENVIRONMENT":      "Production",
-                  "DATABASE_URL":                $db_url,
-                  "Jwt__Key":                    $jwt_key,
-                  "Jwt__Issuer":                 "https://happypaws.lk",
-                  "Jwt__Audience":               "https://happypaws.lk",
-                  "Jwt__ExpiryMinutes":          "15",
-                  "Gemini__ApiKey":              $gemini_key,
-                  "Gemini__Model":               "gemini-2.0-flash",
-                  "Gemini__TimeoutSeconds":      "10",
-                  "Firebase__ServiceAccountJson": $firebase_json,
-                  "Ses__Region":                 "ap-southeast-1",
-                  "Ses__FromAddress":            "noreply@happypaws.lk",
-                  "Ses__AccessKey":              $ses_key_id,
-                  "Ses__SecretKey":              $ses_secret,
-                  "Storage__AccountId":          $storage_account_id,
-                  "Storage__AccessKey":          $storage_key,
-                  "Storage__SecretKey":          $storage_secret,
-                  "Storage__PublicBucket":       "happypaws-public",
-                  "Storage__PrivateBucket":      "happypaws-private",
-                  "Storage__CustomDomain":       "cdn.happypaws.lk",
-                  "Cors__AllowedOrigins__0":     "https://happypaws.lk",
-                  "Cors__AllowedOrigins__1":     "https://admin.happypaws.lk",
-                  "RateLimiting__Disabled":      "false",
-                  "Features__EnableApiDocs":     "false"
-                }
+                "environment": (
+                  {
+                    "ASPNETCORE_ENVIRONMENT":      $aspnetcore_env,
+                    "DATABASE_URL":                $db_url,
+                    "Jwt__Key":                    $jwt_key,
+                    "Jwt__Issuer":                 $jwt_issuer,
+                    "Jwt__Audience":               $jwt_audience,
+                    "Jwt__ExpiryMinutes":          $jwt_expiry,
+                    "Gemini__ApiKey":              $gemini_key,
+                    "Gemini__Model":               $gemini_model,
+                    "Gemini__TimeoutSeconds":      $gemini_timeout,
+                    "Firebase__ServiceAccountJson": $firebase_json,
+                    "Ses__Region":                 $ses_region,
+                    "Ses__FromAddress":            $ses_from,
+                    "Ses__AccessKey":              $ses_key_id,
+                    "Ses__SecretKey":              $ses_secret,
+                    "Storage__AccountId":          $storage_account_id,
+                    "Storage__AccessKey":          $storage_key,
+                    "Storage__SecretKey":          $storage_secret,
+                    "Storage__PublicBucket":       $storage_public_bucket,
+                    "Storage__PrivateBucket":      $storage_private_bucket,
+                    "Storage__CustomDomain":       $storage_custom_domain,
+                    "RateLimiting__Disabled":      $rate_limiting_disabled,
+                    "Features__EnableApiDocs":     $enable_api_docs
+                  }
+                  +
+                  ($cors_origins | split(",") | map(select(length > 0)) | to_entries | map({ key: ("Cors__AllowedOrigins__" + (.key | tostring)), value: .value }) | from_entries)
+                )
               }
             }' > /tmp/containers.json
 

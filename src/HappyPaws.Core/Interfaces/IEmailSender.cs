@@ -1,8 +1,14 @@
 namespace HappyPaws.Core.Interfaces;
 
+/// <summary>
+/// Sends transactional emails. Implementations use Amazon SES in production and log to the console in development.
+/// </summary>
 public interface IEmailSender
 {
+    /// <summary>Sends a plain-text OTP email for identity verification.</summary>
     Task SendOtpAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default);
+
+    /// <summary>Sends a KYC approval or rejection email.</summary>
     Task SendVerificationDecisionAsync(string toEmail, bool approved, string? reason, CancellationToken cancellationToken = default);
 
     /// <summary>Sends a password reset OTP to the user's email.</summary>

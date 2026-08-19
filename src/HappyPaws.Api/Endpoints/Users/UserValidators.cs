@@ -2,6 +2,9 @@ using FluentValidation;
 
 namespace HappyPaws.Api.Endpoints.Users;
 
+/// <summary>
+/// Validates the FCM token and platform when registering or updating a user's device.
+/// </summary>
 public class DeviceRequestValidator : AbstractValidator<DeviceRequest>
 {
     public DeviceRequestValidator()
@@ -11,6 +14,9 @@ public class DeviceRequestValidator : AbstractValidator<DeviceRequest>
     }
 }
 
+/// <summary>
+/// Validates home size, activity level, and the existing pet types list (max 10 items) for a lifestyle profile.
+/// </summary>
 public class LifestyleProfileRequestValidator : AbstractValidator<LifestyleProfileRequest>
 {
     public LifestyleProfileRequestValidator()
@@ -23,6 +29,9 @@ public class LifestyleProfileRequestValidator : AbstractValidator<LifestyleProfi
     }
 }
 
+/// <summary>
+/// Validates the display name when a user updates their own profile.
+/// </summary>
 public class UpdateMeProfileRequestValidator : AbstractValidator<UpdateMeProfileRequest>
 {
     public UpdateMeProfileRequestValidator()
@@ -31,6 +40,9 @@ public class UpdateMeProfileRequestValidator : AbstractValidator<UpdateMeProfile
     }
 }
 
+/// <summary>
+/// Validates the current password and the new password strength for a password change request.
+/// </summary>
 public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRequest>
 {
     public ChangePasswordRequestValidator()
@@ -40,6 +52,9 @@ public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRe
     }
 }
 
+/// <summary>
+/// Validates that the role being assigned is a known enum member.
+/// </summary>
 public class AssignRoleRequestValidator : AbstractValidator<AssignRoleRequest>
 {
     public AssignRoleRequestValidator()

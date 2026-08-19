@@ -3,8 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HappyPaws.Api.Middleware;
 
+/// <summary>
+/// Catches any unhandled exception in the request pipeline, logs it, and writes a generic 500 ProblemDetails response.
+/// </summary>
 public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
+    /// <summary>
+    /// Logs the exception and returns a 500 ProblemDetails response. Always returns <c>true</c> to stop further handling.
+    /// </summary>
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext, 
         Exception exception, 

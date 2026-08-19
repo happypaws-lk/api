@@ -78,3 +78,90 @@ variable "storage_secret_key" {
   type        = string
   sensitive   = true
 }
+
+variable "storage_custom_domain" {
+  description = "Custom domain or R2 public development URL for public storage."
+  type        = string
+  default     = "cdn.happypaws.lk"
+}
+
+variable "cors_allowed_origins" {
+  description = "List of allowed CORS origins for the API."
+  type        = list(string)
+  default = [
+    "https://happypaws.lk",
+    "https://admin.happypaws.lk"
+  ]
+}
+
+variable "aspnetcore_environment" {
+  description = "ASP.NET Core hosting environment."
+  type        = string
+  default     = "Production"
+}
+
+variable "jwt_issuer" {
+  description = "JWT token issuer URL."
+  type        = string
+  default     = "https://happypaws.lk"
+}
+
+variable "jwt_audience" {
+  description = "JWT token audience URL."
+  type        = string
+  default     = "https://happypaws.lk"
+}
+
+variable "jwt_expiry_minutes" {
+  description = "JWT token lifetime in minutes."
+  type        = string
+  default     = "15"
+}
+
+variable "gemini_model" {
+  description = "Gemini model version for urgency classification."
+  type        = string
+  default     = "gemini-2.0-flash"
+}
+
+variable "gemini_timeout_seconds" {
+  description = "Timeout in seconds for Gemini API calls."
+  type        = string
+  default     = "10"
+}
+
+variable "ses_region" {
+  description = "AWS SES service region for outgoing emails."
+  type        = string
+  default     = "ap-southeast-1"
+}
+
+variable "ses_from_address" {
+  description = "From email address used for SES transactional emails."
+  type        = string
+  default     = "noreply@happypaws.lk"
+}
+
+variable "storage_public_bucket" {
+  description = "R2 public bucket name for media assets."
+  type        = string
+  default     = "happypaws-public"
+}
+
+variable "storage_private_bucket" {
+  description = "R2 private bucket name for KYC documents."
+  type        = string
+  default     = "happypaws-private"
+}
+
+variable "rate_limiting_disabled" {
+  description = "Controls whether API rate limiting is disabled."
+  type        = string
+  default     = "false"
+}
+
+variable "features_enable_api_docs" {
+  description = "Controls whether OpenAPI documentation endpoints are enabled in production."
+  type        = string
+  default     = "false"
+}

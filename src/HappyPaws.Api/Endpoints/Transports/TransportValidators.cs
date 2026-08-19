@@ -2,6 +2,9 @@ using FluentValidation;
 
 namespace HappyPaws.Api.Endpoints.Transports;
 
+/// <summary>
+/// Validates pickup and dropoff coordinates and location names for a new transport task.
+/// </summary>
 public class CreateTransportRequestValidator : AbstractValidator<CreateTransportRequest>
 {
     public CreateTransportRequestValidator()
@@ -16,6 +19,9 @@ public class CreateTransportRequestValidator : AbstractValidator<CreateTransport
     }
 }
 
+/// <summary>
+/// Validates that the transport status transition value is a known enum member.
+/// </summary>
 public class TransportStatusUpdateRequestValidator : AbstractValidator<TransportStatusUpdateRequest>
 {
     public TransportStatusUpdateRequestValidator()

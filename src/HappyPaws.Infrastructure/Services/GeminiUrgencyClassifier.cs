@@ -7,11 +7,19 @@ using Microsoft.Extensions.Logging;
 
 namespace HappyPaws.Infrastructure.Services;
 
+/// <summary>
+/// Classifies animal rescue urgency by sending a base64-encoded photo to the Gemini Vision API.
+/// Reads the API key and model from <c>Gemini:ApiKey</c> and <c>Gemini:Model</c> configuration.
+/// </summary>
 public sealed class GeminiUrgencyClassifier(
     IHttpClientFactory httpClientFactory,
     IConfiguration configuration,
     ILogger<GeminiUrgencyClassifier> logger) : IUrgencyClassifier
 {
+    /// <summary>
+    /// Sends the photo to Gemini and parses the single-word response into a <see cref="Urgency"/> value.
+    /// Throws <see cref="InvalidOperationException"/> if the response cannot be parsed.
+    /// </summary>
     public async Task<Urgency> ClassifyAsync(Stream photo, CancellationToken cancellationToken = default)
     {
         var apiKey = configuration["Gemini:ApiKey"]

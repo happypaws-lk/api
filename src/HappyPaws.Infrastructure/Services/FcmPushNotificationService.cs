@@ -7,10 +7,17 @@ using Microsoft.Extensions.Logging;
 
 namespace HappyPaws.Infrastructure.Services;
 
+/// <summary>
+/// Sends push notifications via Firebase Cloud Messaging (FCM).
+/// Automatically removes stale or unregistered device tokens after a failed delivery.
+/// </summary>
 public sealed class FcmPushNotificationService(
     HappyPawsDbContext dbContext,
     ILogger<FcmPushNotificationService> logger) : IPushNotificationService
 {
+    /// <summary>
+    /// Loads all registered devices for the user and sends an FCM multicast message.
+    /// </summary>
     public async Task SendToUserAsync(Guid userId, string title, string body, Dictionary<string, string>? data = null, CancellationToken cancellationToken = default)
     {
         var devices = await dbContext.Set<UserDevice>()
@@ -25,6 +32,9 @@ public sealed class FcmPushNotificationService(
         await SendToDevicesAsync(devices, title, body, data, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Loads all registered devices for the supplied users and sends a single FCM multicast message.
+    /// </summary>
     public async Task SendToUsersAsync(IEnumerable<Guid> userIds, string title, string body, Dictionary<string, string>? data = null, CancellationToken cancellationToken = default)
     {
         var devices = await dbContext.Set<UserDevice>()
@@ -39,6 +49,9 @@ public sealed class FcmPushNotificationService(
         await SendToDevicesAsync(devices, title, body, data, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Sends an FCM multicast message to the provided devices and deletes any tokens that FCM reports as invalid.
+    /// </summary>
     private async Task SendToDevicesAsync(List<UserDevice> devices, string title, string body, Dictionary<string, string>? data, CancellationToken cancellationToken)
     {
         var tokens = devices.Select(d => d.FcmToken).ToList();

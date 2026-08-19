@@ -10,6 +10,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HappyPaws.Api.Hubs;
 
+/// <summary>
+/// SignalR hub for real-time chat between users.
+/// Tracks active connections in a static dictionary and adds each user to their conversation groups on connect.
+/// </summary>
 [Authorize]
 public sealed class ChatHub(
     HappyPawsDbContext dbContext,
@@ -18,6 +22,9 @@ public sealed class ChatHub(
 {
     private static readonly ConcurrentDictionary<string, string> UserConnections = new();
 
+    /// <summary>
+    /// Registers the connection, adds the user to all their conversation groups, and cleans up on disconnect.
+    /// </summary>
     public override async Task OnConnectedAsync()
     {
         var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -37,6 +44,9 @@ public sealed class ChatHub(
         await base.OnConnectedAsync();
     }
 
+    /// <summary>
+    /// Removes the user's connection entry from the tracking dictionary.
+    /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -46,6 +56,10 @@ public sealed class ChatHub(
         await base.OnDisconnectedAsync(exception);
     }
 
+    /// <summary>
+    /// Saves the message to the database, then delivers it directly to the recipient's connection if they are online.
+    /// Falls back to a push notification when the recipient is offline.
+    /// </summary>
     public async Task SendMessage(string conversationId, string content)
     {
         var userIdStr = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);

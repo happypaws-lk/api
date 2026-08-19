@@ -3,8 +3,15 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace HappyPaws.Infrastructure.Data.Interceptors;
 
+/// <summary>
+/// EF Core interceptor that automatically stamps <c>CreatedAt</c> on new entities and <c>UpdatedAt</c> on every save.
+/// </summary>
 public sealed class TimestampInterceptor : SaveChangesInterceptor
 {
+    /// <summary>
+    /// Sets <c>CreatedAt</c> and <c>UpdatedAt</c> on added entities, and <c>UpdatedAt</c> on modified entities,
+    /// using the current UTC time before changes are written to the database.
+    /// </summary>
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,

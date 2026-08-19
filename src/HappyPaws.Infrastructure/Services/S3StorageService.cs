@@ -6,6 +6,10 @@ using Microsoft.Extensions.Logging;
 
 namespace HappyPaws.Infrastructure.Services;
 
+/// <summary>
+/// Stores files in an S3-compatible bucket (Cloudflare R2 by default).
+/// Public files go to the public bucket; private KYC documents go to the private bucket.
+/// </summary>
 public sealed class S3StorageService : IStorageService, IDisposable
 {
     private readonly AmazonS3Client _s3Client;
@@ -42,6 +46,9 @@ public sealed class S3StorageService : IStorageService, IDisposable
             : new AmazonS3Client(config);
     }
 
+    /// <summary>
+    /// Uploads a stream to the public or private bucket, depending on <paramref name="isPrivate"/>. Returns the object key.
+    /// </summary>
     public async Task<string> UploadAsync(string key, Stream content, string contentType, bool isPrivate = false, CancellationToken cancellationToken = default)
     {
         var bucket = isPrivate ? _privateBucket : _publicBucket;
@@ -61,6 +68,9 @@ public sealed class S3StorageService : IStorageService, IDisposable
         return key;
     }
 
+    /// <summary>
+    /// Deletes the object from the appropriate bucket. Keys starting with <c>kyc/</c> are routed to the private bucket.
+    /// </summary>
     public async Task DeleteAsync(string key, CancellationToken cancellationToken = default)
     {
         // KYC docs live in the private bucket; all other keys belong to the public bucket.
@@ -78,11 +88,17 @@ public sealed class S3StorageService : IStorageService, IDisposable
         _logger.LogInformation("Deleted file {Key} from S3-compatible storage bucket {Bucket}", key, bucket);
     }
 
+    /// <summary>
+    /// Returns the CDN URL for a public object key.
+    /// </summary>
     public string GetPublicUrl(string key)
     {
         return $"{_publicBaseUrl}/{key}";
     }
 
+    /// <summary>
+    /// Generates a pre-signed URL for a private bucket object, valid for the specified duration.
+    /// </summary>
     public Task<string> GetPresignedUrlAsync(string key, TimeSpan expiry, CancellationToken cancellationToken = default)
     {
         var protocol = !string.IsNullOrEmpty(_serviceUrl) && _serviceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)

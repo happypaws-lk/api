@@ -2,6 +2,9 @@ using FluentValidation;
 
 namespace HappyPaws.Api.Endpoints.Admin;
 
+/// <summary>
+/// Validates that a KYC rejection reason is provided and within the character limit.
+/// </summary>
 public class KycRejectRequestValidator : AbstractValidator<KycRejectRequest>
 {
     public KycRejectRequestValidator()
@@ -10,6 +13,9 @@ public class KycRejectRequestValidator : AbstractValidator<KycRejectRequest>
     }
 }
 
+/// <summary>
+/// Validates that a suspension reason is provided and within the character limit.
+/// </summary>
 public class SuspendRequestValidator : AbstractValidator<SuspendRequest>
 {
     public SuspendRequestValidator()
@@ -18,6 +24,9 @@ public class SuspendRequestValidator : AbstractValidator<SuspendRequest>
     }
 }
 
+/// <summary>
+/// Validates the target type, target ID, action type, and reason for a moderation action.
+/// </summary>
 public class ModerationRequestValidator : AbstractValidator<ModerationRequest>
 {
     public ModerationRequestValidator()
@@ -29,6 +38,9 @@ public class ModerationRequestValidator : AbstractValidator<ModerationRequest>
     }
 }
 
+/// <summary>
+/// Validates that the points adjustment is non-zero and a reason is provided.
+/// </summary>
 public class ReputationAdjustRequestValidator : AbstractValidator<ReputationAdjustRequest>
 {
     public ReputationAdjustRequestValidator()

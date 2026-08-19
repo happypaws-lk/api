@@ -17,7 +17,7 @@ resource "aws_lightsail_database" "main" {
   publicly_accessible = false
 
   backup_retention_enabled     = true
-  preferred_backup_window      = "16:00-16:30"   # 21:30 SL time — low traffic
+  preferred_backup_window      = "16:00-16:30" # 21:30 SL time — low traffic
   preferred_maintenance_window = "tue:17:00-tue:17:30"
   skip_final_snapshot          = false
   final_snapshot_name          = "happypaws-prod-final"
@@ -70,7 +70,10 @@ data "aws_iam_policy_document" "github_actions_assume_role" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:ref:refs/heads/main"]
+      values = [
+        "repo:${var.github_repo}:ref:refs/heads/main",
+        "repo:${split("/", var.github_repo)[0]}@*/${split("/", var.github_repo)[1]}@*:ref:refs/heads/main"
+      ]
     }
   }
 }
@@ -92,7 +95,7 @@ data "aws_iam_policy_document" "github_actions_deploy" {
       "lightsail:GetContainerImages",
       "lightsail:GetContainerServiceDeployments",
       "lightsail:GetContainerServices",
-      "lightsail:PushContainerImage",
+      "lightsail:RegisterContainerImage",
     ]
     resources = ["*"]
   }
@@ -190,6 +193,104 @@ resource "aws_ssm_parameter" "storage_account_id" {
   lifecycle {
     ignore_changes = [value]
   }
+}
+
+resource "aws_ssm_parameter" "storage_custom_domain" {
+  name        = local.ssm.storage_custom_domain
+  type        = "String"
+  value       = var.storage_custom_domain
+  description = "Public CDN domain or R2 development URL for public assets."
+}
+
+resource "aws_ssm_parameter" "cors_allowed_origins" {
+  name        = local.ssm.cors_allowed_origins
+  type        = "StringList"
+  value       = join(",", var.cors_allowed_origins)
+  description = "Comma-separated list of allowed CORS origins for the HappyPaws API."
+}
+
+resource "aws_ssm_parameter" "aspnetcore_environment" {
+  name        = local.ssm.aspnetcore_environment
+  type        = "String"
+  value       = var.aspnetcore_environment
+  description = "ASP.NET Core hosting environment."
+}
+
+resource "aws_ssm_parameter" "jwt_issuer" {
+  name        = local.ssm.jwt_issuer
+  type        = "String"
+  value       = var.jwt_issuer
+  description = "JWT token issuer URL."
+}
+
+resource "aws_ssm_parameter" "jwt_audience" {
+  name        = local.ssm.jwt_audience
+  type        = "String"
+  value       = var.jwt_audience
+  description = "JWT token audience URL."
+}
+
+resource "aws_ssm_parameter" "jwt_expiry_minutes" {
+  name        = local.ssm.jwt_expiry_minutes
+  type        = "String"
+  value       = tostring(var.jwt_expiry_minutes)
+  description = "JWT token lifetime in minutes."
+}
+
+resource "aws_ssm_parameter" "gemini_model" {
+  name        = local.ssm.gemini_model
+  type        = "String"
+  value       = var.gemini_model
+  description = "Gemini model version for urgency classification."
+}
+
+resource "aws_ssm_parameter" "gemini_timeout_seconds" {
+  name        = local.ssm.gemini_timeout_seconds
+  type        = "String"
+  value       = tostring(var.gemini_timeout_seconds)
+  description = "Timeout in seconds for Gemini API calls."
+}
+
+resource "aws_ssm_parameter" "ses_region" {
+  name        = local.ssm.ses_region
+  type        = "String"
+  value       = var.ses_region
+  description = "AWS SES service region for transactional emails."
+}
+
+resource "aws_ssm_parameter" "ses_from_address" {
+  name        = local.ssm.ses_from_address
+  type        = "String"
+  value       = var.ses_from_address
+  description = "From email address used for SES transactional emails."
+}
+
+resource "aws_ssm_parameter" "storage_public_bucket" {
+  name        = local.ssm.storage_public_bucket
+  type        = "String"
+  value       = var.storage_public_bucket
+  description = "R2 public bucket name for media assets."
+}
+
+resource "aws_ssm_parameter" "storage_private_bucket" {
+  name        = local.ssm.storage_private_bucket
+  type        = "String"
+  value       = var.storage_private_bucket
+  description = "R2 private bucket name for KYC documents."
+}
+
+resource "aws_ssm_parameter" "rate_limiting_disabled" {
+  name        = local.ssm.rate_limiting_disabled
+  type        = "String"
+  value       = tostring(var.rate_limiting_disabled)
+  description = "Controls whether API rate limiting is disabled."
+}
+
+resource "aws_ssm_parameter" "features_enable_api_docs" {
+  name        = local.ssm.features_enable_api_docs
+  type        = "String"
+  value       = tostring(var.features_enable_api_docs)
+  description = "Controls whether OpenAPI documentation endpoints are enabled in production."
 }
 
 # -- SecureStrings: all sensitive values encrypted with the AWS-managed SSM key --

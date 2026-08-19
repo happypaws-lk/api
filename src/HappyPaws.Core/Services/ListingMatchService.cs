@@ -3,8 +3,15 @@ using HappyPaws.Core.Enums;
 
 namespace HappyPaws.Core.Services;
 
+/// <summary>
+/// Scores and ranks adoption listings against a user's lifestyle profile.
+/// </summary>
 public class ListingMatchService
 {
+    /// <summary>
+    /// Filters out incompatible listings (size/home, children, existing pets) then scores the remainder
+    /// by activity level and yard compatibility. Returns listings ordered by score descending, then by most recent.
+    /// </summary>
     public IReadOnlyList<AnimalListing> GetMatches(LifestyleProfile profile, IEnumerable<AnimalListing> listings)
     {
         var scoredListings = new List<(AnimalListing Listing, double Score)>();

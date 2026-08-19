@@ -6,8 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HappyPaws.Infrastructure.Services;
 
+/// <summary>
+/// Checks badge eligibility criteria for a user and awards any badges they have earned but not yet received.
+/// </summary>
 public sealed class BadgeEvaluationService(HappyPawsDbContext dbContext) : IBadgeEvaluationService
 {
+    /// <summary>
+    /// Evaluates VerifiedVet, TopFoster, and TrustedTransporter criteria and awards matching badges.
+    /// Does nothing if the user is not found.
+    /// </summary>
     public async Task EvaluateAndAwardBadgesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await dbContext.Users
@@ -51,6 +58,9 @@ public sealed class BadgeEvaluationService(HappyPawsDbContext dbContext) : IBadg
         }
     }
 
+    /// <summary>
+    /// Creates and persists a <see cref="UserBadge"/> record for the given user and badge type.
+    /// </summary>
     private async Task AwardBadgeAsync(Guid userId, BadgeType badgeType, CancellationToken cancellationToken)
     {
         var badge = new UserBadge

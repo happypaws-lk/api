@@ -6,6 +6,10 @@ using Microsoft.Extensions.Configuration;
 
 namespace HappyPaws.Infrastructure.Services;
 
+/// <summary>
+/// Reads system-wide configuration from the database, with a 5-minute memory cache to avoid repeated queries.
+/// Falls back to the <c>SystemConfig:AlertRadiusKm</c> app-settings value if no database row exists.
+/// </summary>
 public sealed class SystemConfigService(
     HappyPawsDbContext db,
     IMemoryCache cache,
@@ -14,6 +18,9 @@ public sealed class SystemConfigService(
     private const string CacheKey = "sys:alert_radius_km";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
+    /// <summary>
+    /// Returns the alert radius in kilometres. Caches the result for 5 minutes using a sliding expiration.
+    /// </summary>
     public async Task<int> GetAlertRadiusKmAsync(CancellationToken cancellationToken = default)
     {
         if (cache.TryGetValue(CacheKey, out int cached))
