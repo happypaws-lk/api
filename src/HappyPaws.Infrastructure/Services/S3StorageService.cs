@@ -38,7 +38,8 @@ public sealed class S3StorageService : IStorageService, IDisposable
             ServiceURL = !string.IsNullOrEmpty(_serviceUrl)
                 ? _serviceUrl
                 : $"https://{accountId}.r2.cloudflarestorage.com",
-            ForcePathStyle = !string.IsNullOrEmpty(_serviceUrl)
+            ForcePathStyle = true,
+            AuthenticationRegion = "auto"
         };
 
         _s3Client = !string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey)
@@ -52,6 +53,7 @@ public sealed class S3StorageService : IStorageService, IDisposable
     public async Task<string> UploadAsync(string key, Stream content, string contentType, bool isPrivate = false, CancellationToken cancellationToken = default)
     {
         var bucket = isPrivate ? _privateBucket : _publicBucket;
+        var isHttps = string.IsNullOrEmpty(_serviceUrl) || _serviceUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
 
         var request = new PutObjectRequest
         {
@@ -59,7 +61,7 @@ public sealed class S3StorageService : IStorageService, IDisposable
             Key = key,
             InputStream = content,
             ContentType = contentType,
-            DisablePayloadSigning = false
+            DisablePayloadSigning = isHttps
         };
 
         await _s3Client.PutObjectAsync(request, cancellationToken).ConfigureAwait(false);

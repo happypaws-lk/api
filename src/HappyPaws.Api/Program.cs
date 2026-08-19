@@ -235,7 +235,16 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Map Health Check
-app.MapHealthChecks("/healthz");
+var healthCheckOptions = new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, _) =>
+    {
+        context.Response.ContentType = "text/plain";
+        await context.Response.WriteAsync("api.happypaws.lk is up and wagging its tail! Ready to connect paws with loving homes.");
+    }
+};
+app.MapHealthChecks("/health", healthCheckOptions);
+app.MapHealthChecks("/healthz", healthCheckOptions);
 
 // Map SignalR Hub
 app.MapHub<HappyPaws.Api.Hubs.ChatHub>("/hubs/chat");

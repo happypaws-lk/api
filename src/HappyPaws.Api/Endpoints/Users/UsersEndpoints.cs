@@ -92,6 +92,14 @@ public class UsersEndpoints : IEndpointGroup
             .AddEndpointFilter(new RequestSizeLimitFilter(5_242_880))
             .DisableAntiforgery();
 
+        group.MapDelete("/me/avatar", DeleteAvatarAsync)
+            .RequireAuthorization()
+            .WithName("DeleteAvatar")
+            .WithSummary("Remove the authenticated user's avatar")
+            .WithDescription("Deletes the user's avatar image from storage and clears the avatar reference.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         group.MapPost("/me/change-password", ChangePasswordAsync)
             .RequireAuthorization()
             .AddEndpointFilter<ValidationFilter<ChangePasswordRequest>>()
@@ -435,6 +443,29 @@ public class UsersEndpoints : IEndpointGroup
         await db.SaveChangesAsync(ct);
 
         return TypedResults.Ok(new AvatarUploadResponse(key, storageService.GetPublicUrl(key)));
+    }
+
+    private static async Task<Results<NoContent, NotFound>> DeleteAvatarAsync(
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        IStorageService storageService,
+        IOutputCacheStore cacheStore,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+        var user = await db.Users.FirstAsync(u => u.Id == userId, ct);
+
+        if (user.AvatarKey is null)
+            return TypedResults.NotFound();
+
+        await storageService.DeleteAsync(user.AvatarKey, ct);
+        user.AvatarKey = null;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(ct);
+
+        await cacheStore.EvictByTagAsync("users", ct);
+
+        return TypedResults.NoContent();
     }
 
     private static async Task<Results<Ok, BadRequest<string>>> ChangePasswordAsync(
