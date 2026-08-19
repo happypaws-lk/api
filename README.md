@@ -1,4 +1,4 @@
-<a href="https://github.com/happypaws-lk/happypaws-api" align="center">
+<a href="https://github.com/happypaws-lk/api" align="center">
     <img src=".github/assets/banner.jpg" alt="HappyPaws API">
 </a>
 
@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/EF_Core-8+-512BD4?style=flat&logo=nuget&labelColor=171717" alt="EF Core" />
   <img src="https://img.shields.io/badge/SignalR-Realtime-000000?style=flat&labelColor=171717" alt="SignalR" />
   <img src="https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker&labelColor=171717" alt="Docker" />
-  <img src="https://raw.githubusercontent.com/happypaws-lk/happypaws-api/badges/badge_linecoverage.svg" alt="Coverage" />
+  <img src=".github/badges/badge_linecoverage.svg" alt="Coverage" />
   <img src="https://img.shields.io/badge/License-Proprietary-c03dfe?style=flat&labelColor=171717" alt="License" />
 </p>
 

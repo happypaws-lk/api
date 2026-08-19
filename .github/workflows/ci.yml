@@ -42,14 +42,15 @@ jobs:
     - name: Publish coverage summary to GitHub Step Summary
       run: cat TestResults/CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
 
-    - name: Publish coverage badges
+    - name: Commit updated coverage badge
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./TestResults/CoverageReport
-        publish_branch: badges
-        keep_files: true
+      run: |
+        mkdir -p .github/badges
+        cp TestResults/CoverageReport/badge_linecoverage.svg .github/badges/badge_linecoverage.svg
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add .github/badges/badge_linecoverage.svg
+        git diff --quiet && git diff --staged --quiet || (git commit -m "ci(coverage): update coverage badge [skip ci]" && git push)
 
     # Match the new AWS Lightsail container deployment strategy by validating the Dockerfile
     # This ensures any build errors are caught in CI before deployment.
