@@ -7,12 +7,12 @@
 <!-- Badges -->
 <p align="center">
   <img src="https://img.shields.io/badge/.NET-10.0-512BD4?style=flat&logo=dotnet&labelColor=171717" alt=".NET 10.0" />
-  <img src="https://img.shields.io/badge/C%23-239120?style=flat&logo=c-sharp&labelColor=171717" alt="C#" />
   <img src="https://img.shields.io/badge/PostgreSQL-16+-4169E1?style=flat&logo=postgresql&labelColor=171717" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/EF_Core-8+-512BD4?style=flat&logo=nuget&labelColor=171717" alt="EF Core" />
   <img src="https://img.shields.io/badge/SignalR-Realtime-000000?style=flat&labelColor=171717" alt="SignalR" />
   <img src="https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker&labelColor=171717" alt="Docker" />
-  <img src=".github/badges/badge_linecoverage.svg" alt="Coverage" />
+  <a href="https://happypaws-lk.github.io/api/">
+    <img src=".github/badges/badge_linecoverage.svg" alt="Coverage" />
+  </a>
   <img src="https://img.shields.io/badge/License-Proprietary-c03dfe?style=flat&labelColor=171717" alt="License" />
 </p>
 
@@ -223,7 +223,7 @@ This runs the test suite against `coverlet.runsettings`, filters out migrations 
 
 ### Automated CI coverage monitoring
 
-On every pull request and push to `main`, GitHub Actions executes tests, produces a markdown coverage summary in the job step summary, and updates the repository coverage badge.
+On every pull request and push to `main`, GitHub Actions executes tests, produces a markdown coverage summary in the job step summary, commits updated coverage badges, and deploys the full interactive HTML dashboard to [GitHub Pages](https://happypaws-lk.github.io/api/).
 
 ## Deployment and CI/CD
 

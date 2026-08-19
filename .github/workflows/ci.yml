@@ -36,7 +36,7 @@ jobs:
       with:
         reports: 'TestResults/**/coverage.cobertura.xml'
         targetdir: 'TestResults/CoverageReport'
-        reporttypes: 'MarkdownSummaryGithub;Badges;Cobertura'
+        reporttypes: 'Html;MarkdownSummaryGithub;Badges;Cobertura'
         title: 'HappyPaws API Test Coverage'
 
     - name: Publish coverage summary to GitHub Step Summary
@@ -51,6 +51,14 @@ jobs:
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git add .github/badges/badge_linecoverage.svg
         git diff --quiet && git diff --staged --quiet || (git commit -m "ci(coverage): update coverage badge [skip ci]" && git push)
+
+    - name: Deploy coverage dashboard to GitHub Pages
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./TestResults/CoverageReport
+        publish_branch: gh-pages
 
     # Match the new AWS Lightsail container deployment strategy by validating the Dockerfile
     # This ensures any build errors are caught in CI before deployment.
