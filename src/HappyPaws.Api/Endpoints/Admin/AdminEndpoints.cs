@@ -43,6 +43,7 @@ public class AdminEndpoints : IEndpointGroup
             .WithDescription("Sets the suspension flag and records a moderation action. Safe to call on an already-suspended user.")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesValidationProblem();
 
         group.MapPut("/users/{id:guid}/unsuspend", UnsuspendUserAsync)
@@ -57,7 +58,8 @@ public class AdminEndpoints : IEndpointGroup
             .WithSummary("Delete a user")
             .WithDescription("Completely deletes a user from the platform.")
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         group.MapPost("/moderation", CreateModerationActionAsync)
             .AddEndpointFilter<ValidationFilter<ModerationRequest>>()
@@ -301,7 +303,7 @@ public class AdminEndpoints : IEndpointGroup
         return TypedResults.Ok(new PagedResult<AdminUserResponse>(items, totalCount, query.Page, query.PageSize));
     }
 
-    private static async Task<Results<NoContent, NotFound>> SuspendUserAsync(
+    private static async Task<Results<NoContent, NotFound, BadRequest<ProblemDetails>>> SuspendUserAsync(
         Guid id,
         SuspendRequest request,
         ClaimsPrincipal principal,
@@ -309,6 +311,14 @@ public class AdminEndpoints : IEndpointGroup
         CancellationToken ct)
     {
         var adminId = principal.GetUserId();
+        if (adminId == id)
+        {
+            return TypedResults.BadRequest(new ProblemDetails
+            {
+                Title = "Invalid Operation",
+                Detail = "Admins cannot suspend their own account."
+            });
+        }
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user is null)
@@ -358,11 +368,22 @@ public class AdminEndpoints : IEndpointGroup
         return TypedResults.NoContent();
     }
 
-    private static async Task<Results<NoContent, NotFound>> DeleteUserAsync(
+    private static async Task<Results<NoContent, NotFound, BadRequest<ProblemDetails>>> DeleteUserAsync(
         Guid id,
+        ClaimsPrincipal principal,
         HappyPawsDbContext db,
         CancellationToken ct)
     {
+        var adminId = principal.GetUserId();
+        if (adminId == id)
+        {
+            return TypedResults.BadRequest(new ProblemDetails
+            {
+                Title = "Invalid Operation",
+                Detail = "Admins cannot delete their own account."
+            });
+        }
+
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user is null)
             return TypedResults.NotFound();
@@ -399,6 +420,15 @@ public class AdminEndpoints : IEndpointGroup
         }
         else if (request.TargetType == ModerationTargetType.User && request.ActionType == ModerationActionType.Suspended)
         {
+            if (request.TargetId == adminId)
+            {
+                return TypedResults.BadRequest(new ProblemDetails
+                {
+                    Title = "Invalid Operation",
+                    Detail = "Admins cannot suspend their own account."
+                });
+            }
+
             var user = await db.Users.FirstOrDefaultAsync(u => u.Id == request.TargetId, ct);
             if (user is null) return TypedResults.NotFound();
 

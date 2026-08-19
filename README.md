@@ -12,6 +12,7 @@
   <img src="https://img.shields.io/badge/EF_Core-8+-512BD4?style=flat&logo=nuget&labelColor=171717" alt="EF Core" />
   <img src="https://img.shields.io/badge/SignalR-Realtime-000000?style=flat&labelColor=171717" alt="SignalR" />
   <img src="https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker&labelColor=171717" alt="Docker" />
+  <img src="https://raw.githubusercontent.com/happypaws-lk/happypaws-api/badges/badge_linecoverage.svg" alt="Coverage" />
   <img src="https://img.shields.io/badge/License-Proprietary-c03dfe?style=flat&labelColor=171717" alt="License" />
 </p>
 
@@ -197,6 +198,32 @@ When enabled, you can access the documentation using these endpoints.
 
 *   **OpenAPI Schema:** `http://localhost:5047/openapi/v1.json` (Raw JSON definition)
 *   **Scalar UI:** `http://localhost:5047/scalar` (Interactive documentation interface)
+
+## Testing and code coverage
+
+HappyPaws uses xUnit for unit and integration testing, Testcontainers for real PostgreSQL and MinIO instances, Coverlet for code coverage collection, and ReportGenerator for HTML dashboards and badges.
+
+### Run tests locally
+
+Run the test suite from the repository root:
+
+```bash
+dotnet test
+```
+
+### Generate visual coverage reports
+
+You can generate local HTML reports and badges using our PowerShell script:
+
+```powershell
+./generate-coverage.ps1 -OpenReport
+```
+
+This runs the test suite against `coverlet.runsettings`, filters out migrations and test doubles, and opens an interactive HTML coverage dashboard in your default browser.
+
+### Automated CI coverage monitoring
+
+On every pull request and push to `main`, GitHub Actions executes tests, produces a markdown coverage summary in the job step summary, and updates the repository coverage badge.
 
 ## Deployment and CI/CD
 

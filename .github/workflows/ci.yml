@@ -11,6 +11,8 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
@@ -26,8 +28,28 @@ jobs:
     - name: Build
       run: dotnet build HappyPaws.sln --no-restore -c Release
 
-    - name: Test
-      run: dotnet test HappyPaws.sln --no-build -c Release --logger trx --results-directory "TestResults"
+    - name: Test with code coverage
+      run: dotnet test HappyPaws.sln --no-build -c Release --settings coverlet.runsettings --collect:"XPlat Code Coverage" --logger trx --results-directory "TestResults"
+
+    - name: Generate code coverage report and badges
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.4.4
+      with:
+        reports: 'TestResults/**/coverage.cobertura.xml'
+        targetdir: 'TestResults/CoverageReport'
+        reporttypes: 'MarkdownSummaryGithub;Badges;Cobertura'
+        title: 'HappyPaws API Test Coverage'
+
+    - name: Publish coverage summary to GitHub Step Summary
+      run: cat TestResults/CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Publish coverage badges
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./TestResults/CoverageReport
+        publish_branch: badges
+        keep_files: true
 
     # Match the new AWS Lightsail container deployment strategy by validating the Dockerfile
     # This ensures any build errors are caught in CI before deployment.
