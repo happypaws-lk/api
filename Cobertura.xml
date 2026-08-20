@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage line-rate="0.8172338090010977" branch-rate="0.7232142857142857" lines-covered="1489" lines-valid="1822" branches-covered="81" branches-valid="112" complexity="276" version="0" timestamp="1787146995">
+<coverage line-rate="0.8218097447795824" branch-rate="0.6044776119402985" lines-covered="1771" lines-valid="2155" branches-covered="81" branches-valid="134" complexity="307" version="0" timestamp="1787192682">
   <sources>
     <source>/home/runner/work/api/api/src/</source>
   </sources>
   <packages>
-    <package name="HappyPaws.Api" line-rate="0.7585345545378851" branch-rate="0.75" complexity="114">
+    <package name="HappyPaws.Api" line-rate="0.7761685319289006" branch-rate="0.391304347826087" complexity="143">
       <classes>
         <class name="HappyPaws.Api.Authorization.IsVerifiedAuthorizationHandler" filename="/home/runner/work/api/api/src/HappyPaws.Api/Authorization/IsVerifiedAuthorizationHandler.cs" line-rate="1" branch-rate="1" complexity="4">
           <methods>
@@ -1261,7 +1261,7 @@
         </class>
         <class name="HappyPaws.Api.Endpoints.Listings.CreateListingRequest" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Listings/ListingContracts.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
-            <method name=".ctor" signature="(System.Nullable`1&lt;System.Guid&gt;,System.String,System.String,System.String,System.Int32,System.String,HappyPaws.Core.Enums.Gender,HappyPaws.Core.Enums.AnimalSize,HappyPaws.Core.Enums.ActivityLevel,System.String,System.Double,System.Double,System.String)" line-rate="1" branch-rate="1" complexity="1">
+            <method name=".ctor" signature="(System.Nullable`1&lt;System.Guid&gt;,System.String,System.String,System.String,System.String,System.Int32,System.String,HappyPaws.Core.Enums.Gender,HappyPaws.Core.Enums.AnimalSize,HappyPaws.Core.Enums.ActivityLevel,System.String,System.Double,System.Double,System.String,System.Collections.Generic.List`1&lt;System.String&gt;)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
                 <line number="19" hits="4" branch="false" />
                 <line number="20" hits="4" branch="false" />
@@ -1277,6 +1277,8 @@
                 <line number="30" hits="4" branch="false" />
                 <line number="31" hits="4" branch="false" />
                 <line number="32" hits="4" branch="false" />
+                <line number="33" hits="4" branch="false" />
+                <line number="34" hits="4" branch="false" />
               </lines>
             </method>
           </methods>
@@ -1295,6 +1297,8 @@
             <line number="30" hits="4" branch="false" />
             <line number="31" hits="4" branch="false" />
             <line number="32" hits="4" branch="false" />
+            <line number="33" hits="4" branch="false" />
+            <line number="34" hits="4" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Listings.CreateListingRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Listings/ListingValidators.cs" line-rate="1" branch-rate="1" complexity="1">
@@ -1337,14 +1341,8 @@
         </class>
         <class name="HappyPaws.Api.Endpoints.Listings.ListingDetailResponse" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Listings/ListingContracts.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
-            <method name=".ctor" signature="(System.Guid,System.Guid,System.String,System.Nullable`1&lt;System.Guid&gt;,System.String,System.String,System.String,System.Int32,System.String,HappyPaws.Core.Enums.Gender,HappyPaws.Core.Enums.AnimalSize,HappyPaws.Core.Enums.ActivityLevel,System.String,System.Double,System.Double,System.String,HappyPaws.Core.Enums.ListingStatus,System.DateTimeOffset,System.DateTimeOffset,System.Collections.Generic.List`1&lt;HappyPaws.Api.Endpoints.Listings.ListingPhotoResponse&gt;)" line-rate="1" branch-rate="1" complexity="1">
+            <method name=".ctor" signature="(System.Guid,System.Guid,System.String,System.Nullable`1&lt;System.Guid&gt;,System.String,System.String,System.String,System.String,System.Int32,System.String,HappyPaws.Core.Enums.Gender,HappyPaws.Core.Enums.AnimalSize,HappyPaws.Core.Enums.ActivityLevel,System.String,System.Double,System.Double,System.String,HappyPaws.Core.Enums.ListingStatus,System.Collections.Generic.List`1&lt;System.String&gt;,System.DateTimeOffset,System.DateTimeOffset,System.Collections.Generic.List`1&lt;HappyPaws.Api.Endpoints.Listings.ListingPhotoResponse&gt;)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="116" hits="2" branch="false" />
-                <line number="117" hits="2" branch="false" />
-                <line number="118" hits="2" branch="false" />
-                <line number="119" hits="2" branch="false" />
-                <line number="120" hits="2" branch="false" />
-                <line number="121" hits="2" branch="false" />
                 <line number="122" hits="2" branch="false" />
                 <line number="123" hits="2" branch="false" />
                 <line number="124" hits="2" branch="false" />
@@ -1360,16 +1358,18 @@
                 <line number="134" hits="2" branch="false" />
                 <line number="135" hits="2" branch="false" />
                 <line number="136" hits="2" branch="false" />
+                <line number="137" hits="2" branch="false" />
+                <line number="138" hits="2" branch="false" />
+                <line number="139" hits="2" branch="false" />
+                <line number="140" hits="2" branch="false" />
+                <line number="141" hits="2" branch="false" />
+                <line number="142" hits="2" branch="false" />
+                <line number="143" hits="2" branch="false" />
+                <line number="144" hits="2" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="116" hits="2" branch="false" />
-            <line number="117" hits="2" branch="false" />
-            <line number="118" hits="2" branch="false" />
-            <line number="119" hits="2" branch="false" />
-            <line number="120" hits="2" branch="false" />
-            <line number="121" hits="2" branch="false" />
             <line number="122" hits="2" branch="false" />
             <line number="123" hits="2" branch="false" />
             <line number="124" hits="2" branch="false" />
@@ -1385,36 +1385,40 @@
             <line number="134" hits="2" branch="false" />
             <line number="135" hits="2" branch="false" />
             <line number="136" hits="2" branch="false" />
+            <line number="137" hits="2" branch="false" />
+            <line number="138" hits="2" branch="false" />
+            <line number="139" hits="2" branch="false" />
+            <line number="140" hits="2" branch="false" />
+            <line number="141" hits="2" branch="false" />
+            <line number="142" hits="2" branch="false" />
+            <line number="143" hits="2" branch="false" />
+            <line number="144" hits="2" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Listings.ListingPhotoResponse" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Listings/ListingContracts.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name=".ctor" signature="(System.Guid,System.String,System.Int32,System.DateTimeOffset)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="143" hits="0" branch="false" />
-                <line number="144" hits="0" branch="false" />
-                <line number="145" hits="0" branch="false" />
-                <line number="146" hits="0" branch="false" />
-                <line number="147" hits="0" branch="false" />
+                <line number="151" hits="0" branch="false" />
+                <line number="152" hits="0" branch="false" />
+                <line number="153" hits="0" branch="false" />
+                <line number="154" hits="0" branch="false" />
+                <line number="155" hits="0" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="143" hits="0" branch="false" />
-            <line number="144" hits="0" branch="false" />
-            <line number="145" hits="0" branch="false" />
-            <line number="146" hits="0" branch="false" />
-            <line number="147" hits="0" branch="false" />
+            <line number="151" hits="0" branch="false" />
+            <line number="152" hits="0" branch="false" />
+            <line number="153" hits="0" branch="false" />
+            <line number="154" hits="0" branch="false" />
+            <line number="155" hits="0" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Listings.ListingResponse" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Listings/ListingContracts.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
-            <method name=".ctor" signature="(System.Guid,System.String,System.String,System.String,System.Int32,System.String,HappyPaws.Core.Enums.Gender,HappyPaws.Core.Enums.AnimalSize,HappyPaws.Core.Enums.ActivityLevel,System.String,HappyPaws.Core.Enums.ListingStatus,System.String,System.DateTimeOffset)" line-rate="0" branch-rate="1" complexity="1">
+            <method name=".ctor" signature="(System.Guid,System.String,System.String,System.String,System.String,System.Int32,System.String,HappyPaws.Core.Enums.Gender,HappyPaws.Core.Enums.AnimalSize,HappyPaws.Core.Enums.ActivityLevel,System.String,HappyPaws.Core.Enums.ListingStatus,System.Collections.Generic.List`1&lt;System.String&gt;,System.String,System.DateTimeOffset)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="80" hits="0" branch="false" />
-                <line number="81" hits="0" branch="false" />
-                <line number="82" hits="0" branch="false" />
-                <line number="83" hits="0" branch="false" />
                 <line number="84" hits="0" branch="false" />
                 <line number="85" hits="0" branch="false" />
                 <line number="86" hits="0" branch="false" />
@@ -1425,14 +1429,16 @@
                 <line number="91" hits="0" branch="false" />
                 <line number="92" hits="0" branch="false" />
                 <line number="93" hits="0" branch="false" />
+                <line number="94" hits="0" branch="false" />
+                <line number="95" hits="0" branch="false" />
+                <line number="96" hits="0" branch="false" />
+                <line number="97" hits="0" branch="false" />
+                <line number="98" hits="0" branch="false" />
+                <line number="99" hits="0" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="80" hits="0" branch="false" />
-            <line number="81" hits="0" branch="false" />
-            <line number="82" hits="0" branch="false" />
-            <line number="83" hits="0" branch="false" />
             <line number="84" hits="0" branch="false" />
             <line number="85" hits="0" branch="false" />
             <line number="86" hits="0" branch="false" />
@@ -1443,6 +1449,12 @@
             <line number="91" hits="0" branch="false" />
             <line number="92" hits="0" branch="false" />
             <line number="93" hits="0" branch="false" />
+            <line number="94" hits="0" branch="false" />
+            <line number="95" hits="0" branch="false" />
+            <line number="96" hits="0" branch="false" />
+            <line number="97" hits="0" branch="false" />
+            <line number="98" hits="0" branch="false" />
+            <line number="99" hits="0" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Listings.ListingsEndpoints" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Listings/ListingsEndpoints.cs" line-rate="1" branch-rate="1" complexity="1">
@@ -1649,10 +1661,8 @@
         </class>
         <class name="HappyPaws.Api.Endpoints.Listings.UpdateListingRequest" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Listings/ListingContracts.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
-            <method name=".ctor" signature="(System.String,System.String,System.String,System.Int32,System.String,HappyPaws.Core.Enums.Gender,HappyPaws.Core.Enums.AnimalSize,HappyPaws.Core.Enums.ActivityLevel,System.String,System.Double,System.Double,System.String)" line-rate="0" branch-rate="1" complexity="1">
+            <method name=".ctor" signature="(System.String,System.String,System.String,System.String,System.Int32,System.String,HappyPaws.Core.Enums.Gender,HappyPaws.Core.Enums.AnimalSize,HappyPaws.Core.Enums.ActivityLevel,System.String,System.Double,System.Double,System.String,System.Collections.Generic.List`1&lt;System.String&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="47" hits="0" branch="false" />
-                <line number="48" hits="0" branch="false" />
                 <line number="49" hits="0" branch="false" />
                 <line number="50" hits="0" branch="false" />
                 <line number="51" hits="0" branch="false" />
@@ -1664,12 +1674,14 @@
                 <line number="57" hits="0" branch="false" />
                 <line number="58" hits="0" branch="false" />
                 <line number="59" hits="0" branch="false" />
+                <line number="60" hits="0" branch="false" />
+                <line number="61" hits="0" branch="false" />
+                <line number="62" hits="0" branch="false" />
+                <line number="63" hits="0" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="47" hits="0" branch="false" />
-            <line number="48" hits="0" branch="false" />
             <line number="49" hits="0" branch="false" />
             <line number="50" hits="0" branch="false" />
             <line number="51" hits="0" branch="false" />
@@ -1681,6 +1693,10 @@
             <line number="57" hits="0" branch="false" />
             <line number="58" hits="0" branch="false" />
             <line number="59" hits="0" branch="false" />
+            <line number="60" hits="0" branch="false" />
+            <line number="61" hits="0" branch="false" />
+            <line number="62" hits="0" branch="false" />
+            <line number="63" hits="0" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Listings.UpdateListingRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Listings/ListingValidators.cs" line-rate="0" branch-rate="1" complexity="1">
@@ -1725,14 +1741,14 @@
           <methods>
             <method name=".ctor" signature="(HappyPaws.Core.Enums.ListingStatus)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="63" hits="0" branch="false" />
-                <line number="64" hits="0" branch="false" />
+                <line number="67" hits="0" branch="false" />
+                <line number="68" hits="0" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="63" hits="0" branch="false" />
-            <line number="64" hits="0" branch="false" />
+            <line number="67" hits="0" branch="false" />
+            <line number="68" hits="0" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Listings.UpdateListingStatusRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Listings/ListingValidators.cs" line-rate="0" branch-rate="1" complexity="1">
@@ -1961,31 +1977,31 @@
           <methods>
             <method name=".ctor" signature="(System.Guid,System.Guid,System.String,HappyPaws.Core.Enums.UpdateType,System.String,System.String,System.DateTimeOffset)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="90" hits="10" branch="false" />
-                <line number="91" hits="10" branch="false" />
-                <line number="92" hits="10" branch="false" />
-                <line number="93" hits="10" branch="false" />
-                <line number="94" hits="10" branch="false" />
-                <line number="95" hits="10" branch="false" />
                 <line number="96" hits="10" branch="false" />
                 <line number="97" hits="10" branch="false" />
+                <line number="98" hits="10" branch="false" />
+                <line number="99" hits="10" branch="false" />
+                <line number="100" hits="10" branch="false" />
+                <line number="101" hits="10" branch="false" />
+                <line number="102" hits="10" branch="false" />
+                <line number="103" hits="10" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="90" hits="10" branch="false" />
-            <line number="91" hits="10" branch="false" />
-            <line number="92" hits="10" branch="false" />
-            <line number="93" hits="10" branch="false" />
-            <line number="94" hits="10" branch="false" />
-            <line number="95" hits="10" branch="false" />
             <line number="96" hits="10" branch="false" />
             <line number="97" hits="10" branch="false" />
+            <line number="98" hits="10" branch="false" />
+            <line number="99" hits="10" branch="false" />
+            <line number="100" hits="10" branch="false" />
+            <line number="101" hits="10" branch="false" />
+            <line number="102" hits="10" branch="false" />
+            <line number="103" hits="10" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Rescues.CreateRescueRequest" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Rescues/RescueContracts.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
-            <method name=".ctor" signature="(System.Double,System.Double,System.String,System.String,System.String)" line-rate="1" branch-rate="1" complexity="1">
+            <method name=".ctor" signature="(System.String,System.Double,System.Double,System.String,System.String,System.String,System.String)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
                 <line number="12" hits="22" branch="false" />
                 <line number="13" hits="22" branch="false" />
@@ -1993,6 +2009,8 @@
                 <line number="15" hits="22" branch="false" />
                 <line number="16" hits="22" branch="false" />
                 <line number="17" hits="22" branch="false" />
+                <line number="18" hits="22" branch="false" />
+                <line number="19" hits="22" branch="false" />
               </lines>
             </method>
           </methods>
@@ -2003,6 +2021,8 @@
             <line number="15" hits="22" branch="false" />
             <line number="16" hits="22" branch="false" />
             <line number="17" hits="22" branch="false" />
+            <line number="18" hits="22" branch="false" />
+            <line number="19" hits="22" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Rescues.CreateRescueRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Rescues/RescueValidators.cs" line-rate="1" branch-rate="1" complexity="1">
@@ -2049,16 +2069,16 @@
           <methods>
             <method name=".ctor" signature="(HappyPaws.Core.Enums.UpdateType,System.String)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="22" hits="6" branch="false" />
-                <line number="23" hits="6" branch="false" />
                 <line number="24" hits="6" branch="false" />
+                <line number="25" hits="6" branch="false" />
+                <line number="26" hits="6" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="22" hits="6" branch="false" />
-            <line number="23" hits="6" branch="false" />
             <line number="24" hits="6" branch="false" />
+            <line number="25" hits="6" branch="false" />
+            <line number="26" hits="6" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Rescues.PostCaseUpdateRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Rescues/RescueValidators.cs" line-rate="1" branch-rate="1" complexity="1">
@@ -2081,10 +2101,8 @@
         </class>
         <class name="HappyPaws.Api.Endpoints.Rescues.RescueCaseResponse" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Rescues/RescueContracts.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
-            <method name=".ctor" signature="(System.Guid,System.Guid,System.String,System.Nullable`1&lt;System.Guid&gt;,System.String,System.Double,System.Double,System.String,System.String,System.String,System.String,HappyPaws.Core.Enums.Urgency,System.Nullable`1&lt;HappyPaws.Core.Enums.Urgency&gt;,HappyPaws.Core.Enums.UrgencySource,HappyPaws.Core.Enums.CaseStatus,System.DateTimeOffset,System.DateTimeOffset)" line-rate="1" branch-rate="1" complexity="1">
+            <method name=".ctor" signature="(System.Guid,System.String,System.Guid,System.String,System.Nullable`1&lt;System.Guid&gt;,System.String,System.Double,System.Double,System.String,System.String,System.String,System.String,HappyPaws.Core.Enums.Urgency,System.Nullable`1&lt;HappyPaws.Core.Enums.Urgency&gt;,HappyPaws.Core.Enums.UrgencySource,HappyPaws.Core.Enums.CaseStatus,System.Collections.Generic.List`1&lt;System.String&gt;,System.DateTimeOffset,System.DateTimeOffset)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="48" hits="60" branch="false" />
-                <line number="49" hits="60" branch="false" />
                 <line number="50" hits="60" branch="false" />
                 <line number="51" hits="60" branch="false" />
                 <line number="52" hits="60" branch="false" />
@@ -2101,12 +2119,14 @@
                 <line number="63" hits="60" branch="false" />
                 <line number="64" hits="60" branch="false" />
                 <line number="65" hits="60" branch="false" />
+                <line number="66" hits="60" branch="false" />
+                <line number="67" hits="60" branch="false" />
+                <line number="68" hits="60" branch="false" />
+                <line number="69" hits="60" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="48" hits="60" branch="false" />
-            <line number="49" hits="60" branch="false" />
             <line number="50" hits="60" branch="false" />
             <line number="51" hits="60" branch="false" />
             <line number="52" hits="60" branch="false" />
@@ -2123,30 +2143,38 @@
             <line number="63" hits="60" branch="false" />
             <line number="64" hits="60" branch="false" />
             <line number="65" hits="60" branch="false" />
+            <line number="66" hits="60" branch="false" />
+            <line number="67" hits="60" branch="false" />
+            <line number="68" hits="60" branch="false" />
+            <line number="69" hits="60" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Rescues.RescueCaseSummaryResponse" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Rescues/RescueContracts.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
-            <method name=".ctor" signature="(System.Guid,System.String,System.String,HappyPaws.Core.Enums.Urgency,HappyPaws.Core.Enums.CaseStatus,System.DateTimeOffset)" line-rate="1" branch-rate="1" complexity="1">
+            <method name=".ctor" signature="(System.Guid,System.String,System.String,System.String,HappyPaws.Core.Enums.Urgency,HappyPaws.Core.Enums.CaseStatus,System.Collections.Generic.List`1&lt;System.String&gt;,System.DateTimeOffset)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="74" hits="30" branch="false" />
-                <line number="75" hits="30" branch="false" />
-                <line number="76" hits="30" branch="false" />
-                <line number="77" hits="30" branch="false" />
-                <line number="78" hits="30" branch="false" />
-                <line number="79" hits="30" branch="false" />
-                <line number="80" hits="30" branch="false" />
+                <line number="78" hits="24" branch="false" />
+                <line number="79" hits="24" branch="false" />
+                <line number="80" hits="24" branch="false" />
+                <line number="81" hits="24" branch="false" />
+                <line number="82" hits="24" branch="false" />
+                <line number="83" hits="24" branch="false" />
+                <line number="84" hits="24" branch="false" />
+                <line number="85" hits="24" branch="false" />
+                <line number="86" hits="24" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="74" hits="30" branch="false" />
-            <line number="75" hits="30" branch="false" />
-            <line number="76" hits="30" branch="false" />
-            <line number="77" hits="30" branch="false" />
-            <line number="78" hits="30" branch="false" />
-            <line number="79" hits="30" branch="false" />
-            <line number="80" hits="30" branch="false" />
+            <line number="78" hits="24" branch="false" />
+            <line number="79" hits="24" branch="false" />
+            <line number="80" hits="24" branch="false" />
+            <line number="81" hits="24" branch="false" />
+            <line number="82" hits="24" branch="false" />
+            <line number="83" hits="24" branch="false" />
+            <line number="84" hits="24" branch="false" />
+            <line number="85" hits="24" branch="false" />
+            <line number="86" hits="24" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Rescues.RescuesEndpoints" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Rescues/RescuesEndpoints.cs" line-rate="1" branch-rate="1" complexity="2">
@@ -2229,10 +2257,6 @@
             </method>
             <method name="MapToResponse" signature="(HappyPaws.Core.Entities.RescueCase,System.String,System.String,System.String)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="478" hits="34" branch="false" />
-                <line number="479" hits="34" branch="false" />
-                <line number="480" hits="34" branch="false" />
-                <line number="481" hits="34" branch="false" />
                 <line number="482" hits="34" branch="false" />
                 <line number="483" hits="34" branch="false" />
                 <line number="484" hits="34" branch="false" />
@@ -2247,6 +2271,12 @@
                 <line number="493" hits="34" branch="false" />
                 <line number="494" hits="34" branch="false" />
                 <line number="495" hits="34" branch="false" />
+                <line number="496" hits="34" branch="false" />
+                <line number="497" hits="34" branch="false" />
+                <line number="498" hits="34" branch="false" />
+                <line number="499" hits="34" branch="false" />
+                <line number="500" hits="34" branch="false" />
+                <line number="501" hits="34" branch="false" />
               </lines>
             </method>
           </methods>
@@ -2323,10 +2353,6 @@
             <line number="95" hits="2" branch="false" />
             <line number="96" hits="2" branch="false" />
             <line number="97" hits="2" branch="false" />
-            <line number="478" hits="34" branch="false" />
-            <line number="479" hits="34" branch="false" />
-            <line number="480" hits="34" branch="false" />
-            <line number="481" hits="34" branch="false" />
             <line number="482" hits="34" branch="false" />
             <line number="483" hits="34" branch="false" />
             <line number="484" hits="34" branch="false" />
@@ -2341,6 +2367,12 @@
             <line number="493" hits="34" branch="false" />
             <line number="494" hits="34" branch="false" />
             <line number="495" hits="34" branch="false" />
+            <line number="496" hits="34" branch="false" />
+            <line number="497" hits="34" branch="false" />
+            <line number="498" hits="34" branch="false" />
+            <line number="499" hits="34" branch="false" />
+            <line number="500" hits="34" branch="false" />
+            <line number="501" hits="34" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Setup.SetupCompleteRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Setup/SetupValidators.cs" line-rate="0" branch-rate="1" complexity="1">
@@ -2403,32 +2435,384 @@
             <line number="32" hits="2" branch="false" />
           </lines>
         </class>
-        <class name="HappyPaws.Api.Endpoints.Transports.CreateTransportRequest" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Transports/TransportContracts.cs" line-rate="1" branch-rate="1" complexity="1">
+        <class name="HappyPaws.Api.Endpoints.Stories.CommunityStoryResponse" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Stories/StoryContracts.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
-            <method name=".ctor" signature="(System.Guid,System.Double,System.Double,System.String,System.Double,System.Double,System.String)" line-rate="1" branch-rate="1" complexity="1">
+            <method name=".ctor" signature="(System.Guid,System.String,System.String,System.String,System.String,System.Collections.Generic.List`1&lt;System.String&gt;,System.Guid,System.String,System.DateTimeOffset)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="13" hits="4" branch="false" />
-                <line number="14" hits="4" branch="false" />
-                <line number="15" hits="4" branch="false" />
-                <line number="16" hits="4" branch="false" />
-                <line number="17" hits="4" branch="false" />
-                <line number="18" hits="4" branch="false" />
-                <line number="19" hits="4" branch="false" />
-                <line number="20" hits="4" branch="false" />
-                <line number="21" hits="4" branch="false" />
+                <line number="7" hits="0" branch="false" />
+                <line number="8" hits="0" branch="false" />
+                <line number="9" hits="0" branch="false" />
+                <line number="10" hits="0" branch="false" />
+                <line number="11" hits="0" branch="false" />
+                <line number="12" hits="0" branch="false" />
+                <line number="13" hits="0" branch="false" />
+                <line number="14" hits="0" branch="false" />
+                <line number="15" hits="0" branch="false" />
+                <line number="16" hits="0" branch="false" />
+                <line number="17" hits="0" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="13" hits="4" branch="false" />
-            <line number="14" hits="4" branch="false" />
-            <line number="15" hits="4" branch="false" />
-            <line number="16" hits="4" branch="false" />
-            <line number="17" hits="4" branch="false" />
-            <line number="18" hits="4" branch="false" />
-            <line number="19" hits="4" branch="false" />
-            <line number="20" hits="4" branch="false" />
-            <line number="21" hits="4" branch="false" />
+            <line number="7" hits="0" branch="false" />
+            <line number="8" hits="0" branch="false" />
+            <line number="9" hits="0" branch="false" />
+            <line number="10" hits="0" branch="false" />
+            <line number="11" hits="0" branch="false" />
+            <line number="12" hits="0" branch="false" />
+            <line number="13" hits="0" branch="false" />
+            <line number="14" hits="0" branch="false" />
+            <line number="15" hits="0" branch="false" />
+            <line number="16" hits="0" branch="false" />
+            <line number="17" hits="0" branch="false" />
+          </lines>
+        </class>
+        <class name="HappyPaws.Api.Endpoints.Stories.CreateCommunityStoryRequest" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Stories/StoryContracts.cs" line-rate="0" branch-rate="1" complexity="1">
+          <methods>
+            <method name=".ctor" signature="(System.String,System.String,System.String)" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="19" hits="0" branch="false" />
+                <line number="20" hits="0" branch="false" />
+                <line number="21" hits="0" branch="false" />
+                <line number="22" hits="0" branch="false" />
+                <line number="23" hits="0" branch="false" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="19" hits="0" branch="false" />
+            <line number="20" hits="0" branch="false" />
+            <line number="21" hits="0" branch="false" />
+            <line number="22" hits="0" branch="false" />
+            <line number="23" hits="0" branch="false" />
+          </lines>
+        </class>
+        <class name="HappyPaws.Api.Endpoints.Stories.StoriesEndpoints" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Stories/StoriesEndpoints.cs" line-rate="1" branch-rate="1" complexity="1">
+          <methods>
+            <method name="Map" signature="(Microsoft.AspNetCore.Routing.RouteGroupBuilder)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="22" hits="2" branch="false" />
+                <line number="24" hits="2" branch="false" />
+                <line number="25" hits="2" branch="false" />
+                <line number="26" hits="2" branch="false" />
+                <line number="27" hits="2" branch="false" />
+                <line number="28" hits="2" branch="false" />
+                <line number="29" hits="2" branch="false" />
+                <line number="30" hits="2" branch="false" />
+                <line number="31" hits="2" branch="false" />
+                <line number="32" hits="2" branch="false" />
+                <line number="33" hits="2" branch="false" />
+                <line number="34" hits="2" branch="false" />
+                <line number="35" hits="2" branch="false" />
+                <line number="36" hits="2" branch="false" />
+                <line number="37" hits="2" branch="false" />
+                <line number="38" hits="2" branch="false" />
+                <line number="39" hits="2" branch="false" />
+                <line number="40" hits="2" branch="false" />
+                <line number="41" hits="2" branch="false" />
+                <line number="42" hits="2" branch="false" />
+                <line number="43" hits="2" branch="false" />
+                <line number="44" hits="2" branch="false" />
+                <line number="45" hits="2" branch="false" />
+                <line number="46" hits="2" branch="false" />
+                <line number="47" hits="2" branch="false" />
+                <line number="48" hits="2" branch="false" />
+                <line number="49" hits="2" branch="false" />
+                <line number="50" hits="2" branch="false" />
+                <line number="51" hits="2" branch="false" />
+                <line number="52" hits="2" branch="false" />
+                <line number="53" hits="2" branch="false" />
+                <line number="54" hits="2" branch="false" />
+                <line number="55" hits="2" branch="false" />
+                <line number="56" hits="2" branch="false" />
+                <line number="58" hits="2" branch="false" />
+                <line number="59" hits="2" branch="false" />
+                <line number="60" hits="2" branch="false" />
+                <line number="61" hits="2" branch="false" />
+                <line number="62" hits="2" branch="false" />
+                <line number="63" hits="2" branch="false" />
+                <line number="64" hits="2" branch="false" />
+                <line number="65" hits="2" branch="false" />
+                <line number="66" hits="2" branch="false" />
+                <line number="67" hits="2" branch="false" />
+                <line number="68" hits="2" branch="false" />
+                <line number="69" hits="2" branch="false" />
+                <line number="70" hits="2" branch="false" />
+                <line number="71" hits="2" branch="false" />
+                <line number="72" hits="2" branch="false" />
+                <line number="73" hits="2" branch="false" />
+                <line number="74" hits="2" branch="false" />
+                <line number="75" hits="2" branch="false" />
+                <line number="76" hits="2" branch="false" />
+                <line number="77" hits="2" branch="false" />
+                <line number="78" hits="2" branch="false" />
+                <line number="79" hits="2" branch="false" />
+                <line number="80" hits="2" branch="false" />
+                <line number="82" hits="2" branch="false" />
+                <line number="83" hits="2" branch="false" />
+                <line number="84" hits="2" branch="false" />
+                <line number="85" hits="2" branch="false" />
+                <line number="86" hits="2" branch="false" />
+                <line number="87" hits="2" branch="false" />
+                <line number="88" hits="2" branch="false" />
+                <line number="89" hits="2" branch="false" />
+                <line number="90" hits="2" branch="false" />
+                <line number="91" hits="2" branch="false" />
+                <line number="92" hits="2" branch="false" />
+                <line number="93" hits="2" branch="false" />
+                <line number="94" hits="2" branch="false" />
+                <line number="95" hits="2" branch="false" />
+                <line number="96" hits="2" branch="false" />
+                <line number="97" hits="2" branch="false" />
+                <line number="98" hits="2" branch="false" />
+                <line number="99" hits="2" branch="false" />
+                <line number="100" hits="2" branch="false" />
+                <line number="101" hits="2" branch="false" />
+                <line number="102" hits="2" branch="false" />
+                <line number="103" hits="2" branch="false" />
+                <line number="104" hits="2" branch="false" />
+                <line number="105" hits="2" branch="false" />
+                <line number="106" hits="2" branch="false" />
+                <line number="107" hits="2" branch="false" />
+                <line number="108" hits="2" branch="false" />
+                <line number="109" hits="2" branch="false" />
+                <line number="110" hits="2" branch="false" />
+                <line number="111" hits="2" branch="false" />
+                <line number="112" hits="2" branch="false" />
+                <line number="113" hits="2" branch="false" />
+                <line number="114" hits="2" branch="false" />
+                <line number="115" hits="2" branch="false" />
+                <line number="116" hits="2" branch="false" />
+                <line number="117" hits="2" branch="false" />
+                <line number="118" hits="2" branch="false" />
+                <line number="119" hits="2" branch="false" />
+                <line number="120" hits="2" branch="false" />
+                <line number="121" hits="2" branch="false" />
+                <line number="122" hits="2" branch="false" />
+                <line number="123" hits="2" branch="false" />
+                <line number="124" hits="2" branch="false" />
+                <line number="125" hits="2" branch="false" />
+                <line number="126" hits="2" branch="false" />
+                <line number="127" hits="2" branch="false" />
+                <line number="128" hits="2" branch="false" />
+                <line number="129" hits="2" branch="false" />
+                <line number="130" hits="2" branch="false" />
+                <line number="131" hits="2" branch="false" />
+                <line number="132" hits="2" branch="false" />
+                <line number="133" hits="2" branch="false" />
+                <line number="134" hits="2" branch="false" />
+                <line number="135" hits="2" branch="false" />
+                <line number="136" hits="2" branch="false" />
+                <line number="137" hits="2" branch="false" />
+                <line number="138" hits="2" branch="false" />
+                <line number="139" hits="2" branch="false" />
+                <line number="141" hits="2" branch="false" />
+                <line number="142" hits="2" branch="false" />
+                <line number="143" hits="2" branch="false" />
+                <line number="144" hits="2" branch="false" />
+                <line number="145" hits="2" branch="false" />
+                <line number="146" hits="2" branch="false" />
+                <line number="147" hits="2" branch="false" />
+                <line number="148" hits="2" branch="false" />
+                <line number="149" hits="2" branch="false" />
+                <line number="150" hits="2" branch="false" />
+                <line number="151" hits="2" branch="false" />
+                <line number="152" hits="2" branch="false" />
+                <line number="153" hits="2" branch="false" />
+                <line number="154" hits="2" branch="false" />
+                <line number="155" hits="2" branch="false" />
+                <line number="156" hits="2" branch="false" />
+                <line number="157" hits="2" branch="false" />
+                <line number="158" hits="2" branch="false" />
+                <line number="159" hits="2" branch="false" />
+                <line number="160" hits="2" branch="false" />
+                <line number="161" hits="2" branch="false" />
+                <line number="162" hits="2" branch="false" />
+                <line number="163" hits="2" branch="false" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="22" hits="2" branch="false" />
+            <line number="24" hits="2" branch="false" />
+            <line number="25" hits="2" branch="false" />
+            <line number="26" hits="2" branch="false" />
+            <line number="27" hits="2" branch="false" />
+            <line number="28" hits="2" branch="false" />
+            <line number="29" hits="2" branch="false" />
+            <line number="30" hits="2" branch="false" />
+            <line number="31" hits="2" branch="false" />
+            <line number="32" hits="2" branch="false" />
+            <line number="33" hits="2" branch="false" />
+            <line number="34" hits="2" branch="false" />
+            <line number="35" hits="2" branch="false" />
+            <line number="36" hits="2" branch="false" />
+            <line number="37" hits="2" branch="false" />
+            <line number="38" hits="2" branch="false" />
+            <line number="39" hits="2" branch="false" />
+            <line number="40" hits="2" branch="false" />
+            <line number="41" hits="2" branch="false" />
+            <line number="42" hits="2" branch="false" />
+            <line number="43" hits="2" branch="false" />
+            <line number="44" hits="2" branch="false" />
+            <line number="45" hits="2" branch="false" />
+            <line number="46" hits="2" branch="false" />
+            <line number="47" hits="2" branch="false" />
+            <line number="48" hits="2" branch="false" />
+            <line number="49" hits="2" branch="false" />
+            <line number="50" hits="2" branch="false" />
+            <line number="51" hits="2" branch="false" />
+            <line number="52" hits="2" branch="false" />
+            <line number="53" hits="2" branch="false" />
+            <line number="54" hits="2" branch="false" />
+            <line number="55" hits="2" branch="false" />
+            <line number="56" hits="2" branch="false" />
+            <line number="58" hits="2" branch="false" />
+            <line number="59" hits="2" branch="false" />
+            <line number="60" hits="2" branch="false" />
+            <line number="61" hits="2" branch="false" />
+            <line number="62" hits="2" branch="false" />
+            <line number="63" hits="2" branch="false" />
+            <line number="64" hits="2" branch="false" />
+            <line number="65" hits="2" branch="false" />
+            <line number="66" hits="2" branch="false" />
+            <line number="67" hits="2" branch="false" />
+            <line number="68" hits="2" branch="false" />
+            <line number="69" hits="2" branch="false" />
+            <line number="70" hits="2" branch="false" />
+            <line number="71" hits="2" branch="false" />
+            <line number="72" hits="2" branch="false" />
+            <line number="73" hits="2" branch="false" />
+            <line number="74" hits="2" branch="false" />
+            <line number="75" hits="2" branch="false" />
+            <line number="76" hits="2" branch="false" />
+            <line number="77" hits="2" branch="false" />
+            <line number="78" hits="2" branch="false" />
+            <line number="79" hits="2" branch="false" />
+            <line number="80" hits="2" branch="false" />
+            <line number="82" hits="2" branch="false" />
+            <line number="83" hits="2" branch="false" />
+            <line number="84" hits="2" branch="false" />
+            <line number="85" hits="2" branch="false" />
+            <line number="86" hits="2" branch="false" />
+            <line number="87" hits="2" branch="false" />
+            <line number="88" hits="2" branch="false" />
+            <line number="89" hits="2" branch="false" />
+            <line number="90" hits="2" branch="false" />
+            <line number="91" hits="2" branch="false" />
+            <line number="92" hits="2" branch="false" />
+            <line number="93" hits="2" branch="false" />
+            <line number="94" hits="2" branch="false" />
+            <line number="95" hits="2" branch="false" />
+            <line number="96" hits="2" branch="false" />
+            <line number="97" hits="2" branch="false" />
+            <line number="98" hits="2" branch="false" />
+            <line number="99" hits="2" branch="false" />
+            <line number="100" hits="2" branch="false" />
+            <line number="101" hits="2" branch="false" />
+            <line number="102" hits="2" branch="false" />
+            <line number="103" hits="2" branch="false" />
+            <line number="104" hits="2" branch="false" />
+            <line number="105" hits="2" branch="false" />
+            <line number="106" hits="2" branch="false" />
+            <line number="107" hits="2" branch="false" />
+            <line number="108" hits="2" branch="false" />
+            <line number="109" hits="2" branch="false" />
+            <line number="110" hits="2" branch="false" />
+            <line number="111" hits="2" branch="false" />
+            <line number="112" hits="2" branch="false" />
+            <line number="113" hits="2" branch="false" />
+            <line number="114" hits="2" branch="false" />
+            <line number="115" hits="2" branch="false" />
+            <line number="116" hits="2" branch="false" />
+            <line number="117" hits="2" branch="false" />
+            <line number="118" hits="2" branch="false" />
+            <line number="119" hits="2" branch="false" />
+            <line number="120" hits="2" branch="false" />
+            <line number="121" hits="2" branch="false" />
+            <line number="122" hits="2" branch="false" />
+            <line number="123" hits="2" branch="false" />
+            <line number="124" hits="2" branch="false" />
+            <line number="125" hits="2" branch="false" />
+            <line number="126" hits="2" branch="false" />
+            <line number="127" hits="2" branch="false" />
+            <line number="128" hits="2" branch="false" />
+            <line number="129" hits="2" branch="false" />
+            <line number="130" hits="2" branch="false" />
+            <line number="131" hits="2" branch="false" />
+            <line number="132" hits="2" branch="false" />
+            <line number="133" hits="2" branch="false" />
+            <line number="134" hits="2" branch="false" />
+            <line number="135" hits="2" branch="false" />
+            <line number="136" hits="2" branch="false" />
+            <line number="137" hits="2" branch="false" />
+            <line number="138" hits="2" branch="false" />
+            <line number="139" hits="2" branch="false" />
+            <line number="141" hits="2" branch="false" />
+            <line number="142" hits="2" branch="false" />
+            <line number="143" hits="2" branch="false" />
+            <line number="144" hits="2" branch="false" />
+            <line number="145" hits="2" branch="false" />
+            <line number="146" hits="2" branch="false" />
+            <line number="147" hits="2" branch="false" />
+            <line number="148" hits="2" branch="false" />
+            <line number="149" hits="2" branch="false" />
+            <line number="150" hits="2" branch="false" />
+            <line number="151" hits="2" branch="false" />
+            <line number="152" hits="2" branch="false" />
+            <line number="153" hits="2" branch="false" />
+            <line number="154" hits="2" branch="false" />
+            <line number="155" hits="2" branch="false" />
+            <line number="156" hits="2" branch="false" />
+            <line number="157" hits="2" branch="false" />
+            <line number="158" hits="2" branch="false" />
+            <line number="159" hits="2" branch="false" />
+            <line number="160" hits="2" branch="false" />
+            <line number="161" hits="2" branch="false" />
+            <line number="162" hits="2" branch="false" />
+            <line number="163" hits="2" branch="false" />
+          </lines>
+        </class>
+        <class name="HappyPaws.Api.Endpoints.Transports.CreateTransportRequest" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Transports/TransportContracts.cs" line-rate="1" branch-rate="1" complexity="1">
+          <methods>
+            <method name=".ctor" signature="(System.Guid,System.String,System.Double,System.Double,System.String,System.Double,System.Double,System.String,System.String,System.Nullable`1&lt;System.DateTimeOffset&gt;,System.Nullable`1&lt;System.DateTimeOffset&gt;,System.String,System.String,System.String)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="14" hits="2" branch="false" />
+                <line number="15" hits="2" branch="false" />
+                <line number="16" hits="2" branch="false" />
+                <line number="17" hits="2" branch="false" />
+                <line number="18" hits="2" branch="false" />
+                <line number="19" hits="2" branch="false" />
+                <line number="20" hits="2" branch="false" />
+                <line number="21" hits="2" branch="false" />
+                <line number="22" hits="2" branch="false" />
+                <line number="23" hits="2" branch="false" />
+                <line number="24" hits="2" branch="false" />
+                <line number="25" hits="2" branch="false" />
+                <line number="26" hits="2" branch="false" />
+                <line number="27" hits="2" branch="false" />
+                <line number="28" hits="2" branch="false" />
+                <line number="29" hits="2" branch="false" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="14" hits="2" branch="false" />
+            <line number="15" hits="2" branch="false" />
+            <line number="16" hits="2" branch="false" />
+            <line number="17" hits="2" branch="false" />
+            <line number="18" hits="2" branch="false" />
+            <line number="19" hits="2" branch="false" />
+            <line number="20" hits="2" branch="false" />
+            <line number="21" hits="2" branch="false" />
+            <line number="22" hits="2" branch="false" />
+            <line number="23" hits="2" branch="false" />
+            <line number="24" hits="2" branch="false" />
+            <line number="25" hits="2" branch="false" />
+            <line number="26" hits="2" branch="false" />
+            <line number="27" hits="2" branch="false" />
+            <line number="28" hits="2" branch="false" />
+            <line number="29" hits="2" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Transports.CreateTransportRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Transports/TransportValidators.cs" line-rate="1" branch-rate="1" complexity="1">
@@ -2473,25 +2857,25 @@
                 <line number="25" hits="2" branch="false" />
                 <line number="26" hits="2" branch="false" />
                 <line number="27" hits="2" branch="false" />
+                <line number="28" hits="2" branch="false" />
                 <line number="29" hits="2" branch="false" />
                 <line number="30" hits="2" branch="false" />
                 <line number="31" hits="2" branch="false" />
-                <line number="32" hits="2" branch="false" />
                 <line number="33" hits="2" branch="false" />
                 <line number="34" hits="2" branch="false" />
+                <line number="35" hits="2" branch="false" />
                 <line number="36" hits="2" branch="false" />
                 <line number="37" hits="2" branch="false" />
                 <line number="38" hits="2" branch="false" />
-                <line number="39" hits="2" branch="false" />
                 <line number="40" hits="2" branch="false" />
                 <line number="41" hits="2" branch="false" />
                 <line number="42" hits="2" branch="false" />
                 <line number="43" hits="2" branch="false" />
                 <line number="44" hits="2" branch="false" />
+                <line number="45" hits="2" branch="false" />
                 <line number="46" hits="2" branch="false" />
                 <line number="47" hits="2" branch="false" />
                 <line number="48" hits="2" branch="false" />
-                <line number="49" hits="2" branch="false" />
                 <line number="50" hits="2" branch="false" />
                 <line number="51" hits="2" branch="false" />
                 <line number="52" hits="2" branch="false" />
@@ -2500,24 +2884,36 @@
                 <line number="55" hits="2" branch="false" />
                 <line number="56" hits="2" branch="false" />
                 <line number="57" hits="2" branch="false" />
+                <line number="58" hits="2" branch="false" />
+                <line number="59" hits="2" branch="false" />
+                <line number="60" hits="2" branch="false" />
+                <line number="61" hits="2" branch="false" />
               </lines>
             </method>
-            <method name="MapToResponse" signature="(HappyPaws.Core.Entities.TransportTask,System.String)" line-rate="1" branch-rate="1" complexity="2">
+            <method name="MapToResponse" signature="(HappyPaws.Core.Entities.TransportTask,System.String,System.String)" line-rate="1" branch-rate="1" complexity="2">
               <lines>
-                <line number="174" hits="10" branch="true" condition-coverage="100% (2/2)" />
-                <line number="175" hits="10" branch="false" />
-                <line number="176" hits="10" branch="false" />
-                <line number="177" hits="10" branch="false" />
-                <line number="178" hits="10" branch="false" />
-                <line number="179" hits="10" branch="false" />
-                <line number="180" hits="10" branch="false" />
-                <line number="181" hits="10" branch="false" />
-                <line number="182" hits="10" branch="false" />
-                <line number="183" hits="10" branch="false" />
-                <line number="184" hits="10" branch="false" />
-                <line number="185" hits="10" branch="false" />
-                <line number="186" hits="10" branch="false" />
-                <line number="187" hits="10" branch="false" />
+                <line number="201" hits="10" branch="true" condition-coverage="100% (2/2)" />
+                <line number="202" hits="10" branch="false" />
+                <line number="203" hits="10" branch="false" />
+                <line number="204" hits="10" branch="false" />
+                <line number="205" hits="10" branch="false" />
+                <line number="206" hits="10" branch="false" />
+                <line number="207" hits="10" branch="false" />
+                <line number="208" hits="10" branch="false" />
+                <line number="209" hits="10" branch="false" />
+                <line number="210" hits="10" branch="false" />
+                <line number="211" hits="10" branch="false" />
+                <line number="212" hits="10" branch="false" />
+                <line number="213" hits="10" branch="false" />
+                <line number="214" hits="10" branch="false" />
+                <line number="215" hits="10" branch="false" />
+                <line number="216" hits="10" branch="false" />
+                <line number="217" hits="10" branch="false" />
+                <line number="218" hits="10" branch="false" />
+                <line number="219" hits="10" branch="false" />
+                <line number="220" hits="10" branch="false" />
+                <line number="221" hits="10" branch="false" />
+                <line number="222" hits="10" branch="false" />
               </lines>
             </method>
           </methods>
@@ -2532,25 +2928,25 @@
             <line number="25" hits="2" branch="false" />
             <line number="26" hits="2" branch="false" />
             <line number="27" hits="2" branch="false" />
+            <line number="28" hits="2" branch="false" />
             <line number="29" hits="2" branch="false" />
             <line number="30" hits="2" branch="false" />
             <line number="31" hits="2" branch="false" />
-            <line number="32" hits="2" branch="false" />
             <line number="33" hits="2" branch="false" />
             <line number="34" hits="2" branch="false" />
+            <line number="35" hits="2" branch="false" />
             <line number="36" hits="2" branch="false" />
             <line number="37" hits="2" branch="false" />
             <line number="38" hits="2" branch="false" />
-            <line number="39" hits="2" branch="false" />
             <line number="40" hits="2" branch="false" />
             <line number="41" hits="2" branch="false" />
             <line number="42" hits="2" branch="false" />
             <line number="43" hits="2" branch="false" />
             <line number="44" hits="2" branch="false" />
+            <line number="45" hits="2" branch="false" />
             <line number="46" hits="2" branch="false" />
             <line number="47" hits="2" branch="false" />
             <line number="48" hits="2" branch="false" />
-            <line number="49" hits="2" branch="false" />
             <line number="50" hits="2" branch="false" />
             <line number="51" hits="2" branch="false" />
             <line number="52" hits="2" branch="false" />
@@ -2559,36 +2955,48 @@
             <line number="55" hits="2" branch="false" />
             <line number="56" hits="2" branch="false" />
             <line number="57" hits="2" branch="false" />
-            <line number="174" hits="10" branch="true" condition-coverage="100% (2/2)" />
-            <line number="175" hits="10" branch="false" />
-            <line number="176" hits="10" branch="false" />
-            <line number="177" hits="10" branch="false" />
-            <line number="178" hits="10" branch="false" />
-            <line number="179" hits="10" branch="false" />
-            <line number="180" hits="10" branch="false" />
-            <line number="181" hits="10" branch="false" />
-            <line number="182" hits="10" branch="false" />
-            <line number="183" hits="10" branch="false" />
-            <line number="184" hits="10" branch="false" />
-            <line number="185" hits="10" branch="false" />
-            <line number="186" hits="10" branch="false" />
-            <line number="187" hits="10" branch="false" />
+            <line number="58" hits="2" branch="false" />
+            <line number="59" hits="2" branch="false" />
+            <line number="60" hits="2" branch="false" />
+            <line number="61" hits="2" branch="false" />
+            <line number="201" hits="10" branch="true" condition-coverage="100% (2/2)" />
+            <line number="202" hits="10" branch="false" />
+            <line number="203" hits="10" branch="false" />
+            <line number="204" hits="10" branch="false" />
+            <line number="205" hits="10" branch="false" />
+            <line number="206" hits="10" branch="false" />
+            <line number="207" hits="10" branch="false" />
+            <line number="208" hits="10" branch="false" />
+            <line number="209" hits="10" branch="false" />
+            <line number="210" hits="10" branch="false" />
+            <line number="211" hits="10" branch="false" />
+            <line number="212" hits="10" branch="false" />
+            <line number="213" hits="10" branch="false" />
+            <line number="214" hits="10" branch="false" />
+            <line number="215" hits="10" branch="false" />
+            <line number="216" hits="10" branch="false" />
+            <line number="217" hits="10" branch="false" />
+            <line number="218" hits="10" branch="false" />
+            <line number="219" hits="10" branch="false" />
+            <line number="220" hits="10" branch="false" />
+            <line number="221" hits="10" branch="false" />
+            <line number="222" hits="10" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Transports.TransportStatusUpdateRequest" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Transports/TransportContracts.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
             <method name=".ctor" signature="(HappyPaws.Core.Enums.TransportStatus)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="55" hits="12" branch="false" />
-                <line number="56" hits="12" branch="false" />
-                <line number="57" hits="12" branch="false" />
+                <line number="71" hits="12" branch="false" />
+                <line number="72" hits="12" branch="false" />
+                <line number="73" hits="12" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="55" hits="12" branch="false" />
-            <line number="56" hits="12" branch="false" />
-            <line number="57" hits="12" branch="false" />
+            <line number="71" hits="12" branch="false" />
+            <line number="72" hits="12" branch="false" />
+            <line number="73" hits="12" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Transports.TransportStatusUpdateRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Transports/TransportValidators.cs" line-rate="1" branch-rate="1" complexity="1">
@@ -2609,16 +3017,8 @@
         </class>
         <class name="HappyPaws.Api.Endpoints.Transports.TransportTaskResponse" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Transports/TransportContracts.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
-            <method name=".ctor" signature="(System.Guid,System.Guid,System.Nullable`1&lt;System.Guid&gt;,System.String,System.Double,System.Double,System.String,System.Double,System.Double,System.String,HappyPaws.Core.Enums.TransportStatus,System.DateTimeOffset,System.DateTimeOffset)" line-rate="1" branch-rate="1" complexity="1">
+            <method name=".ctor" signature="(System.Guid,System.Guid,System.String,System.String,System.Nullable`1&lt;System.Guid&gt;,System.String,System.Double,System.Double,System.String,System.Double,System.Double,System.String,System.String,System.Nullable`1&lt;System.DateTimeOffset&gt;,System.Nullable`1&lt;System.DateTimeOffset&gt;,System.String,System.String,System.Collections.Generic.List`1&lt;System.String&gt;,HappyPaws.Core.Enums.TransportStatus,System.DateTimeOffset,System.DateTimeOffset)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="37" hits="12" branch="false" />
-                <line number="38" hits="12" branch="false" />
-                <line number="39" hits="12" branch="false" />
-                <line number="40" hits="12" branch="false" />
-                <line number="41" hits="12" branch="false" />
-                <line number="42" hits="12" branch="false" />
-                <line number="43" hits="12" branch="false" />
-                <line number="44" hits="12" branch="false" />
                 <line number="45" hits="12" branch="false" />
                 <line number="46" hits="12" branch="false" />
                 <line number="47" hits="12" branch="false" />
@@ -2626,18 +3026,26 @@
                 <line number="49" hits="12" branch="false" />
                 <line number="50" hits="12" branch="false" />
                 <line number="51" hits="12" branch="false" />
+                <line number="52" hits="12" branch="false" />
+                <line number="53" hits="12" branch="false" />
+                <line number="54" hits="12" branch="false" />
+                <line number="55" hits="12" branch="false" />
+                <line number="56" hits="12" branch="false" />
+                <line number="57" hits="12" branch="false" />
+                <line number="58" hits="12" branch="false" />
+                <line number="59" hits="12" branch="false" />
+                <line number="60" hits="12" branch="false" />
+                <line number="61" hits="12" branch="false" />
+                <line number="62" hits="12" branch="false" />
+                <line number="63" hits="12" branch="false" />
+                <line number="64" hits="12" branch="false" />
+                <line number="65" hits="12" branch="false" />
+                <line number="66" hits="12" branch="false" />
+                <line number="67" hits="12" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="37" hits="12" branch="false" />
-            <line number="38" hits="12" branch="false" />
-            <line number="39" hits="12" branch="false" />
-            <line number="40" hits="12" branch="false" />
-            <line number="41" hits="12" branch="false" />
-            <line number="42" hits="12" branch="false" />
-            <line number="43" hits="12" branch="false" />
-            <line number="44" hits="12" branch="false" />
             <line number="45" hits="12" branch="false" />
             <line number="46" hits="12" branch="false" />
             <line number="47" hits="12" branch="false" />
@@ -2645,6 +3053,22 @@
             <line number="49" hits="12" branch="false" />
             <line number="50" hits="12" branch="false" />
             <line number="51" hits="12" branch="false" />
+            <line number="52" hits="12" branch="false" />
+            <line number="53" hits="12" branch="false" />
+            <line number="54" hits="12" branch="false" />
+            <line number="55" hits="12" branch="false" />
+            <line number="56" hits="12" branch="false" />
+            <line number="57" hits="12" branch="false" />
+            <line number="58" hits="12" branch="false" />
+            <line number="59" hits="12" branch="false" />
+            <line number="60" hits="12" branch="false" />
+            <line number="61" hits="12" branch="false" />
+            <line number="62" hits="12" branch="false" />
+            <line number="63" hits="12" branch="false" />
+            <line number="64" hits="12" branch="false" />
+            <line number="65" hits="12" branch="false" />
+            <line number="66" hits="12" branch="false" />
+            <line number="67" hits="12" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Users.AssignRoleRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Users/UserValidators.cs" line-rate="0" branch-rate="1" complexity="1">
@@ -2679,6 +3103,24 @@
             <line number="50" hits="0" branch="false" />
             <line number="51" hits="0" branch="false" />
             <line number="52" hits="0" branch="false" />
+          </lines>
+        </class>
+        <class name="HappyPaws.Api.Endpoints.Users.ConfirmEmailChangeRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Users/UserValidators.cs" line-rate="0" branch-rate="1" complexity="1">
+          <methods>
+            <method name=".ctor" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="77" hits="0" branch="false" />
+                <line number="79" hits="0" branch="false" />
+                <line number="80" hits="0" branch="false" />
+                <line number="81" hits="0" branch="false" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="77" hits="0" branch="false" />
+            <line number="79" hits="0" branch="false" />
+            <line number="80" hits="0" branch="false" />
+            <line number="81" hits="0" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Endpoints.Users.DeviceRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Users/UserValidators.cs" line-rate="0" branch-rate="1" complexity="1">
@@ -2873,6 +3315,24 @@
             <line number="36" hits="0" branch="false" />
           </lines>
         </class>
+        <class name="HappyPaws.Api.Endpoints.Users.RequestEmailChangeRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Users/UserValidators.cs" line-rate="0" branch-rate="1" complexity="1">
+          <methods>
+            <method name=".ctor" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="68" hits="0" branch="false" />
+                <line number="70" hits="0" branch="false" />
+                <line number="71" hits="0" branch="false" />
+                <line number="72" hits="0" branch="false" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="68" hits="0" branch="false" />
+            <line number="70" hits="0" branch="false" />
+            <line number="71" hits="0" branch="false" />
+            <line number="72" hits="0" branch="false" />
+          </lines>
+        </class>
         <class name="HappyPaws.Api.Endpoints.Users.UpdateMeProfileRequestValidator" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Users/UserValidators.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name=".ctor" signature="()" line-rate="0" branch-rate="1" complexity="1">
@@ -2915,17 +3375,16 @@
             <line number="20" hits="8" branch="false" />
           </lines>
         </class>
-        <class name="HappyPaws.Api.Endpoints.Users.UsersEndpoints" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Users/UsersEndpoints.cs" line-rate="1" branch-rate="1" complexity="2">
+        <class name="HappyPaws.Api.Endpoints.Users.UsersEndpoints" filename="/home/runner/work/api/api/src/HappyPaws.Api/Endpoints/Users/UsersEndpoints.cs" line-rate="0.993006993006993" branch-rate="1" complexity="3">
           <methods>
             <method name="Map" signature="(Microsoft.AspNetCore.Routing.RouteGroupBuilder)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="20" hits="2" branch="false" />
                 <line number="21" hits="2" branch="false" />
                 <line number="22" hits="2" branch="false" />
                 <line number="23" hits="2" branch="false" />
                 <line number="24" hits="2" branch="false" />
                 <line number="25" hits="2" branch="false" />
-                <line number="27" hits="2" branch="false" />
+                <line number="26" hits="2" branch="false" />
                 <line number="28" hits="2" branch="false" />
                 <line number="29" hits="2" branch="false" />
                 <line number="30" hits="2" branch="false" />
@@ -2933,20 +3392,20 @@
                 <line number="32" hits="2" branch="false" />
                 <line number="33" hits="2" branch="false" />
                 <line number="34" hits="2" branch="false" />
-                <line number="36" hits="2" branch="false" />
+                <line number="35" hits="2" branch="false" />
                 <line number="37" hits="2" branch="false" />
                 <line number="38" hits="2" branch="false" />
                 <line number="39" hits="2" branch="false" />
                 <line number="40" hits="2" branch="false" />
                 <line number="41" hits="2" branch="false" />
                 <line number="42" hits="2" branch="false" />
-                <line number="44" hits="2" branch="false" />
+                <line number="43" hits="2" branch="false" />
                 <line number="45" hits="2" branch="false" />
                 <line number="46" hits="2" branch="false" />
                 <line number="47" hits="2" branch="false" />
                 <line number="48" hits="2" branch="false" />
                 <line number="49" hits="2" branch="false" />
-                <line number="51" hits="2" branch="false" />
+                <line number="50" hits="2" branch="false" />
                 <line number="52" hits="2" branch="false" />
                 <line number="53" hits="2" branch="false" />
                 <line number="54" hits="2" branch="false" />
@@ -2954,20 +3413,20 @@
                 <line number="56" hits="2" branch="false" />
                 <line number="57" hits="2" branch="false" />
                 <line number="58" hits="2" branch="false" />
-                <line number="60" hits="2" branch="false" />
+                <line number="59" hits="2" branch="false" />
                 <line number="61" hits="2" branch="false" />
                 <line number="62" hits="2" branch="false" />
                 <line number="63" hits="2" branch="false" />
                 <line number="64" hits="2" branch="false" />
                 <line number="65" hits="2" branch="false" />
                 <line number="66" hits="2" branch="false" />
-                <line number="68" hits="2" branch="false" />
+                <line number="67" hits="2" branch="false" />
                 <line number="69" hits="2" branch="false" />
                 <line number="70" hits="2" branch="false" />
                 <line number="71" hits="2" branch="false" />
                 <line number="72" hits="2" branch="false" />
                 <line number="73" hits="2" branch="false" />
-                <line number="75" hits="2" branch="false" />
+                <line number="74" hits="2" branch="false" />
                 <line number="76" hits="2" branch="false" />
                 <line number="77" hits="2" branch="false" />
                 <line number="78" hits="2" branch="false" />
@@ -2975,7 +3434,7 @@
                 <line number="80" hits="2" branch="false" />
                 <line number="81" hits="2" branch="false" />
                 <line number="82" hits="2" branch="false" />
-                <line number="84" hits="2" branch="false" />
+                <line number="83" hits="2" branch="false" />
                 <line number="85" hits="2" branch="false" />
                 <line number="86" hits="2" branch="false" />
                 <line number="87" hits="2" branch="false" />
@@ -2985,14 +3444,14 @@
                 <line number="91" hits="2" branch="false" />
                 <line number="92" hits="2" branch="false" />
                 <line number="93" hits="2" branch="false" />
-                <line number="95" hits="2" branch="false" />
+                <line number="94" hits="2" branch="false" />
                 <line number="96" hits="2" branch="false" />
                 <line number="97" hits="2" branch="false" />
                 <line number="98" hits="2" branch="false" />
                 <line number="99" hits="2" branch="false" />
                 <line number="100" hits="2" branch="false" />
                 <line number="101" hits="2" branch="false" />
-                <line number="103" hits="2" branch="false" />
+                <line number="102" hits="2" branch="false" />
                 <line number="104" hits="2" branch="false" />
                 <line number="105" hits="2" branch="false" />
                 <line number="106" hits="2" branch="false" />
@@ -3001,14 +3460,14 @@
                 <line number="109" hits="2" branch="false" />
                 <line number="110" hits="2" branch="false" />
                 <line number="111" hits="2" branch="false" />
-                <line number="113" hits="2" branch="false" />
+                <line number="112" hits="2" branch="false" />
                 <line number="114" hits="2" branch="false" />
                 <line number="115" hits="2" branch="false" />
                 <line number="116" hits="2" branch="false" />
                 <line number="117" hits="2" branch="false" />
                 <line number="118" hits="2" branch="false" />
                 <line number="119" hits="2" branch="false" />
-                <line number="121" hits="2" branch="false" />
+                <line number="120" hits="2" branch="false" />
                 <line number="122" hits="2" branch="false" />
                 <line number="123" hits="2" branch="false" />
                 <line number="124" hits="2" branch="false" />
@@ -3016,7 +3475,7 @@
                 <line number="126" hits="2" branch="false" />
                 <line number="127" hits="2" branch="false" />
                 <line number="128" hits="2" branch="false" />
-                <line number="130" hits="2" branch="false" />
+                <line number="129" hits="2" branch="false" />
                 <line number="131" hits="2" branch="false" />
                 <line number="132" hits="2" branch="false" />
                 <line number="133" hits="2" branch="false" />
@@ -3026,7 +3485,7 @@
                 <line number="137" hits="2" branch="false" />
                 <line number="138" hits="2" branch="false" />
                 <line number="139" hits="2" branch="false" />
-                <line number="141" hits="2" branch="false" />
+                <line number="140" hits="2" branch="false" />
                 <line number="142" hits="2" branch="false" />
                 <line number="143" hits="2" branch="false" />
                 <line number="144" hits="2" branch="false" />
@@ -3037,24 +3496,50 @@
                 <line number="149" hits="2" branch="false" />
                 <line number="150" hits="2" branch="false" />
                 <line number="151" hits="2" branch="false" />
+                <line number="153" hits="2" branch="false" />
+                <line number="154" hits="2" branch="false" />
+                <line number="155" hits="2" branch="false" />
+                <line number="156" hits="2" branch="false" />
+                <line number="157" hits="2" branch="false" />
+                <line number="158" hits="2" branch="false" />
+                <line number="159" hits="2" branch="false" />
+                <line number="160" hits="2" branch="false" />
+                <line number="161" hits="2" branch="false" />
+                <line number="162" hits="2" branch="false" />
+                <line number="163" hits="2" branch="false" />
+                <line number="165" hits="2" branch="false" />
+                <line number="166" hits="2" branch="false" />
+                <line number="167" hits="2" branch="false" />
+                <line number="168" hits="2" branch="false" />
+                <line number="169" hits="2" branch="false" />
+                <line number="170" hits="2" branch="false" />
+                <line number="171" hits="2" branch="false" />
+                <line number="172" hits="2" branch="false" />
+                <line number="173" hits="2" branch="false" />
+                <line number="174" hits="2" branch="false" />
+                <line number="175" hits="2" branch="false" />
+              </lines>
+            </method>
+            <method name="GenerateOtpCode" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="763" hits="0" branch="false" />
               </lines>
             </method>
             <method name=".cctor" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="414" hits="2" branch="false" />
-                <line number="597" hits="2" branch="false" />
-                <line number="598" hits="2" branch="false" />
+                <line number="438" hits="2" branch="false" />
+                <line number="621" hits="2" branch="false" />
+                <line number="622" hits="2" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="20" hits="2" branch="false" />
             <line number="21" hits="2" branch="false" />
             <line number="22" hits="2" branch="false" />
             <line number="23" hits="2" branch="false" />
             <line number="24" hits="2" branch="false" />
             <line number="25" hits="2" branch="false" />
-            <line number="27" hits="2" branch="false" />
+            <line number="26" hits="2" branch="false" />
             <line number="28" hits="2" branch="false" />
             <line number="29" hits="2" branch="false" />
             <line number="30" hits="2" branch="false" />
@@ -3062,20 +3547,20 @@
             <line number="32" hits="2" branch="false" />
             <line number="33" hits="2" branch="false" />
             <line number="34" hits="2" branch="false" />
-            <line number="36" hits="2" branch="false" />
+            <line number="35" hits="2" branch="false" />
             <line number="37" hits="2" branch="false" />
             <line number="38" hits="2" branch="false" />
             <line number="39" hits="2" branch="false" />
             <line number="40" hits="2" branch="false" />
             <line number="41" hits="2" branch="false" />
             <line number="42" hits="2" branch="false" />
-            <line number="44" hits="2" branch="false" />
+            <line number="43" hits="2" branch="false" />
             <line number="45" hits="2" branch="false" />
             <line number="46" hits="2" branch="false" />
             <line number="47" hits="2" branch="false" />
             <line number="48" hits="2" branch="false" />
             <line number="49" hits="2" branch="false" />
-            <line number="51" hits="2" branch="false" />
+            <line number="50" hits="2" branch="false" />
             <line number="52" hits="2" branch="false" />
             <line number="53" hits="2" branch="false" />
             <line number="54" hits="2" branch="false" />
@@ -3083,20 +3568,20 @@
             <line number="56" hits="2" branch="false" />
             <line number="57" hits="2" branch="false" />
             <line number="58" hits="2" branch="false" />
-            <line number="60" hits="2" branch="false" />
+            <line number="59" hits="2" branch="false" />
             <line number="61" hits="2" branch="false" />
             <line number="62" hits="2" branch="false" />
             <line number="63" hits="2" branch="false" />
             <line number="64" hits="2" branch="false" />
             <line number="65" hits="2" branch="false" />
             <line number="66" hits="2" branch="false" />
-            <line number="68" hits="2" branch="false" />
+            <line number="67" hits="2" branch="false" />
             <line number="69" hits="2" branch="false" />
             <line number="70" hits="2" branch="false" />
             <line number="71" hits="2" branch="false" />
             <line number="72" hits="2" branch="false" />
             <line number="73" hits="2" branch="false" />
-            <line number="75" hits="2" branch="false" />
+            <line number="74" hits="2" branch="false" />
             <line number="76" hits="2" branch="false" />
             <line number="77" hits="2" branch="false" />
             <line number="78" hits="2" branch="false" />
@@ -3104,7 +3589,7 @@
             <line number="80" hits="2" branch="false" />
             <line number="81" hits="2" branch="false" />
             <line number="82" hits="2" branch="false" />
-            <line number="84" hits="2" branch="false" />
+            <line number="83" hits="2" branch="false" />
             <line number="85" hits="2" branch="false" />
             <line number="86" hits="2" branch="false" />
             <line number="87" hits="2" branch="false" />
@@ -3114,14 +3599,14 @@
             <line number="91" hits="2" branch="false" />
             <line number="92" hits="2" branch="false" />
             <line number="93" hits="2" branch="false" />
-            <line number="95" hits="2" branch="false" />
+            <line number="94" hits="2" branch="false" />
             <line number="96" hits="2" branch="false" />
             <line number="97" hits="2" branch="false" />
             <line number="98" hits="2" branch="false" />
             <line number="99" hits="2" branch="false" />
             <line number="100" hits="2" branch="false" />
             <line number="101" hits="2" branch="false" />
-            <line number="103" hits="2" branch="false" />
+            <line number="102" hits="2" branch="false" />
             <line number="104" hits="2" branch="false" />
             <line number="105" hits="2" branch="false" />
             <line number="106" hits="2" branch="false" />
@@ -3130,14 +3615,14 @@
             <line number="109" hits="2" branch="false" />
             <line number="110" hits="2" branch="false" />
             <line number="111" hits="2" branch="false" />
-            <line number="113" hits="2" branch="false" />
+            <line number="112" hits="2" branch="false" />
             <line number="114" hits="2" branch="false" />
             <line number="115" hits="2" branch="false" />
             <line number="116" hits="2" branch="false" />
             <line number="117" hits="2" branch="false" />
             <line number="118" hits="2" branch="false" />
             <line number="119" hits="2" branch="false" />
-            <line number="121" hits="2" branch="false" />
+            <line number="120" hits="2" branch="false" />
             <line number="122" hits="2" branch="false" />
             <line number="123" hits="2" branch="false" />
             <line number="124" hits="2" branch="false" />
@@ -3145,7 +3630,7 @@
             <line number="126" hits="2" branch="false" />
             <line number="127" hits="2" branch="false" />
             <line number="128" hits="2" branch="false" />
-            <line number="130" hits="2" branch="false" />
+            <line number="129" hits="2" branch="false" />
             <line number="131" hits="2" branch="false" />
             <line number="132" hits="2" branch="false" />
             <line number="133" hits="2" branch="false" />
@@ -3155,7 +3640,7 @@
             <line number="137" hits="2" branch="false" />
             <line number="138" hits="2" branch="false" />
             <line number="139" hits="2" branch="false" />
-            <line number="141" hits="2" branch="false" />
+            <line number="140" hits="2" branch="false" />
             <line number="142" hits="2" branch="false" />
             <line number="143" hits="2" branch="false" />
             <line number="144" hits="2" branch="false" />
@@ -3166,9 +3651,32 @@
             <line number="149" hits="2" branch="false" />
             <line number="150" hits="2" branch="false" />
             <line number="151" hits="2" branch="false" />
-            <line number="414" hits="2" branch="false" />
-            <line number="597" hits="2" branch="false" />
-            <line number="598" hits="2" branch="false" />
+            <line number="153" hits="2" branch="false" />
+            <line number="154" hits="2" branch="false" />
+            <line number="155" hits="2" branch="false" />
+            <line number="156" hits="2" branch="false" />
+            <line number="157" hits="2" branch="false" />
+            <line number="158" hits="2" branch="false" />
+            <line number="159" hits="2" branch="false" />
+            <line number="160" hits="2" branch="false" />
+            <line number="161" hits="2" branch="false" />
+            <line number="162" hits="2" branch="false" />
+            <line number="163" hits="2" branch="false" />
+            <line number="165" hits="2" branch="false" />
+            <line number="166" hits="2" branch="false" />
+            <line number="167" hits="2" branch="false" />
+            <line number="168" hits="2" branch="false" />
+            <line number="169" hits="2" branch="false" />
+            <line number="170" hits="2" branch="false" />
+            <line number="171" hits="2" branch="false" />
+            <line number="172" hits="2" branch="false" />
+            <line number="173" hits="2" branch="false" />
+            <line number="174" hits="2" branch="false" />
+            <line number="175" hits="2" branch="false" />
+            <line number="438" hits="2" branch="false" />
+            <line number="621" hits="2" branch="false" />
+            <line number="622" hits="2" branch="false" />
+            <line number="763" hits="0" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Extensions.ClaimsPrincipalExtensions" filename="/home/runner/work/api/api/src/HappyPaws.Api/Extensions/ClaimsPrincipalExtensions.cs" line-rate="0.625" branch-rate="0.375" complexity="9">
@@ -3212,12 +3720,12 @@
                 <line number="17" hits="2" branch="false" />
                 <line number="18" hits="2" branch="false" />
                 <line number="19" hits="2" branch="false" />
-                <line number="21" hits="48" branch="true" condition-coverage="100% (2/2)" />
-                <line number="23" hits="22" branch="false" />
-                <line number="27" hits="22" branch="false" />
-                <line number="29" hits="22" branch="false" />
-                <line number="30" hits="22" branch="false" />
-                <line number="32" hits="22" branch="false" />
+                <line number="21" hits="52" branch="true" condition-coverage="100% (2/2)" />
+                <line number="23" hits="24" branch="false" />
+                <line number="27" hits="24" branch="false" />
+                <line number="29" hits="24" branch="false" />
+                <line number="30" hits="24" branch="false" />
+                <line number="32" hits="24" branch="false" />
                 <line number="35" hits="2" branch="false" />
               </lines>
             </method>
@@ -3226,63 +3734,259 @@
             <line number="17" hits="2" branch="false" />
             <line number="18" hits="2" branch="false" />
             <line number="19" hits="2" branch="false" />
-            <line number="21" hits="48" branch="true" condition-coverage="100% (2/2)" />
-            <line number="23" hits="22" branch="false" />
-            <line number="27" hits="22" branch="false" />
-            <line number="29" hits="22" branch="false" />
-            <line number="30" hits="22" branch="false" />
-            <line number="32" hits="22" branch="false" />
+            <line number="21" hits="52" branch="true" condition-coverage="100% (2/2)" />
+            <line number="23" hits="24" branch="false" />
+            <line number="27" hits="24" branch="false" />
+            <line number="29" hits="24" branch="false" />
+            <line number="30" hits="24" branch="false" />
+            <line number="32" hits="24" branch="false" />
             <line number="35" hits="2" branch="false" />
+          </lines>
+        </class>
+        <class name="HappyPaws.Api.Extensions.HostExtensions" filename="/home/runner/work/api/api/src/HappyPaws.Api/Extensions/HostExtensions.cs" line-rate="0.7692307692307693" branch-rate="0" complexity="23">
+          <methods>
+            <method name="LogApplicationUrls" signature="(Microsoft.AspNetCore.Builder.WebApplication)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="14" hits="2" branch="false" />
+                <line number="15" hits="2" branch="false" />
+                <line number="16" hits="2" branch="false" />
+                <line number="17" hits="2" branch="false" />
+                <line number="18" hits="2" branch="false" />
+                <line number="19" hits="2" branch="false" />
+                <line number="20" hits="2" branch="false" />
+                <line number="21" hits="2" branch="false" />
+                <line number="22" hits="2" branch="false" />
+                <line number="23" hits="2" branch="false" />
+                <line number="24" hits="2" branch="false" />
+                <line number="25" hits="2" branch="false" />
+                <line number="26" hits="2" branch="false" />
+                <line number="27" hits="2" branch="false" />
+                <line number="28" hits="2" branch="false" />
+                <line number="29" hits="2" branch="false" />
+                <line number="30" hits="2" branch="false" />
+                <line number="31" hits="2" branch="false" />
+                <line number="32" hits="2" branch="false" />
+                <line number="33" hits="2" branch="false" />
+                <line number="34" hits="2" branch="false" />
+                <line number="35" hits="2" branch="false" />
+                <line number="36" hits="2" branch="false" />
+                <line number="37" hits="2" branch="false" />
+                <line number="38" hits="2" branch="false" />
+                <line number="39" hits="2" branch="false" />
+                <line number="40" hits="2" branch="false" />
+                <line number="41" hits="2" branch="false" />
+                <line number="42" hits="2" branch="false" />
+                <line number="43" hits="2" branch="false" />
+                <line number="44" hits="2" branch="false" />
+                <line number="45" hits="2" branch="false" />
+                <line number="46" hits="2" branch="false" />
+                <line number="47" hits="2" branch="false" />
+                <line number="48" hits="2" branch="false" />
+                <line number="49" hits="2" branch="false" />
+                <line number="50" hits="2" branch="false" />
+                <line number="51" hits="2" branch="false" />
+                <line number="52" hits="2" branch="false" />
+                <line number="53" hits="2" branch="false" />
+                <line number="54" hits="2" branch="false" />
+                <line number="55" hits="2" branch="false" />
+                <line number="56" hits="2" branch="false" />
+                <line number="57" hits="2" branch="false" />
+                <line number="58" hits="2" branch="false" />
+                <line number="59" hits="2" branch="false" />
+                <line number="60" hits="2" branch="false" />
+                <line number="61" hits="2" branch="false" />
+                <line number="62" hits="2" branch="false" />
+                <line number="63" hits="2" branch="false" />
+                <line number="64" hits="2" branch="false" />
+                <line number="65" hits="2" branch="false" />
+                <line number="66" hits="2" branch="false" />
+                <line number="67" hits="2" branch="false" />
+                <line number="68" hits="2" branch="false" />
+                <line number="69" hits="2" branch="false" />
+                <line number="70" hits="2" branch="false" />
+                <line number="71" hits="2" branch="false" />
+                <line number="72" hits="2" branch="false" />
+                <line number="73" hits="2" branch="false" />
+                <line number="74" hits="2" branch="false" />
+                <line number="75" hits="2" branch="false" />
+                <line number="76" hits="2" branch="false" />
+                <line number="77" hits="2" branch="false" />
+                <line number="78" hits="2" branch="false" />
+                <line number="79" hits="2" branch="false" />
+                <line number="80" hits="2" branch="false" />
+                <line number="81" hits="2" branch="false" />
+                <line number="82" hits="2" branch="false" />
+                <line number="83" hits="2" branch="false" />
+              </lines>
+            </method>
+            <method name="GetLocalIPv4Addresses" signature="()" line-rate="0" branch-rate="0" complexity="22">
+              <lines>
+                <line number="87" hits="0" branch="false" />
+                <line number="90" hits="0" branch="true" condition-coverage="0% (0/2)" />
+                <line number="92" hits="0" branch="true" condition-coverage="0% (0/2)" />
+                <line number="95" hits="0" branch="true" condition-coverage="0% (0/2)" />
+                <line number="98" hits="0" branch="false" />
+                <line number="99" hits="0" branch="true" condition-coverage="0% (0/4)" />
+                <line number="102" hits="0" branch="true" condition-coverage="0% (0/2)" />
+                <line number="104" hits="0" branch="true" condition-coverage="0% (0/4)" />
+                <line number="105" hits="0" branch="false" />
+                <line number="107" hits="0" branch="false" />
+                <line number="111" hits="0" branch="false" />
+                <line number="112" hits="0" branch="false" />
+                <line number="117" hits="0" branch="false" />
+                <line number="118" hits="0" branch="true" condition-coverage="0% (0/2)" />
+                <line number="120" hits="0" branch="true" condition-coverage="0% (0/4)" />
+                <line number="122" hits="0" branch="false" />
+                <line number="125" hits="0" branch="false" />
+                <line number="126" hits="0" branch="false" />
+                <line number="129" hits="0" branch="false" />
+                <line number="130" hits="0" branch="false" />
+                <line number="132" hits="0" branch="false" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="14" hits="2" branch="false" />
+            <line number="15" hits="2" branch="false" />
+            <line number="16" hits="2" branch="false" />
+            <line number="17" hits="2" branch="false" />
+            <line number="18" hits="2" branch="false" />
+            <line number="19" hits="2" branch="false" />
+            <line number="20" hits="2" branch="false" />
+            <line number="21" hits="2" branch="false" />
+            <line number="22" hits="2" branch="false" />
+            <line number="23" hits="2" branch="false" />
+            <line number="24" hits="2" branch="false" />
+            <line number="25" hits="2" branch="false" />
+            <line number="26" hits="2" branch="false" />
+            <line number="27" hits="2" branch="false" />
+            <line number="28" hits="2" branch="false" />
+            <line number="29" hits="2" branch="false" />
+            <line number="30" hits="2" branch="false" />
+            <line number="31" hits="2" branch="false" />
+            <line number="32" hits="2" branch="false" />
+            <line number="33" hits="2" branch="false" />
+            <line number="34" hits="2" branch="false" />
+            <line number="35" hits="2" branch="false" />
+            <line number="36" hits="2" branch="false" />
+            <line number="37" hits="2" branch="false" />
+            <line number="38" hits="2" branch="false" />
+            <line number="39" hits="2" branch="false" />
+            <line number="40" hits="2" branch="false" />
+            <line number="41" hits="2" branch="false" />
+            <line number="42" hits="2" branch="false" />
+            <line number="43" hits="2" branch="false" />
+            <line number="44" hits="2" branch="false" />
+            <line number="45" hits="2" branch="false" />
+            <line number="46" hits="2" branch="false" />
+            <line number="47" hits="2" branch="false" />
+            <line number="48" hits="2" branch="false" />
+            <line number="49" hits="2" branch="false" />
+            <line number="50" hits="2" branch="false" />
+            <line number="51" hits="2" branch="false" />
+            <line number="52" hits="2" branch="false" />
+            <line number="53" hits="2" branch="false" />
+            <line number="54" hits="2" branch="false" />
+            <line number="55" hits="2" branch="false" />
+            <line number="56" hits="2" branch="false" />
+            <line number="57" hits="2" branch="false" />
+            <line number="58" hits="2" branch="false" />
+            <line number="59" hits="2" branch="false" />
+            <line number="60" hits="2" branch="false" />
+            <line number="61" hits="2" branch="false" />
+            <line number="62" hits="2" branch="false" />
+            <line number="63" hits="2" branch="false" />
+            <line number="64" hits="2" branch="false" />
+            <line number="65" hits="2" branch="false" />
+            <line number="66" hits="2" branch="false" />
+            <line number="67" hits="2" branch="false" />
+            <line number="68" hits="2" branch="false" />
+            <line number="69" hits="2" branch="false" />
+            <line number="70" hits="2" branch="false" />
+            <line number="71" hits="2" branch="false" />
+            <line number="72" hits="2" branch="false" />
+            <line number="73" hits="2" branch="false" />
+            <line number="74" hits="2" branch="false" />
+            <line number="75" hits="2" branch="false" />
+            <line number="76" hits="2" branch="false" />
+            <line number="77" hits="2" branch="false" />
+            <line number="78" hits="2" branch="false" />
+            <line number="79" hits="2" branch="false" />
+            <line number="80" hits="2" branch="false" />
+            <line number="81" hits="2" branch="false" />
+            <line number="82" hits="2" branch="false" />
+            <line number="83" hits="2" branch="false" />
+            <line number="87" hits="0" branch="false" />
+            <line number="90" hits="0" branch="true" condition-coverage="0% (0/2)" />
+            <line number="92" hits="0" branch="true" condition-coverage="0% (0/2)" />
+            <line number="95" hits="0" branch="true" condition-coverage="0% (0/2)" />
+            <line number="98" hits="0" branch="false" />
+            <line number="99" hits="0" branch="true" condition-coverage="0% (0/4)" />
+            <line number="102" hits="0" branch="true" condition-coverage="0% (0/2)" />
+            <line number="104" hits="0" branch="true" condition-coverage="0% (0/4)" />
+            <line number="105" hits="0" branch="false" />
+            <line number="107" hits="0" branch="false" />
+            <line number="111" hits="0" branch="false" />
+            <line number="112" hits="0" branch="false" />
+            <line number="117" hits="0" branch="false" />
+            <line number="118" hits="0" branch="true" condition-coverage="0% (0/2)" />
+            <line number="120" hits="0" branch="true" condition-coverage="0% (0/4)" />
+            <line number="122" hits="0" branch="false" />
+            <line number="125" hits="0" branch="false" />
+            <line number="126" hits="0" branch="false" />
+            <line number="129" hits="0" branch="false" />
+            <line number="130" hits="0" branch="false" />
+            <line number="132" hits="0" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Filters.HtmlSanitizationFilter`1" filename="/home/runner/work/api/api/src/HappyPaws.Api/Filters/HtmlSanitizationFilter.cs" line-rate="1" branch-rate="0.875" complexity="9">
           <methods>
             <method name="SanitizeProperties" signature="(System.Object)" line-rate="1" branch-rate="0.875" complexity="8">
               <lines>
-                <line number="35" hits="30" branch="true" condition-coverage="50% (1/2)" />
-                <line number="37" hits="30" branch="true" condition-coverage="100% (2/2)" />
-                <line number="38" hits="30" branch="false" />
-                <line number="40" hits="228" branch="true" condition-coverage="100% (2/2)" />
-                <line number="42" hits="84" branch="false" />
-                <line number="43" hits="84" branch="true" condition-coverage="100% (2/2)" />
-                <line number="45" hits="62" branch="false" />
-                <line number="46" hits="62" branch="false" />
-                <line number="49" hits="30" branch="false" />
+                <line number="35" hits="32" branch="true" condition-coverage="50% (1/2)" />
+                <line number="37" hits="32" branch="true" condition-coverage="100% (2/2)" />
+                <line number="38" hits="32" branch="false" />
+                <line number="40" hits="352" branch="true" condition-coverage="100% (2/2)" />
+                <line number="42" hits="144" branch="false" />
+                <line number="43" hits="144" branch="true" condition-coverage="100% (2/2)" />
+                <line number="45" hits="114" branch="false" />
+                <line number="46" hits="114" branch="false" />
+                <line number="49" hits="32" branch="false" />
               </lines>
             </method>
             <method name=".cctor" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="13" hits="6" branch="false" />
+                <line number="13" hits="8" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="13" hits="6" branch="false" />
-            <line number="35" hits="30" branch="true" condition-coverage="50% (1/2)" />
-            <line number="37" hits="30" branch="true" condition-coverage="100% (2/2)" />
-            <line number="38" hits="30" branch="false" />
-            <line number="40" hits="228" branch="true" condition-coverage="100% (2/2)" />
-            <line number="42" hits="84" branch="false" />
-            <line number="43" hits="84" branch="true" condition-coverage="100% (2/2)" />
-            <line number="45" hits="62" branch="false" />
-            <line number="46" hits="62" branch="false" />
-            <line number="49" hits="30" branch="false" />
+            <line number="13" hits="8" branch="false" />
+            <line number="35" hits="32" branch="true" condition-coverage="50% (1/2)" />
+            <line number="37" hits="32" branch="true" condition-coverage="100% (2/2)" />
+            <line number="38" hits="32" branch="false" />
+            <line number="40" hits="352" branch="true" condition-coverage="100% (2/2)" />
+            <line number="42" hits="144" branch="false" />
+            <line number="43" hits="144" branch="true" condition-coverage="100% (2/2)" />
+            <line number="45" hits="114" branch="false" />
+            <line number="46" hits="114" branch="false" />
+            <line number="49" hits="32" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Filters.RequestSizeLimitFilter" filename="/home/runner/work/api/api/src/HappyPaws.Api/Filters/RequestSizeLimitFilter.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
             <method name=".ctor" signature="(System.Int64)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="16" hits="8" branch="false" />
-                <line number="18" hits="8" branch="false" />
-                <line number="19" hits="8" branch="false" />
+                <line number="16" hits="10" branch="false" />
+                <line number="18" hits="10" branch="false" />
+                <line number="19" hits="10" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="16" hits="8" branch="false" />
-            <line number="18" hits="8" branch="false" />
-            <line number="19" hits="8" branch="false" />
+            <line number="16" hits="10" branch="false" />
+            <line number="18" hits="10" branch="false" />
+            <line number="19" hits="10" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Api.Hubs.ChatHub" filename="/home/runner/work/api/api/src/HappyPaws.Api/Hubs/ChatHub.cs" line-rate="1" branch-rate="1" complexity="2">
@@ -3409,7 +4113,7 @@
         </class>
       </classes>
     </package>
-    <package name="HappyPaws.Infrastructure" line-rate="0.9276094276094277" branch-rate="0.5384615384615384" complexity="123">
+    <package name="HappyPaws.Infrastructure" line-rate="0.9277504105090312" branch-rate="0.5384615384615384" complexity="125">
       <classes>
         <class name="HappyPaws.Infrastructure.Data.Configurations.AdoptionApplicationConfiguration" filename="/home/runner/work/api/api/src/HappyPaws.Infrastructure/Data/Configurations/AdoptionApplicationConfiguration.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
@@ -3581,6 +4285,44 @@
             <line number="30" hits="2" branch="false" />
             <line number="31" hits="2" branch="false" />
             <line number="32" hits="2" branch="false" />
+          </lines>
+        </class>
+        <class name="HappyPaws.Infrastructure.Data.Configurations.CommunityStoryConfiguration" filename="/home/runner/work/api/api/src/HappyPaws.Infrastructure/Data/Configurations/CommunityStoryConfiguration.cs" line-rate="1" branch-rate="1" complexity="1">
+          <methods>
+            <method name="Configure" signature="(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder`1&lt;HappyPaws.Core.Entities.CommunityStory&gt;)" line-rate="1" branch-rate="1" complexity="1">
+              <lines>
+                <line number="11" hits="2" branch="false" />
+                <line number="13" hits="2" branch="false" />
+                <line number="15" hits="2" branch="false" />
+                <line number="16" hits="2" branch="false" />
+                <line number="17" hits="2" branch="false" />
+                <line number="19" hits="2" branch="false" />
+                <line number="20" hits="2" branch="false" />
+                <line number="22" hits="2" branch="false" />
+                <line number="23" hits="2" branch="false" />
+                <line number="25" hits="2" branch="false" />
+                <line number="26" hits="2" branch="false" />
+                <line number="27" hits="2" branch="false" />
+                <line number="28" hits="2" branch="false" />
+                <line number="29" hits="2" branch="false" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="11" hits="2" branch="false" />
+            <line number="13" hits="2" branch="false" />
+            <line number="15" hits="2" branch="false" />
+            <line number="16" hits="2" branch="false" />
+            <line number="17" hits="2" branch="false" />
+            <line number="19" hits="2" branch="false" />
+            <line number="20" hits="2" branch="false" />
+            <line number="22" hits="2" branch="false" />
+            <line number="23" hits="2" branch="false" />
+            <line number="25" hits="2" branch="false" />
+            <line number="26" hits="2" branch="false" />
+            <line number="27" hits="2" branch="false" />
+            <line number="28" hits="2" branch="false" />
+            <line number="29" hits="2" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Infrastructure.Data.Configurations.ConversationConfiguration" filename="/home/runner/work/api/api/src/HappyPaws.Infrastructure/Data/Configurations/ConversationConfiguration.cs" line-rate="1" branch-rate="1" complexity="1">
@@ -4397,7 +5139,7 @@
             <line number="26" hits="2" branch="false" />
           </lines>
         </class>
-        <class name="HappyPaws.Infrastructure.Data.HappyPawsDbContext" filename="/home/runner/work/api/api/src/HappyPaws.Infrastructure/Data/HappyPawsDbContext.cs" line-rate="0.9230769230769231" branch-rate="1" complexity="24">
+        <class name="HappyPaws.Infrastructure.Data.HappyPawsDbContext" filename="/home/runner/work/api/api/src/HappyPaws.Infrastructure/Data/HappyPawsDbContext.cs" line-rate="0.8888888888888888" branch-rate="1" complexity="25">
           <methods>
             <method name="get_Users" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
@@ -4481,7 +5223,7 @@
             </method>
             <method name="get_TransportTasks" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="30" hits="48" branch="false" />
+                <line number="30" hits="128" branch="false" />
               </lines>
             </method>
             <method name="get_UserDevices" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -4509,11 +5251,16 @@
                 <line number="35" hits="0" branch="false" />
               </lines>
             </method>
+            <method name="get_CommunityStories" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="36" hits="0" branch="false" />
+              </lines>
+            </method>
             <method name="OnModelCreating" signature="(Microsoft.EntityFrameworkCore.ModelBuilder)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="39" hits="2" branch="false" />
                 <line number="40" hits="2" branch="false" />
                 <line number="41" hits="2" branch="false" />
+                <line number="42" hits="2" branch="false" />
               </lines>
             </method>
             <method name=".ctor" signature="(Microsoft.EntityFrameworkCore.DbContextOptions`1&lt;HappyPaws.Infrastructure.Data.HappyPawsDbContext&gt;)" line-rate="1" branch-rate="1" complexity="1">
@@ -4540,15 +5287,16 @@
             <line number="27" hits="12" branch="false" />
             <line number="28" hits="6" branch="false" />
             <line number="29" hits="4" branch="false" />
-            <line number="30" hits="48" branch="false" />
+            <line number="30" hits="128" branch="false" />
             <line number="31" hits="2" branch="false" />
             <line number="32" hits="0" branch="false" />
             <line number="33" hits="32" branch="false" />
             <line number="34" hits="20" branch="false" />
             <line number="35" hits="0" branch="false" />
-            <line number="39" hits="2" branch="false" />
+            <line number="36" hits="0" branch="false" />
             <line number="40" hits="2" branch="false" />
             <line number="41" hits="2" branch="false" />
+            <line number="42" hits="2" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Infrastructure.Data.Interceptors.TimestampInterceptor" filename="/home/runner/work/api/api/src/HappyPaws.Infrastructure/Data/Interceptors/TimestampInterceptor.cs" line-rate="0.9230769230769231" branch-rate="0.9285714285714286" complexity="14">
@@ -4558,13 +5306,13 @@
                 <line number="20" hits="434" branch="true" condition-coverage="50% (1/2)" />
                 <line number="21" hits="0" branch="false" />
                 <line number="23" hits="434" branch="false" />
-                <line number="25" hits="3524" branch="true" condition-coverage="100% (2/2)" />
-                <line number="27" hits="1328" branch="true" condition-coverage="100% (2/2)" />
-                <line number="29" hits="712" branch="true" condition-coverage="100% (2/2)" />
-                <line number="30" hits="526" branch="false" />
-                <line number="32" hits="712" branch="true" condition-coverage="100% (2/2)" />
-                <line number="33" hits="198" branch="false" />
-                <line number="35" hits="616" branch="true" condition-coverage="100% (2/2)" />
+                <line number="25" hits="3844" branch="true" condition-coverage="100% (2/2)" />
+                <line number="27" hits="1488" branch="true" condition-coverage="100% (2/2)" />
+                <line number="29" hits="792" branch="true" condition-coverage="100% (2/2)" />
+                <line number="30" hits="606" branch="false" />
+                <line number="32" hits="792" branch="true" condition-coverage="100% (2/2)" />
+                <line number="33" hits="278" branch="false" />
+                <line number="35" hits="696" branch="true" condition-coverage="100% (2/2)" />
                 <line number="37" hits="226" branch="true" condition-coverage="100% (2/2)" />
                 <line number="38" hits="154" branch="false" />
                 <line number="42" hits="434" branch="false" />
@@ -4575,13 +5323,13 @@
             <line number="20" hits="434" branch="true" condition-coverage="50% (1/2)" />
             <line number="21" hits="0" branch="false" />
             <line number="23" hits="434" branch="false" />
-            <line number="25" hits="3524" branch="true" condition-coverage="100% (2/2)" />
-            <line number="27" hits="1328" branch="true" condition-coverage="100% (2/2)" />
-            <line number="29" hits="712" branch="true" condition-coverage="100% (2/2)" />
-            <line number="30" hits="526" branch="false" />
-            <line number="32" hits="712" branch="true" condition-coverage="100% (2/2)" />
-            <line number="33" hits="198" branch="false" />
-            <line number="35" hits="616" branch="true" condition-coverage="100% (2/2)" />
+            <line number="25" hits="3844" branch="true" condition-coverage="100% (2/2)" />
+            <line number="27" hits="1488" branch="true" condition-coverage="100% (2/2)" />
+            <line number="29" hits="792" branch="true" condition-coverage="100% (2/2)" />
+            <line number="30" hits="606" branch="false" />
+            <line number="32" hits="792" branch="true" condition-coverage="100% (2/2)" />
+            <line number="33" hits="278" branch="false" />
+            <line number="35" hits="696" branch="true" condition-coverage="100% (2/2)" />
             <line number="37" hits="226" branch="true" condition-coverage="100% (2/2)" />
             <line number="38" hits="154" branch="false" />
             <line number="42" hits="434" branch="false" />
@@ -4927,7 +5675,7 @@
           <methods>
             <method name="GetPublicUrl" signature="(System.String)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="98" hits="56" branch="false" />
+                <line number="98" hits="62" branch="false" />
               </lines>
             </method>
             <method name="GetPresignedUrlAsync" signature="(System.String,System.TimeSpan,System.Threading.CancellationToken)" line-rate="1" branch-rate="0.5" complexity="4">
@@ -4948,60 +5696,60 @@
             </method>
             <method name="Dispose" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="122" hits="70" branch="false" />
+                <line number="122" hits="80" branch="false" />
               </lines>
             </method>
             <method name=".ctor" signature="(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger`1&lt;HappyPaws.Infrastructure.Services.S3StorageService&gt;)" line-rate="1" branch-rate="0.5714285714285714" complexity="14">
               <lines>
-                <line number="22" hits="70" branch="false" />
-                <line number="24" hits="70" branch="false" />
-                <line number="26" hits="70" branch="false" />
-                <line number="27" hits="70" branch="false" />
-                <line number="28" hits="70" branch="false" />
-                <line number="29" hits="70" branch="false" />
-                <line number="30" hits="70" branch="true" condition-coverage="100% (2/2)" />
-                <line number="32" hits="70" branch="true" condition-coverage="50% (1/2)" />
-                <line number="33" hits="70" branch="true" condition-coverage="50% (1/2)" />
-                <line number="34" hits="70" branch="true" condition-coverage="50% (1/2)" />
-                <line number="36" hits="70" branch="true" condition-coverage="50% (1/2)" />
-                <line number="37" hits="70" branch="false" />
-                <line number="38" hits="70" branch="false" />
-                <line number="39" hits="70" branch="false" />
-                <line number="40" hits="70" branch="false" />
-                <line number="41" hits="70" branch="false" />
-                <line number="42" hits="70" branch="false" />
-                <line number="43" hits="70" branch="false" />
-                <line number="45" hits="70" branch="true" condition-coverage="50% (2/4)" />
-                <line number="46" hits="70" branch="false" />
-                <line number="47" hits="70" branch="false" />
-                <line number="48" hits="70" branch="false" />
+                <line number="22" hits="80" branch="false" />
+                <line number="24" hits="80" branch="false" />
+                <line number="26" hits="80" branch="false" />
+                <line number="27" hits="80" branch="false" />
+                <line number="28" hits="80" branch="false" />
+                <line number="29" hits="80" branch="false" />
+                <line number="30" hits="80" branch="true" condition-coverage="100% (2/2)" />
+                <line number="32" hits="80" branch="true" condition-coverage="50% (1/2)" />
+                <line number="33" hits="80" branch="true" condition-coverage="50% (1/2)" />
+                <line number="34" hits="80" branch="true" condition-coverage="50% (1/2)" />
+                <line number="36" hits="80" branch="true" condition-coverage="50% (1/2)" />
+                <line number="37" hits="80" branch="false" />
+                <line number="38" hits="80" branch="false" />
+                <line number="39" hits="80" branch="false" />
+                <line number="40" hits="80" branch="false" />
+                <line number="41" hits="80" branch="false" />
+                <line number="42" hits="80" branch="false" />
+                <line number="43" hits="80" branch="false" />
+                <line number="45" hits="80" branch="true" condition-coverage="50% (2/4)" />
+                <line number="46" hits="80" branch="false" />
+                <line number="47" hits="80" branch="false" />
+                <line number="48" hits="80" branch="false" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="22" hits="70" branch="false" />
-            <line number="24" hits="70" branch="false" />
-            <line number="26" hits="70" branch="false" />
-            <line number="27" hits="70" branch="false" />
-            <line number="28" hits="70" branch="false" />
-            <line number="29" hits="70" branch="false" />
-            <line number="30" hits="70" branch="true" condition-coverage="100% (2/2)" />
-            <line number="32" hits="70" branch="true" condition-coverage="50% (1/2)" />
-            <line number="33" hits="70" branch="true" condition-coverage="50% (1/2)" />
-            <line number="34" hits="70" branch="true" condition-coverage="50% (1/2)" />
-            <line number="36" hits="70" branch="true" condition-coverage="50% (1/2)" />
-            <line number="37" hits="70" branch="false" />
-            <line number="38" hits="70" branch="false" />
-            <line number="39" hits="70" branch="false" />
-            <line number="40" hits="70" branch="false" />
-            <line number="41" hits="70" branch="false" />
-            <line number="42" hits="70" branch="false" />
-            <line number="43" hits="70" branch="false" />
-            <line number="45" hits="70" branch="true" condition-coverage="50% (2/4)" />
-            <line number="46" hits="70" branch="false" />
-            <line number="47" hits="70" branch="false" />
-            <line number="48" hits="70" branch="false" />
-            <line number="98" hits="56" branch="false" />
+            <line number="22" hits="80" branch="false" />
+            <line number="24" hits="80" branch="false" />
+            <line number="26" hits="80" branch="false" />
+            <line number="27" hits="80" branch="false" />
+            <line number="28" hits="80" branch="false" />
+            <line number="29" hits="80" branch="false" />
+            <line number="30" hits="80" branch="true" condition-coverage="100% (2/2)" />
+            <line number="32" hits="80" branch="true" condition-coverage="50% (1/2)" />
+            <line number="33" hits="80" branch="true" condition-coverage="50% (1/2)" />
+            <line number="34" hits="80" branch="true" condition-coverage="50% (1/2)" />
+            <line number="36" hits="80" branch="true" condition-coverage="50% (1/2)" />
+            <line number="37" hits="80" branch="false" />
+            <line number="38" hits="80" branch="false" />
+            <line number="39" hits="80" branch="false" />
+            <line number="40" hits="80" branch="false" />
+            <line number="41" hits="80" branch="false" />
+            <line number="42" hits="80" branch="false" />
+            <line number="43" hits="80" branch="false" />
+            <line number="45" hits="80" branch="true" condition-coverage="50% (2/4)" />
+            <line number="46" hits="80" branch="false" />
+            <line number="47" hits="80" branch="false" />
+            <line number="48" hits="80" branch="false" />
+            <line number="98" hits="62" branch="false" />
             <line number="106" hits="2" branch="true" condition-coverage="50% (2/4)" />
             <line number="107" hits="2" branch="false" />
             <line number="108" hits="2" branch="false" />
@@ -5014,7 +5762,7 @@
             <line number="116" hits="2" branch="false" />
             <line number="118" hits="2" branch="false" />
             <line number="119" hits="2" branch="false" />
-            <line number="122" hits="70" branch="false" />
+            <line number="122" hits="80" branch="false" />
           </lines>
         </class>
         <class name="HappyPaws.Infrastructure.Services.SesEmailSender" filename="/home/runner/work/api/api/src/HappyPaws.Infrastructure/Services/SesEmailSender.cs" line-rate="0" branch-rate="0" complexity="8">

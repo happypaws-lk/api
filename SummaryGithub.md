@@ -3,31 +3,31 @@
 
 |||
 |:---|:---|
-| Generated on: | 08/19/2026 - 13:43:15 |
-| Coverage date: | 08/19/2026 - 13:43:10 |
+| Generated on: | 08/20/2026 - 02:24:42 |
+| Coverage date: | 08/20/2026 - 02:24:37 |
 | Parser: | MultiReport (2x Cobertura) |
 | Assemblies: | 3 |
-| Classes: | 129 |
-| Files: | 77 |
-| **Line coverage:** | 81.7% (1489 of 1822) |
-| Covered lines: | 1489 |
-| Uncovered lines: | 333 |
-| Coverable lines: | 1822 |
-| Total lines: | 7593 |
-| **Branch coverage:** | 72.3% (81 of 112) |
+| Classes: | 136 |
+| Files: | 81 |
+| **Line coverage:** | 82.1% (1771 of 2155) |
+| Covered lines: | 1771 |
+| Uncovered lines: | 384 |
+| Coverable lines: | 2155 |
+| Total lines: | 8181 |
+| **Branch coverage:** | 60.4% (81 of 134) |
 | Covered branches: | 81 |
-| Total branches: | 112 |
+| Total branches: | 134 |
 | **Method coverage:** | [Feature is only available for sponsors](https://reportgenerator.io/pro) |
-| Tag: | 8_32259559764 |
+| Tag: | 10_32324456923 |
 
 </details>
 
 ## Coverage
-<details><summary>HappyPaws.Api - 75.8%</summary>
+<details><summary>HappyPaws.Api - 77.6%</summary>
 
 |**Name**|**Line**|**Branch**|
 |:---|---:|---:|
-|**HappyPaws.Api**|**75.8%**|**75%**|
+|**HappyPaws.Api**|**77.6%**|**39.1%**|
 |HappyPaws.Api.Authorization.IsVerifiedAuthorizationHandler|100%|100%|
 |HappyPaws.Api.Endpoints.Admin.AdminCaseResponse|0%||
 |HappyPaws.Api.Endpoints.Admin.AdminEndpoints|100%||
@@ -91,6 +91,9 @@
 |HappyPaws.Api.Endpoints.Rescues.RescuesEndpoints|100%||
 |HappyPaws.Api.Endpoints.Setup.SetupCompleteRequestValidator|0%||
 |HappyPaws.Api.Endpoints.Setup.SetupEndpoints|100%||
+|HappyPaws.Api.Endpoints.Stories.CommunityStoryResponse|0%||
+|HappyPaws.Api.Endpoints.Stories.CreateCommunityStoryRequest|0%||
+|HappyPaws.Api.Endpoints.Stories.StoriesEndpoints|100%||
 |HappyPaws.Api.Endpoints.Transports.CreateTransportRequest|100%||
 |HappyPaws.Api.Endpoints.Transports.CreateTransportRequestValidator|100%||
 |HappyPaws.Api.Endpoints.Transports.TransportsEndpoints|100%|100%|
@@ -99,6 +102,7 @@
 |HappyPaws.Api.Endpoints.Transports.TransportTaskResponse|100%||
 |HappyPaws.Api.Endpoints.Users.AssignRoleRequestValidator|0%||
 |HappyPaws.Api.Endpoints.Users.ChangePasswordRequestValidator|0%||
+|HappyPaws.Api.Endpoints.Users.ConfirmEmailChangeRequestValidator|0%||
 |HappyPaws.Api.Endpoints.Users.DeviceRequestValidator|0%||
 |HappyPaws.Api.Endpoints.Users.DeviceResponse|0%||
 |HappyPaws.Api.Endpoints.Users.KycDocumentResponse|0%||
@@ -107,11 +111,13 @@
 |HappyPaws.Api.Endpoints.Users.LifestyleProfileResponse|0%||
 |HappyPaws.Api.Endpoints.Users.MeProfileResponse|0%||
 |HappyPaws.Api.Endpoints.Users.PublicUserResponse|0%||
+|HappyPaws.Api.Endpoints.Users.RequestEmailChangeRequestValidator|0%||
 |HappyPaws.Api.Endpoints.Users.UpdateMeProfileRequestValidator|0%||
 |HappyPaws.Api.Endpoints.Users.UserProfileResponse|100%||
-|HappyPaws.Api.Endpoints.Users.UsersEndpoints|100%||
+|HappyPaws.Api.Endpoints.Users.UsersEndpoints|99.3%||
 |HappyPaws.Api.Extensions.ClaimsPrincipalExtensions|62.5%|37.5%|
 |HappyPaws.Api.Extensions.EndpointExtensions|100%|100%|
+|HappyPaws.Api.Extensions.HostExtensions|76.9%|0%|
 |HappyPaws.Api.Filters.HtmlSanitizationFilter`1|100%|87.5%|
 |HappyPaws.Api.Filters.RequestSizeLimitFilter|100%||
 |HappyPaws.Api.Hubs.ChatHub|100%||
@@ -135,6 +141,7 @@
 |HappyPaws.Infrastructure.Data.Configurations.AdoptionApplicationConfigurati<br/>on|100%||
 |HappyPaws.Infrastructure.Data.Configurations.AnimalListingConfiguration|100%||
 |HappyPaws.Infrastructure.Data.Configurations.CaseUpdateConfiguration|100%||
+|HappyPaws.Infrastructure.Data.Configurations.CommunityStoryConfiguration|100%||
 |HappyPaws.Infrastructure.Data.Configurations.ConversationConfiguration|100%||
 |HappyPaws.Infrastructure.Data.Configurations.ConversationParticipantConfigu<br/>ration|100%||
 |HappyPaws.Infrastructure.Data.Configurations.IdentityDocumentConfiguration|100%||
@@ -154,7 +161,7 @@
 |HappyPaws.Infrastructure.Data.Configurations.UserConfiguration|100%||
 |HappyPaws.Infrastructure.Data.Configurations.UserDeviceConfiguration|100%||
 |HappyPaws.Infrastructure.Data.Configurations.UserRoleConfiguration|100%||
-|HappyPaws.Infrastructure.Data.HappyPawsDbContext|92.3%||
+|HappyPaws.Infrastructure.Data.HappyPawsDbContext|88.8%||
 |HappyPaws.Infrastructure.Data.Interceptors.TimestampInterceptor|92.3%|92.8%|
 |HappyPaws.Infrastructure.Extensions.ServiceCollectionExtensions|100%||
 |HappyPaws.Infrastructure.Services.BadgeEvaluationService|100%||
