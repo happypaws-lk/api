@@ -47,12 +47,14 @@ public record DeviceRequest(string FcmToken, string? DeviceName, Platform Platfo
 /// <param name="DeviceName">Friendly label for the device. Null if not provided.</param>
 /// <param name="Platform">The device platform.</param>
 /// <param name="LastActiveAt">UTC timestamp when this device last registered or refreshed its token.</param>
+/// <param name="IsCurrent">True if this device is the one making the current request.</param>
 public record DeviceResponse(
     Guid Id,
     string FcmToken,
     string? DeviceName,
     Platform Platform,
-    DateTimeOffset LastActiveAt);
+    DateTimeOffset LastActiveAt,
+    bool IsCurrent);
 
 /// <summary>Data submitted when creating or updating the lifestyle profile used for animal matching.</summary>
 /// <param name="HomeSize">The size of the user's home.</param>
@@ -153,3 +155,30 @@ public record KycDocumentResponse(
     string? RejectionReason,
     DateTimeOffset UploadedAt,
     DateTimeOffset? ReviewedAt);
+
+/// <summary>A role request submitted by the user.</summary>
+/// <param name="Id">Unique identifier of the role request.</param>
+/// <param name="Role">The role being requested.</param>
+/// <param name="Status">The current status of the request.</param>
+/// <param name="Justification">Optional justification provided by the user. Null if not provided.</param>
+/// <param name="RejectionReason">The reason for rejection if the request was rejected. Null otherwise.</param>
+/// <param name="CreatedAt">UTC timestamp when the request was submitted.</param>
+/// <param name="ReviewedAt">UTC timestamp when an admin reviewed the request. Null if not yet reviewed.</param>
+public record RoleRequestResponse(
+    Guid Id,
+    string Role,
+    RoleRequestStatus Status,
+    string? Justification,
+    string? RejectionReason,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? ReviewedAt);
+
+/// <summary>Data submitted when requesting an email change (Step 1).</summary>
+/// <param name="NewEmail">The new email address to assign to the account.</param>
+/// <param name="CurrentPassword">The user's current account password to verify identity.</param>
+public record RequestEmailChangeRequest(string NewEmail, string CurrentPassword);
+
+/// <summary>Data submitted when confirming an email change with OTP code (Step 2).</summary>
+/// <param name="NewEmail">The new email address being assigned.</param>
+/// <param name="Code">The 6-digit OTP verification code sent to the new email.</param>
+public record ConfirmEmailChangeRequest(string NewEmail, string Code);

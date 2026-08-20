@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
 using HappyPaws.Api.Extensions;
 using HappyPaws.Api.Filters;
 using HappyPaws.Core.Entities;
@@ -61,9 +62,10 @@ public class UsersEndpoints : IEndpointGroup
             .RequireAuthorization()
             .WithName("RemoveDevice")
             .WithSummary("Remove a registered FCM device")
-            .WithDescription("Unregisters a device so it no longer receives push notifications.")
+            .WithDescription("Unregisters a device so it no longer receives push notifications. Returns 403 if the request targets the caller's own current device.")
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status403Forbidden);
 
         group.MapGet("/me/profile", GetMeProfileAsync)
             .RequireAuthorization()
@@ -145,6 +147,55 @@ public class UsersEndpoints : IEndpointGroup
             .WithSummary("Add a role to the authenticated user's account")
             .WithDescription("Assigns an additional role to the user. Admin and Veterinarian roles cannot be self-assigned. Roles requiring KYC (Foster, Transporter, Sponsor) require the user to be verified first.")
             .Produces<RoleResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesValidationProblem();
+
+        group.MapGet("/me/kyc", GetMyKycDocumentsAsync)
+            .RequireAuthorization()
+            .WithName("GetMyKycDocuments")
+            .WithSummary("Get the authenticated user's KYC documents")
+            .WithDescription("Returns all identity documents submitted by the user, ordered by upload date descending.")
+            .Produces<List<KycDocumentResponse>>();
+
+        group.MapPost("/me/role-requests", SubmitRoleRequestAsync)
+            .RequireAuthorization()
+            .WithName("SubmitRoleRequest")
+            .WithSummary("Submit a role request with a supporting document")
+            .WithDescription("Creates a pending role request. An admin must approve the request before the role is granted. Roles Admin and Adopter cannot be requested. Duplicate pending requests for the same role are rejected with 409.")
+            .Produces<RoleRequestResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .RequireRateLimiting("UploadLimiter")
+            .AddEndpointFilter(new RequestSizeLimitFilter(10_485_760))
+            .DisableAntiforgery();
+
+        group.MapGet("/me/role-requests", GetMyRoleRequestsAsync)
+            .RequireAuthorization()
+            .WithName("GetMyRoleRequests")
+            .WithSummary("Get the authenticated user's role requests")
+            .WithDescription("Returns all role requests submitted by the user, ordered by creation date descending.")
+            .Produces<List<RoleRequestResponse>>();
+
+        group.MapPost("/me/email/request-change", RequestEmailChangeAsync)
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<RequestEmailChangeRequest>>()
+            .RequireRateLimiting("OtpLimiter")
+            .WithName("RequestEmailChange")
+            .WithSummary("Request an email change by verifying current password and sending OTP code")
+            .WithDescription("Verifies the user's current password and dispatches a 6-digit OTP code to the requested new email address.")
+            .Produces(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesValidationProblem();
+
+        group.MapPost("/me/email/confirm-change", ConfirmEmailChangeAsync)
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<ConfirmEmailChangeRequest>>()
+            .WithName("ConfirmEmailChange")
+            .WithSummary("Confirm email change using 6-digit OTP code")
+            .WithDescription("Validates the 6-digit OTP code sent to the new email address and updates the user's email on success.")
+            .Produces<MeProfileResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesValidationProblem();
@@ -273,14 +324,19 @@ public class UsersEndpoints : IEndpointGroup
     private static async Task<Ok<List<DeviceResponse>>> GetDevicesAsync(
         ClaimsPrincipal principal,
         HappyPawsDbContext db,
+        HttpContext httpContext,
         CancellationToken ct)
     {
         var userId = principal.GetUserId();
 
+        var currentDeviceIdHeader = httpContext.Request.Headers["X-Device-Id"].FirstOrDefault();
+        Guid? currentDeviceId = Guid.TryParse(currentDeviceIdHeader, out var parsedId) ? parsedId : null;
+
         var devices = await db.UserDevices
             .AsNoTracking()
             .Where(d => d.UserId == userId)
-            .Select(d => new DeviceResponse(d.Id, d.FcmToken, d.DeviceName, d.Platform, d.LastActiveAt))
+            .Select(d => new DeviceResponse(d.Id, d.FcmToken, d.DeviceName, d.Platform, d.LastActiveAt,
+                currentDeviceId.HasValue && d.Id == currentDeviceId.Value))
             .ToListAsync(ct);
 
         return TypedResults.Ok(devices);
@@ -304,7 +360,7 @@ public class UsersEndpoints : IEndpointGroup
             existing.UserId = userId;
             await db.SaveChangesAsync(ct);
 
-            return TypedResults.Ok(new DeviceResponse(existing.Id, existing.FcmToken, existing.DeviceName, existing.Platform, existing.LastActiveAt));
+            return TypedResults.Ok(new DeviceResponse(existing.Id, existing.FcmToken, existing.DeviceName, existing.Platform, existing.LastActiveAt, true));
         }
 
         var device = new UserDevice
@@ -320,15 +376,20 @@ public class UsersEndpoints : IEndpointGroup
         db.UserDevices.Add(device);
         await db.SaveChangesAsync(ct);
 
-        return TypedResults.Ok(new DeviceResponse(device.Id, device.FcmToken, device.DeviceName, device.Platform, device.LastActiveAt));
+        return TypedResults.Ok(new DeviceResponse(device.Id, device.FcmToken, device.DeviceName, device.Platform, device.LastActiveAt, true));
     }
 
-    private static async Task<Results<NoContent, NotFound>> RemoveDeviceAsync(
+    private static async Task<Results<NoContent, NotFound, ForbidHttpResult>> RemoveDeviceAsync(
         Guid id,
         ClaimsPrincipal principal,
         HappyPawsDbContext db,
+        HttpContext httpContext,
         CancellationToken ct)
     {
+        var currentDeviceIdHeader = httpContext.Request.Headers["X-Device-Id"].FirstOrDefault();
+        if (Guid.TryParse(currentDeviceIdHeader, out var currentDeviceId) && id == currentDeviceId)
+            return TypedResults.Forbid();
+
         var userId = principal.GetUserId();
 
         var device = await db.UserDevices
@@ -594,8 +655,124 @@ public class UsersEndpoints : IEndpointGroup
         return TypedResults.Created($"/api/v1/users/me/kyc", response);
     }
 
-    private static readonly HashSet<Role> KycRequiredRoles = [Role.Foster, Role.Transporter, Role.Sponsor];
-    private static readonly HashSet<Role> NonSelfAssignableRoles = [Role.Admin, Role.Veterinarian];
+    private static readonly HashSet<Role> RoleRequestRequiredRoles =
+        [Role.Foster, Role.Transporter, Role.Sponsor, Role.Veterinarian];
+
+    private static async Task<Ok<List<KycDocumentResponse>>> GetMyKycDocumentsAsync(
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+
+        var documents = await db.IdentityDocuments
+            .AsNoTracking()
+            .Where(d => d.UserId == userId)
+            .OrderByDescending(d => d.UploadedAt)
+            .Select(d => new KycDocumentResponse(
+                d.Id,
+                d.DocumentType,
+                d.Status,
+                d.RejectionReason,
+                d.UploadedAt,
+                d.ReviewedAt))
+            .ToListAsync(ct);
+
+        return TypedResults.Ok(documents);
+    }
+
+    private static async Task<Results<Created<RoleRequestResponse>, BadRequest<string>, Conflict<string>>> SubmitRoleRequestAsync(
+        IFormFile document,
+        Role role,
+        DocumentType documentType,
+        string? justification,
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        IStorageService storageService,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+
+        if (role == Role.Admin)
+            return TypedResults.BadRequest("The Admin role cannot be requested.");
+
+        if (role == Role.Adopter)
+            return TypedResults.BadRequest("Adopter is the default role and does not require a request.");
+
+        var hasPending = await db.RoleRequests
+            .AnyAsync(r => r.UserId == userId && r.Role == role && r.Status == RoleRequestStatus.Pending, ct);
+
+        if (hasPending)
+            return TypedResults.Conflict("A pending request for this role already exists.");
+
+        var alreadyAssigned = await db.UserRoles
+            .AnyAsync(r => r.UserId == userId && r.Role == role, ct);
+
+        if (alreadyAssigned)
+            return TypedResults.Conflict("You already have this role.");
+
+        if (document is null || document.Length == 0)
+            return TypedResults.BadRequest("A supporting document is required.");
+
+        if (document.Length > 10 * 1024 * 1024)
+            return TypedResults.BadRequest("Document must not exceed 10 MB.");
+
+        var extension = Path.GetExtension(document.FileName).ToLowerInvariant();
+        var key = $"role-requests/{userId}/{Guid.NewGuid()}{extension}";
+
+        await using var stream = document.OpenReadStream();
+        await storageService.UploadAsync(key, stream, document.ContentType, isPrivate: true, ct);
+
+        var roleRequest = new RoleRequest
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Role = role,
+            DocumentType = documentType,
+            DocumentKey = key,
+            Status = RoleRequestStatus.Pending,
+            Justification = string.IsNullOrWhiteSpace(justification) ? null : justification.Trim(),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        db.RoleRequests.Add(roleRequest);
+        await db.SaveChangesAsync(ct);
+
+        return TypedResults.Created(
+            $"/api/v1/users/me/role-requests/{roleRequest.Id}",
+            new RoleRequestResponse(
+                roleRequest.Id,
+                roleRequest.Role.ToString(),
+                roleRequest.Status,
+                roleRequest.Justification,
+                null,
+                roleRequest.CreatedAt,
+                null));
+    }
+
+    private static async Task<Ok<List<RoleRequestResponse>>> GetMyRoleRequestsAsync(
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+
+        var requests = await db.RoleRequests
+            .AsNoTracking()
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new RoleRequestResponse(
+                r.Id,
+                r.Role.ToString(),
+                r.Status,
+                r.Justification,
+                r.RejectionReason,
+                r.CreatedAt,
+                r.ReviewedAt))
+            .ToListAsync(ct);
+
+        return TypedResults.Ok(requests);
+    }
 
     private static async Task<Results<Created<RoleResponse>, BadRequest<string>, Conflict<string>>> AssignRoleAsync(
         AssignRoleRequest request,
@@ -605,8 +782,11 @@ public class UsersEndpoints : IEndpointGroup
     {
         var userId = principal.GetUserId();
 
-        if (NonSelfAssignableRoles.Contains(request.Role))
-            return TypedResults.BadRequest("Admin and Veterinarian roles cannot be self-assigned.");
+        if (request.Role == Role.Admin)
+            return TypedResults.BadRequest("The Admin role cannot be self-assigned.");
+
+        if (RoleRequestRequiredRoles.Contains(request.Role))
+            return TypedResults.BadRequest($"The {request.Role} role requires a role request and admin approval. Use POST /me/role-requests instead.");
 
         var user = await db.Users
             .Include(u => u.Roles)
@@ -614,9 +794,6 @@ public class UsersEndpoints : IEndpointGroup
 
         if (user.Roles.Any(r => r.Role == request.Role))
             return TypedResults.Conflict("You already have this role.");
-
-        if (KycRequiredRoles.Contains(request.Role) && !user.IsVerified)
-            return TypedResults.BadRequest("KYC verification is required before adding this role. Please submit your identity document first.");
 
         var userRole = new UserRole
         {
@@ -632,5 +809,110 @@ public class UsersEndpoints : IEndpointGroup
         return TypedResults.Created(
             $"/api/v1/users/me/roles",
             new RoleResponse(userRole.Role.ToString(), userRole.AssignedAt));
+    }
+
+    private static async Task<Results<Ok, BadRequest<string>, Conflict<string>>> RequestEmailChangeAsync(
+        RequestEmailChangeRequest request,
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        IPasswordHasher<User> passwordHasher,
+        IEmailSender emailSender,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+        var user = await db.Users.FirstAsync(u => u.Id == userId, ct);
+
+        // Verify current password
+        var passResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
+        if (passResult == PasswordVerificationResult.Failed)
+            return TypedResults.BadRequest("Current password is incorrect.");
+
+        var newEmail = request.NewEmail.Trim().ToLowerInvariant();
+        if (newEmail == user.Email.ToLowerInvariant())
+            return TypedResults.BadRequest("New email address must be different from your current email address.");
+
+        // Check if email is already taken
+        var isTaken = await db.Users.AnyAsync(u => u.Email.ToLower() == newEmail && u.Id != userId, ct);
+        if (isTaken)
+            return TypedResults.Conflict("A user with this email address already exists.");
+
+        // Generate 6-digit OTP code
+        var code = GenerateOtpCode();
+        var hashedCode = passwordHasher.HashPassword(user, code);
+
+        db.OtpCodes.Add(new OtpCode
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Code = hashedCode,
+            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(10)
+        });
+
+        await db.SaveChangesAsync(ct);
+
+        await emailSender.SendOtpAsync(newEmail, code, ct);
+
+        return TypedResults.Ok();
+    }
+
+    private static async Task<Results<Ok<MeProfileResponse>, BadRequest<string>, Conflict<string>>> ConfirmEmailChangeAsync(
+        ConfirmEmailChangeRequest request,
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        IPasswordHasher<User> passwordHasher,
+        CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+        var user = await db.Users
+            .Include(u => u.Roles)
+            .FirstAsync(u => u.Id == userId, ct);
+
+        var newEmail = request.NewEmail.Trim().ToLowerInvariant();
+        var isTaken = await db.Users.AnyAsync(u => u.Email.ToLower() == newEmail && u.Id != userId, ct);
+        if (isTaken)
+            return TypedResults.Conflict("A user with this email address already exists.");
+
+        // Find active OTP code for user
+        var now = DateTimeOffset.UtcNow;
+        var validCodes = await db.OtpCodes
+            .Where(o => o.UserId == userId && o.ExpiresAt > now)
+            .ToListAsync(ct);
+
+        var matchingOtp = validCodes.FirstOrDefault(o =>
+            passwordHasher.VerifyHashedPassword(user, o.Code, request.Code) != PasswordVerificationResult.Failed);
+
+        if (matchingOtp is null)
+            return TypedResults.BadRequest("Invalid or expired verification code.");
+
+        // Consume OTP and update email
+        db.OtpCodes.RemoveRange(validCodes);
+        user.Email = newEmail;
+        user.UpdatedAt = now;
+
+        await db.SaveChangesAsync(ct);
+
+        var location = user.LastKnownLocation is not null
+            ? new LocationResponse(user.LastKnownLocation.Y, user.LastKnownLocation.X)
+            : null;
+
+        return TypedResults.Ok(new MeProfileResponse(
+            user.Id,
+            user.Name,
+            user.Email,
+            user.AvatarKey,
+            user.IsVerified,
+            user.ReputationPoints,
+            user.IsSuspended,
+            user.SuspendedAt,
+            user.SuspendedReason,
+            user.CreatedAt,
+            user.UpdatedAt,
+            location,
+            user.Roles.Select(r => new RoleResponse(r.Role.ToString(), r.AssignedAt))));
+    }
+
+    private static string GenerateOtpCode()
+    {
+        return RandomNumberGenerator.GetInt32(100000, 1000000).ToString("D6");
     }
 }

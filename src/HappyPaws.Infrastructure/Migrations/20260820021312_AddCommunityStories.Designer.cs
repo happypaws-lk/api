@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using HappyPaws.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HappyPaws.Infrastructure.Migrations
 {
     [DbContext(typeof(HappyPawsDbContext))]
-    partial class HappyPawsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260820021312_AddCommunityStories")]
+    partial class AddCommunityStories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -627,32 +630,6 @@ namespace HappyPaws.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("HappyPaws.Core.Entities.PostUpvote", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("TargetId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("TargetType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PostUpvotes");
-                });
-
             modelBuilder.Entity("HappyPaws.Core.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -814,62 +791,6 @@ namespace HappyPaws.Infrastructure.Migrations
                         .IsDescending(false, false, true);
 
                     b.ToTable("rescue_cases", (string)null);
-                });
-
-            modelBuilder.Entity("HappyPaws.Core.Entities.RoleRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DocumentKey")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("DocumentType")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
-
-                    b.Property<string>("Justification")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTimeOffset?>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("ReviewedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReviewedById");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("role_requests", (string)null);
                 });
 
             modelBuilder.Entity("HappyPaws.Core.Entities.SystemConfig", b =>
@@ -1371,17 +1292,6 @@ namespace HappyPaws.Infrastructure.Migrations
                     b.Navigation("Sponsor");
                 });
 
-            modelBuilder.Entity("HappyPaws.Core.Entities.PostUpvote", b =>
-                {
-                    b.HasOne("HappyPaws.Core.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("HappyPaws.Core.Entities.RefreshToken", b =>
                 {
                     b.HasOne("HappyPaws.Core.Entities.User", "User")
@@ -1427,24 +1337,6 @@ namespace HappyPaws.Infrastructure.Migrations
                     b.Navigation("Reporter");
 
                     b.Navigation("UrgencyOverriddenBy");
-                });
-
-            modelBuilder.Entity("HappyPaws.Core.Entities.RoleRequest", b =>
-                {
-                    b.HasOne("HappyPaws.Core.Entities.User", "ReviewedBy")
-                        .WithMany()
-                        .HasForeignKey("ReviewedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("HappyPaws.Core.Entities.User", "User")
-                        .WithMany("RoleRequests")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReviewedBy");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HappyPaws.Core.Entities.TransportTask", b =>
@@ -1558,8 +1450,6 @@ namespace HappyPaws.Infrastructure.Migrations
                     b.Navigation("ReportedCases");
 
                     b.Navigation("ReputationEvents");
-
-                    b.Navigation("RoleRequests");
 
                     b.Navigation("Roles");
 

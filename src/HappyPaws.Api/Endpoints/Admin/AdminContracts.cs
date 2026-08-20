@@ -23,6 +23,31 @@ public record KycPendingResponse(
     string DocumentUrl,
     DateTimeOffset UploadedAt);
 
+/// <summary>A pending role request awaiting admin review.</summary>
+/// <param name="Id">Unique identifier of the role request.</param>
+/// <param name="UserId">ID of the user who submitted the request.</param>
+/// <param name="UserName">Display name of the submitting user.</param>
+/// <param name="UserEmail">Email address of the submitting user.</param>
+/// <param name="Role">The role being requested.</param>
+/// <param name="DocumentType">The type of document submitted.</param>
+/// <param name="DocumentUrl">A short-lived presigned URL (15 minutes) to view the document.</param>
+/// <param name="Justification">Optional justification provided by the user. Null if not provided.</param>
+/// <param name="CreatedAt">UTC timestamp when the request was submitted.</param>
+public record RoleRequestPendingResponse(
+    Guid Id,
+    Guid UserId,
+    string UserName,
+    string UserEmail,
+    string Role,
+    DocumentType DocumentType,
+    string DocumentUrl,
+    string? Justification,
+    DateTimeOffset CreatedAt);
+
+/// <summary>Reason for rejecting a role request.</summary>
+/// <param name="Reason">A short explanation of why the request was not approved.</param>
+public record RoleRequestRejectRequest(string Reason);
+
 /// <summary>Summary statistics and recent activity for the admin dashboard.</summary>
 /// <param name="PendingKycCount">Number of KYC documents awaiting review.</param>
 /// <param name="OpenRescueCasesCount">Number of rescue cases currently open.</param>
@@ -152,6 +177,69 @@ public record AdminListingResponse(
     ListingStatus Status,
     bool IsActive,
     string LocationName,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+/// <summary>A community post entry for the admin community management view.</summary>
+/// <param name="Id">Unique identifier of the post.</param>
+/// <param name="ContentType">The type of content: ADOPTION_LISTING, RESCUE_REPORT, TRANSPORT_REQUEST, or COMMUNITY_STORY.</param>
+/// <param name="Title">Title of the post.</param>
+/// <param name="Description">Body/description of the post.</param>
+/// <param name="PhotoUrl">URL of the primary image, if any.</param>
+/// <param name="Tags">Tags associated with the post.</param>
+/// <param name="AuthorName">Display name of the author.</param>
+/// <param name="AuthorId">ID of the author.</param>
+/// <param name="CreatedAt">UTC timestamp when the post was created.</param>
+/// <param name="Status">Approval status: Pending or Approved.</param>
+public record CommunityPostResponse(
+    Guid Id,
+    string ContentType,
+    string Title,
+    string Description,
+    string? PhotoUrl,
+    List<string> Tags,
+    string AuthorName,
+    Guid AuthorId,
+    DateTimeOffset CreatedAt,
+    string Status);
+
+/// <summary>Full detail of a community post for the admin detail view. Contains all fields across all content types, with nulls for non-applicable fields.</summary>
+public record CommunityPostDetailResponse(
+    Guid Id,
+    string ContentType,
+    string Title,
+    string Description,
+    string? PhotoUrl,
+    string? VideoUrl,
+    List<string>? Photos,
+    List<string> Tags,
+    string AuthorName,
+    Guid AuthorId,
+    string? LocationName,
+    double? Latitude,
+    double? Longitude,
+    string? Urgency,
+    string? UrgencySource,
+    string? OriginalAiUrgency,
+    string Status,
+    string? ConditionNotes,
+    // Adoption fields
+    string? AnimalName,
+    string? Species,
+    string? Breed,
+    int? AgeMonths,
+    string? AgeLabel,
+    string? Gender,
+    string? Size,
+    // Transport fields
+    string? DropoffLocation,
+    double? DropoffLatitude,
+    double? DropoffLongitude,
+    string? PickupContactName,
+    string? DropoffContactName,
+    DateTimeOffset? PickupTimeStart,
+    DateTimeOffset? PickupTimeEnd,
+    string? ActivityLevel,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 

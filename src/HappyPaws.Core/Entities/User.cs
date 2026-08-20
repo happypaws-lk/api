@@ -23,6 +23,7 @@ public class User
     public ICollection<OtpCode> OtpCodes { get; set; } = [];
     public LifestyleProfile? LifestyleProfile { get; set; }
     public ICollection<IdentityDocument> IdentityDocuments { get; set; } = [];
+    public ICollection<RoleRequest> RoleRequests { get; set; } = [];
     public ICollection<RescueCase> ReportedCases { get; set; } = [];
     public ICollection<AnimalListing> Listings { get; set; } = [];
     public ICollection<AdoptionApplication> Applications { get; set; } = [];

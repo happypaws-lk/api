@@ -18,6 +18,7 @@ namespace HappyPaws.Api.Endpoints.Listings;
 /// <param name="LocationName">Human-readable name of the listing location.</param>
 public record CreateListingRequest(
     Guid? RescueCaseId,
+    string Title,
     string Name,
     string Species,
     string Breed,
@@ -29,7 +30,8 @@ public record CreateListingRequest(
     string Description,
     double Latitude,
     double Longitude,
-    string LocationName);
+    string LocationName,
+    List<string> Tags);
 
 /// <summary>Data submitted when updating an existing animal listing.</summary>
 /// <param name="Name">The animal's name or a short identifier.</param>
@@ -45,6 +47,7 @@ public record CreateListingRequest(
 /// <param name="Longitude">WGS84 longitude of the listing location.</param>
 /// <param name="LocationName">Human-readable name of the listing location.</param>
 public record UpdateListingRequest(
+    string Title,
     string Name,
     string Species,
     string Breed,
@@ -56,7 +59,8 @@ public record UpdateListingRequest(
     string Description,
     double Latitude,
     double Longitude,
-    string LocationName);
+    string LocationName,
+    List<string> Tags);
 
 /// <summary>Data submitted when changing a listing's adoption status.</summary>
 /// <param name="Status">The new adoption status.</param>
@@ -79,6 +83,7 @@ public record UpdateListingStatusRequest(
 /// <param name="CreatedAt">UTC timestamp when the listing was created.</param>
 public record ListingResponse(
     Guid Id,
+    string Title,
     string Name,
     string Species,
     string Breed,
@@ -89,6 +94,7 @@ public record ListingResponse(
     ActivityLevel ActivityLevel,
     string LocationName,
     ListingStatus Status,
+    List<string> Tags,
     string? PrimaryPhotoUrl,
     DateTimeOffset CreatedAt);
 
@@ -118,6 +124,7 @@ public record ListingDetailResponse(
     Guid OwnerId,
     string OwnerName,
     Guid? RescueCaseId,
+    string Title,
     string Name,
     string Species,
     string Breed,
@@ -131,6 +138,7 @@ public record ListingDetailResponse(
     double Longitude,
     string LocationName,
     ListingStatus Status,
+    List<string> Tags,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     List<ListingPhotoResponse> Photos);

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using HappyPaws.Api.Extensions;
 using HappyPaws.Api.Filters;
+using HappyPaws.Core.Entities;
 using HappyPaws.Core.Enums;
 using HappyPaws.Core.Interfaces;
 using HappyPaws.Infrastructure.Data;
@@ -29,6 +30,13 @@ public class AdminEndpoints : IEndpointGroup
             .WithSummary("Get all active rescue cases for the live map")
             .WithDescription("Returns all active rescue cases with coordinates for the admin live map view.")
             .Produces<List<AdminCaseResponse>>();
+
+        group.MapPost("/cases/{id:guid}/approve", ApproveCaseAsync)
+            .WithName("ApproveRescueCase")
+            .WithSummary("Approve a pending rescue case")
+            .WithDescription("Approves a RescueCase and notifies nearby volunteers.")
+            .Produces<Ok>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/users", GetUsersAsync)
             .WithName("GetAdminUsers")
@@ -120,6 +128,73 @@ public class AdminEndpoints : IEndpointGroup
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem();
+
+        group.MapGet("/role-requests/pending", GetPendingRoleRequestsAsync)
+            .WithName("GetPendingRoleRequests")
+            .WithSummary("List all pending role requests for review")
+            .WithDescription("Returns all role requests awaiting review, ordered oldest first. Each entry includes a 15-minute presigned URL to view the supporting document.")
+            .Produces<List<RoleRequestPendingResponse>>();
+
+        group.MapPost("/role-requests/{id:guid}/approve", ApproveRoleRequestAsync)
+            .WithName("ApproveRoleRequest")
+            .WithSummary("Approve a role request and grant the role")
+            .WithDescription("Approves the request, assigns the role to the user, and sends a push notification.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        group.MapPost("/role-requests/{id:guid}/reject", RejectRoleRequestAsync)
+            .AddEndpointFilter<ValidationFilter<RoleRequestRejectRequest>>()
+            .WithName("RejectRoleRequest")
+            .WithSummary("Reject a role request with a reason")
+            .WithDescription("Rejects the request with a reason and notifies the user via push notification.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem();
+
+        group.MapGet("/community/posts", GetCommunityPostsAsync)
+            .WithName("GetAdminCommunityPosts")
+            .WithSummary("Get community posts")
+            .WithDescription("Returns a paginated list of community posts across all content types (Adoption Listings, Rescue Reports, Transport Requests, Community Stories), with optional filtering by type and pending status.")
+            .Produces<PagedResult<CommunityPostResponse>>();
+
+        group.MapGet("/community/pending", GetPendingCommunityPostsAsync)
+            .WithName("GetPendingCommunityPosts")
+            .WithSummary("Get all pending community posts awaiting approval")
+            .WithDescription("Returns all community posts across all content types that are awaiting admin approval.")
+            .Produces<List<CommunityPostResponse>>();
+
+        group.MapPost("/community/{type}/{id:guid}/approve", ApproveCommunityPostAsync)
+            .WithName("ApproveCommunityPost")
+            .WithSummary("Approve a pending community post")
+            .WithDescription("Approves a community post, making it visible in the community feed.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        group.MapPost("/community/{type}/{id:guid}/reject", RejectCommunityPostAsync)
+            .WithName("RejectCommunityPost")
+            .WithSummary("Reject a pending community post")
+            .WithDescription("Rejects a community post, removing it from the approval queue.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        group.MapDelete("/community/{type}/{id:guid}", DeleteCommunityPostAsync)
+            .WithName("DeleteCommunityPost")
+            .WithSummary("Permanently delete a community post")
+            .WithDescription("Hard deletes a community post across all content types (Rescue Reports, Adoption Listings, Transport Requests, Community Stories).")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        group.MapGet("/community/{type}/{id:guid}", GetCommunityPostDetailAsync)
+            .WithName("GetCommunityPostDetail")
+            .WithSummary("Get full details of a community post")
+            .WithDescription("Returns the full details of a community post by content type and ID.")
+            .Produces<CommunityPostDetailResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     private static async Task<Results<Ok<DashboardResponse>, ValidationProblem>> GetDashboardAsync(
@@ -252,6 +327,75 @@ public class AdminEndpoints : IEndpointGroup
             .ToListAsync(ct);
 
         return TypedResults.Ok(cases);
+    }
+
+    private static async Task<Results<Ok, NotFound>> ApproveCaseAsync(
+        Guid id,
+        HappyPawsDbContext db,
+        IServiceProvider serviceProvider,
+        INotificationService notificationService,
+        ISystemConfigService configService,
+        ILogger<AdminEndpoints> logger,
+        CancellationToken ct)
+    {
+        var rescueCase = await db.RescueCases.FirstOrDefaultAsync(c => c.Id == id && c.IsActive, ct);
+
+        if (rescueCase == null)
+            return TypedResults.NotFound();
+
+        if (rescueCase.Status != CaseStatus.PendingApproval)
+            return TypedResults.Ok(); // Already approved or in another state
+
+        rescueCase.Status = CaseStatus.Open;
+        await db.SaveChangesAsync(ct);
+
+        // Send proximity alerts to volunteers
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // We use a new scope since this runs in the background
+                using var scope = serviceProvider.CreateScope();
+                var scopedDb = scope.ServiceProvider.GetRequiredService<HappyPawsDbContext>();
+                var scopedNotification = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                var scopedConfig = scope.ServiceProvider.GetRequiredService<ISystemConfigService>();
+
+                var radiusMeters = (await scopedConfig.GetAlertRadiusKmAsync(CancellationToken.None)) * 1000.0;
+                var caseLocation = rescueCase.LocationCoords;
+
+                var responderIds = await scopedDb.Users
+                    .AsNoTracking()
+                    .Where(u => u.IsVerified && !u.IsSuspended && u.Id != rescueCase.ReporterId)
+                    .Where(u => u.LastKnownLocation != null &&
+                                u.LastKnownLocation.IsWithinDistance(caseLocation, radiusMeters))
+                    .Where(u => u.Roles.Any(r => r.Role == Role.Foster || r.Role == Role.Transporter || r.Role == Role.Veterinarian))
+                    .Select(u => u.Id)
+                    .ToListAsync();
+
+                if (responderIds.Count > 0)
+                {
+                    await scopedNotification.SendNotificationsAsync(
+                        responderIds,
+                        "rescue_nearby",
+                        "New Rescue Case Nearby",
+                        $"{rescueCase.Urgency} urgency rescue reported at {rescueCase.LocationName}",
+                        rescueCase.Id,
+                        "RescueCase",
+                        new Dictionary<string, string>
+                        {
+                            ["caseId"] = rescueCase.Id.ToString(),
+                            ["urgency"] = rescueCase.Urgency.ToString()
+                        },
+                        CancellationToken.None);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to send proximity alerts for approved case {CaseId}", rescueCase.Id);
+            }
+        });
+
+        return TypedResults.Ok();
     }
 
     private static async Task<Ok<PagedResult<AdminUserResponse>>> GetUsersAsync(
@@ -715,5 +859,548 @@ public class AdminEndpoints : IEndpointGroup
             ct);
 
         return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<List<RoleRequestPendingResponse>>> GetPendingRoleRequestsAsync(
+        HappyPawsDbContext db,
+        IStorageService storageService,
+        CancellationToken ct)
+    {
+        var requests = await db.RoleRequests
+            .AsNoTracking()
+            .Include(r => r.User)
+            .Where(r => r.Status == RoleRequestStatus.Pending)
+            .OrderBy(r => r.CreatedAt)
+            .ToListAsync(ct);
+
+        var responses = new List<RoleRequestPendingResponse>();
+        foreach (var r in requests)
+        {
+            var url = await storageService.GetPresignedUrlAsync(r.DocumentKey, TimeSpan.FromMinutes(15), ct);
+            responses.Add(new RoleRequestPendingResponse(
+                r.Id,
+                r.UserId,
+                r.User.Name,
+                r.User.Email,
+                r.Role.ToString(),
+                r.DocumentType,
+                url,
+                r.Justification,
+                r.CreatedAt));
+        }
+
+        return TypedResults.Ok(responses);
+    }
+
+    private static async Task<Results<NoContent, NotFound, Conflict<string>>> ApproveRoleRequestAsync(
+        Guid id,
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        INotificationService notificationService,
+        CancellationToken ct)
+    {
+        var adminId = principal.GetUserId();
+
+        var roleRequest = await db.RoleRequests
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
+
+        if (roleRequest is null)
+            return TypedResults.NotFound();
+
+        if (roleRequest.Status != RoleRequestStatus.Pending)
+            return TypedResults.Conflict("This request is not pending.");
+
+        var alreadyAssigned = await db.UserRoles
+            .AnyAsync(r => r.UserId == roleRequest.UserId && r.Role == roleRequest.Role, ct);
+
+        if (!alreadyAssigned)
+        {
+            db.UserRoles.Add(new UserRole
+            {
+                Id = Guid.NewGuid(),
+                UserId = roleRequest.UserId,
+                Role = roleRequest.Role,
+                AssignedAt = DateTimeOffset.UtcNow
+            });
+        }
+
+        roleRequest.Status = RoleRequestStatus.Approved;
+        roleRequest.ReviewedById = adminId;
+        roleRequest.ReviewedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(ct);
+
+        await notificationService.SendNotificationAsync(
+            roleRequest.UserId,
+            "role_request_approved",
+            "Role Request Approved",
+            $"Your {roleRequest.Role} role request has been approved. You now have access to {roleRequest.Role} features.",
+            roleRequest.Id,
+            "RoleRequest",
+            null,
+            ct);
+
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Results<NoContent, NotFound, Conflict<string>>> RejectRoleRequestAsync(
+        Guid id,
+        RoleRequestRejectRequest request,
+        ClaimsPrincipal principal,
+        HappyPawsDbContext db,
+        INotificationService notificationService,
+        CancellationToken ct)
+    {
+        var adminId = principal.GetUserId();
+
+        var roleRequest = await db.RoleRequests
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
+
+        if (roleRequest is null)
+            return TypedResults.NotFound();
+
+        if (roleRequest.Status != RoleRequestStatus.Pending)
+            return TypedResults.Conflict("This request is not pending.");
+
+        roleRequest.Status = RoleRequestStatus.Rejected;
+        roleRequest.RejectionReason = request.Reason;
+        roleRequest.ReviewedById = adminId;
+        roleRequest.ReviewedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(ct);
+
+        await notificationService.SendNotificationAsync(
+            roleRequest.UserId,
+            "role_request_rejected",
+            "Role Request Not Approved",
+            $"Your {roleRequest.Role} role request was not approved. Reason: {request.Reason}",
+            roleRequest.Id,
+            "RoleRequest",
+            null,
+            ct);
+
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<PagedResult<CommunityPostResponse>>> GetCommunityPostsAsync(
+        [AsParameters] PaginationQuery query,
+        string? type,
+        bool? onlyPending,
+        string? status,
+        HappyPawsDbContext db,
+        IStorageService storage,
+        CancellationToken ct)
+    {
+        var posts = new List<CommunityPostResponse>();
+        var filterPending = onlyPending == true || string.Equals(status, "Pending", StringComparison.OrdinalIgnoreCase);
+        var filterApproved = onlyPending == false || string.Equals(status, "Approved", StringComparison.OrdinalIgnoreCase);
+
+        if (type == null || type == "RESCUE_REPORT")
+        {
+            var rescueQuery = db.RescueCases
+                .AsNoTracking()
+                .Include(c => c.Reporter)
+                .Where(c => c.IsActive);
+
+            if (filterPending)
+            {
+                rescueQuery = rescueQuery.Where(c => c.Status == CaseStatus.PendingApproval);
+            }
+            else if (filterApproved)
+            {
+                rescueQuery = rescueQuery.Where(c => c.Status != CaseStatus.PendingApproval);
+            }
+
+            var rescues = await rescueQuery
+                .OrderByDescending(c => c.CreatedAt)
+                .Select(c => new CommunityPostResponse(
+                    c.Id, "RESCUE_REPORT", c.Title, c.Description,
+                    storage.GetPublicUrl(c.PhotoKey),
+                    c.Tags, c.Reporter.Name, c.ReporterId, c.CreatedAt,
+                    c.Status == CaseStatus.PendingApproval ? "Pending" : "Approved"))
+                .ToListAsync(ct);
+            posts.AddRange(rescues);
+        }
+
+        if (type == null || type == "ADOPTION_LISTING")
+        {
+            var listingQuery = db.AnimalListings
+                .AsNoTracking()
+                .Include(l => l.Owner)
+                .Where(l => l.IsActive);
+
+            if (filterPending)
+            {
+                listingQuery = listingQuery.Where(l => l.Status == ListingStatus.Pending);
+            }
+            else if (filterApproved)
+            {
+                listingQuery = listingQuery.Where(l => l.Status != ListingStatus.Pending);
+            }
+
+            var listings = await listingQuery
+                .OrderByDescending(l => l.CreatedAt)
+                .Select(l => new CommunityPostResponse(
+                    l.Id, "ADOPTION_LISTING", l.Title, l.Description,
+                    l.Photos.Any() ? storage.GetPublicUrl(l.Photos.OrderBy(p => p.SortOrder).First().StorageKey) : null,
+                    l.Tags, l.Owner.Name, l.OwnerId, l.CreatedAt,
+                    l.Status == ListingStatus.Pending ? "Pending" : "Approved"))
+                .ToListAsync(ct);
+            posts.AddRange(listings);
+        }
+
+        if (type == null || type == "TRANSPORT_REQUEST")
+        {
+            var transportQuery = db.TransportTasks
+                .AsNoTracking()
+                .Include(t => t.Case).ThenInclude(c => c.Reporter)
+                .AsQueryable();
+
+            if (filterPending)
+            {
+                transportQuery = transportQuery.Where(t => t.Status == TransportStatus.Pending);
+            }
+            else if (filterApproved)
+            {
+                transportQuery = transportQuery.Where(t => t.Status != TransportStatus.Pending);
+            }
+
+            var transports = await transportQuery
+                .OrderByDescending(t => t.CreatedAt)
+                .Select(t => new CommunityPostResponse(
+                    t.Id, "TRANSPORT_REQUEST", t.Title, t.SpecialInstructions ?? "",
+                    storage.GetPublicUrl(t.PhotoKey),
+                    t.Tags, t.Case.Reporter.Name, t.Case.ReporterId, t.CreatedAt,
+                    t.Status == TransportStatus.Pending ? "Pending" : "Approved"))
+                .ToListAsync(ct);
+            posts.AddRange(transports);
+        }
+
+        if ((type == null || type == "COMMUNITY_STORY") && !filterPending)
+        {
+            var stories = await db.CommunityStories
+                .AsNoTracking()
+                .Include(s => s.Author)
+                .Where(s => s.IsActive)
+                .OrderByDescending(s => s.CreatedAt)
+                .Select(s => new CommunityPostResponse(
+                    s.Id, "COMMUNITY_STORY", s.Title, s.Content,
+                    s.PhotoKey != null ? storage.GetPublicUrl(s.PhotoKey) : null,
+                    s.Tags, s.Author.Name, s.AuthorId, s.CreatedAt, "Approved"))
+                .ToListAsync(ct);
+            posts.AddRange(stories);
+        }
+
+        var sorted = posts.OrderByDescending(p => p.CreatedAt).ToList();
+        var totalCount = sorted.Count;
+        var paged = sorted.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize).ToList();
+
+        return TypedResults.Ok(new PagedResult<CommunityPostResponse>(paged, totalCount, query.Page, query.PageSize));
+    }
+
+    private static async Task<Ok<List<CommunityPostResponse>>> GetPendingCommunityPostsAsync(
+        HappyPawsDbContext db,
+        IStorageService storage,
+        CancellationToken ct)
+    {
+        var posts = new List<CommunityPostResponse>();
+
+        var rescues = await db.RescueCases
+            .AsNoTracking()
+            .Include(c => c.Reporter)
+            .Where(c => c.IsActive && c.Status == CaseStatus.PendingApproval)
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new CommunityPostResponse(
+                c.Id, "RESCUE_REPORT", c.Title, c.Description,
+                storage.GetPublicUrl(c.PhotoKey),
+                c.Tags, c.Reporter.Name, c.ReporterId, c.CreatedAt, "Pending"))
+            .ToListAsync(ct);
+        posts.AddRange(rescues);
+
+        var listings = await db.AnimalListings
+            .AsNoTracking()
+            .Include(l => l.Owner)
+            .Where(l => l.IsActive && l.Status == ListingStatus.Pending)
+            .OrderByDescending(l => l.CreatedAt)
+            .Select(l => new CommunityPostResponse(
+                l.Id, "ADOPTION_LISTING", l.Title, l.Description,
+                l.Photos.Any() ? storage.GetPublicUrl(l.Photos.OrderBy(p => p.SortOrder).First().StorageKey) : null,
+                l.Tags, l.Owner.Name, l.OwnerId, l.CreatedAt, "Pending"))
+            .ToListAsync(ct);
+        posts.AddRange(listings);
+
+        var transports = await db.TransportTasks
+            .AsNoTracking()
+            .Include(t => t.Case).ThenInclude(c => c.Reporter)
+            .Where(t => t.Status == TransportStatus.Pending)
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => new CommunityPostResponse(
+                t.Id, "TRANSPORT_REQUEST", t.Title, t.SpecialInstructions ?? "",
+                storage.GetPublicUrl(t.PhotoKey),
+                t.Tags, t.Case.Reporter.Name, t.Case.ReporterId, t.CreatedAt, "Pending"))
+            .ToListAsync(ct);
+        posts.AddRange(transports);
+
+        return TypedResults.Ok(posts.OrderByDescending(p => p.CreatedAt).ToList());
+    }
+
+    private static async Task<Results<NoContent, NotFound, BadRequest<string>>> ApproveCommunityPostAsync(
+        string type,
+        Guid id,
+        HappyPawsDbContext db,
+        CancellationToken ct)
+    {
+        switch (type)
+        {
+            case "RESCUE_REPORT":
+                var rescue = await db.RescueCases.FirstOrDefaultAsync(c => c.Id == id && c.IsActive, ct);
+                if (rescue == null) return TypedResults.NotFound();
+                if (rescue.Status != CaseStatus.PendingApproval)
+                    return TypedResults.BadRequest("Post is not pending approval.");
+                rescue.Status = CaseStatus.Open;
+                break;
+
+            case "ADOPTION_LISTING":
+                var listing = await db.AnimalListings.FirstOrDefaultAsync(l => l.Id == id && l.IsActive, ct);
+                if (listing == null) return TypedResults.NotFound();
+                if (listing.Status != ListingStatus.Pending)
+                    return TypedResults.BadRequest("Post is not pending approval.");
+                listing.Status = ListingStatus.Available;
+                break;
+
+            case "TRANSPORT_REQUEST":
+                var transport = await db.TransportTasks.FirstOrDefaultAsync(t => t.Id == id, ct);
+                if (transport == null) return TypedResults.NotFound();
+                if (transport.Status != TransportStatus.Pending)
+                    return TypedResults.BadRequest("Post is not pending approval.");
+                transport.Status = TransportStatus.Assigned;
+                break;
+
+            default:
+                return TypedResults.BadRequest($"Unknown content type: {type}");
+        }
+
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Results<NoContent, NotFound, BadRequest<string>>> RejectCommunityPostAsync(
+        string type,
+        Guid id,
+        HappyPawsDbContext db,
+        CancellationToken ct)
+    {
+        switch (type)
+        {
+            case "RESCUE_REPORT":
+                var rescue = await db.RescueCases.FirstOrDefaultAsync(c => c.Id == id && c.IsActive, ct);
+                if (rescue == null) return TypedResults.NotFound();
+                rescue.IsActive = false;
+                rescue.UpdatedAt = DateTimeOffset.UtcNow;
+                break;
+
+            case "ADOPTION_LISTING":
+                var listing = await db.AnimalListings.FirstOrDefaultAsync(l => l.Id == id && l.IsActive, ct);
+                if (listing == null) return TypedResults.NotFound();
+                listing.IsActive = false;
+                listing.UpdatedAt = DateTimeOffset.UtcNow;
+                break;
+
+            case "TRANSPORT_REQUEST":
+                var transport = await db.TransportTasks.FirstOrDefaultAsync(t => t.Id == id, ct);
+                if (transport == null) return TypedResults.NotFound();
+                return TypedResults.BadRequest("Transport requests cannot be rejected, only reassigned.");
+
+            default:
+                return TypedResults.BadRequest($"Unknown content type: {type}");
+        }
+
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Results<NoContent, NotFound, BadRequest<string>>> DeleteCommunityPostAsync(
+        string type,
+        Guid id,
+        HappyPawsDbContext db,
+        IStorageService storage,
+        CancellationToken ct)
+    {
+        switch (type)
+        {
+            case "RESCUE_REPORT":
+                var rescue = await db.RescueCases
+                    .Include(c => c.TransportTasks)
+                    .Include(c => c.CaseUpdates)
+                    .Include(c => c.AnimalListings)
+                    .FirstOrDefaultAsync(c => c.Id == id, ct);
+                if (rescue == null) return TypedResults.NotFound();
+
+                if (rescue.PhotoKey != null) await storage.DeleteAsync(rescue.PhotoKey, ct);
+                
+                foreach (var update in rescue.CaseUpdates)
+                {
+                    if (update.PhotoKey != null) await storage.DeleteAsync(update.PhotoKey, ct);
+                }
+
+                if (rescue.TransportTasks.Count > 0)
+                {
+                    foreach (var task in rescue.TransportTasks)
+                    {
+                        if (task.PhotoKey != null) await storage.DeleteAsync(task.PhotoKey, ct);
+                    }
+                    db.TransportTasks.RemoveRange(rescue.TransportTasks);
+                }
+                
+                if (rescue.CaseUpdates.Count > 0)
+                    db.CaseUpdates.RemoveRange(rescue.CaseUpdates);
+                foreach (var listing in rescue.AnimalListings)
+                {
+                    listing.RescueCaseId = null;
+                }
+                db.RescueCases.Remove(rescue);
+                break;
+
+            case "ADOPTION_LISTING":
+                var listingItem = await db.AnimalListings
+                    .Include(l => l.Photos)
+                    .FirstOrDefaultAsync(l => l.Id == id, ct);
+                if (listingItem == null) return TypedResults.NotFound();
+                
+                foreach (var photo in listingItem.Photos)
+                {
+                    await storage.DeleteAsync(photo.StorageKey, ct);
+                }
+                
+                var apps = await db.AdoptionApplications.Where(a => a.ListingId == id).ToListAsync(ct);
+                db.AdoptionApplications.RemoveRange(apps);
+                
+                db.AnimalListings.Remove(listingItem);
+                break;
+
+            case "TRANSPORT_REQUEST":
+                var transport = await db.TransportTasks.FirstOrDefaultAsync(t => t.Id == id, ct);
+                if (transport == null) return TypedResults.NotFound();
+                if (transport.PhotoKey != null) await storage.DeleteAsync(transport.PhotoKey, ct);
+                db.TransportTasks.Remove(transport);
+                break;
+
+            case "COMMUNITY_STORY":
+                var story = await db.CommunityStories.FirstOrDefaultAsync(s => s.Id == id, ct);
+                if (story == null) return TypedResults.NotFound();
+                if (story.PhotoKey != null) await storage.DeleteAsync(story.PhotoKey, ct);
+                if (story.VideoKey != null) await storage.DeleteAsync(story.VideoKey, ct);
+                db.CommunityStories.Remove(story);
+                break;
+
+            default:
+                return TypedResults.BadRequest($"Unknown content type: {type}");
+        }
+
+        var upvotes = await db.PostUpvotes.Where(u => u.TargetId == id).ToListAsync(ct);
+        db.PostUpvotes.RemoveRange(upvotes);
+
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Results<Ok<CommunityPostDetailResponse>, NotFound, BadRequest<string>>> GetCommunityPostDetailAsync(
+        string type,
+        Guid id,
+        HappyPawsDbContext db,
+        IStorageService storage,
+        CancellationToken ct)
+    {
+        switch (type)
+        {
+            case "RESCUE_REPORT":
+            {
+                var c = await db.RescueCases
+                    .AsNoTracking()
+                    .Include(r => r.Reporter)
+                    .FirstOrDefaultAsync(r => r.Id == id, ct);
+                if (c == null) return TypedResults.NotFound();
+
+                return TypedResults.Ok(new CommunityPostDetailResponse(
+                    c.Id, "RESCUE_REPORT", c.Title, c.Description,
+                    storage.GetPublicUrl(c.PhotoKey), null, null,
+                    c.Tags, c.Reporter.Name, c.ReporterId,
+                    c.LocationName, c.LocationCoords.Y, c.LocationCoords.X,
+                    c.Urgency.ToString(), c.UrgencySource.ToString(), c.OriginalAiUrgency?.ToString(),
+                    c.Status.ToString(), c.ConditionNotes,
+                    null, null, null, null, null, null, null,
+                    null, null, null, null, null, null, null, null,
+                    c.CreatedAt, c.UpdatedAt));
+            }
+
+            case "ADOPTION_LISTING":
+            {
+                var l = await db.AnimalListings
+                    .AsNoTracking()
+                    .Include(x => x.Owner)
+                    .Include(x => x.Photos.OrderBy(p => p.SortOrder))
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (l == null) return TypedResults.NotFound();
+
+                var photos = l.Photos.Select(p => storage.GetPublicUrl(p.StorageKey)).ToList();
+
+                return TypedResults.Ok(new CommunityPostDetailResponse(
+                    l.Id, "ADOPTION_LISTING", l.Title, l.Description,
+                    photos.Count > 0 ? photos[0] : null, null, photos,
+                    l.Tags, l.Owner.Name, l.OwnerId,
+                    l.LocationName, l.LocationCoords.Y, l.LocationCoords.X,
+                    null, null, null,
+                    l.Status.ToString(), null,
+                    l.Name, l.Species, l.Breed, l.AgeMonths, l.AgeLabel, l.Gender.ToString(), l.Size.ToString(),
+                    null, null, null, null, null, null, null, null,
+                    l.CreatedAt, l.UpdatedAt));
+            }
+
+            case "TRANSPORT_REQUEST":
+            {
+                var t = await db.TransportTasks
+                    .AsNoTracking()
+                    .Include(x => x.Case).ThenInclude(c => c.Reporter)
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (t == null) return TypedResults.NotFound();
+
+                return TypedResults.Ok(new CommunityPostDetailResponse(
+                    t.Id, "TRANSPORT_REQUEST", t.Title, t.SpecialInstructions ?? "",
+                    storage.GetPublicUrl(t.PhotoKey), null, null,
+                    t.Tags, t.Case.Reporter.Name, t.Case.ReporterId,
+                    t.PickupLocation, t.PickupLocationCoords.Y, t.PickupLocationCoords.X,
+                    null, null, null,
+                    t.Status.ToString(), null,
+                    null, null, null, null, null, null, null,
+                    t.DropoffLocation, t.DropoffLocationCoords.Y, t.DropoffLocationCoords.X,
+                    t.PickupContactName, t.DropoffContactName, t.PickupTimeStart, t.PickupTimeEnd, null,
+                    t.CreatedAt, t.UpdatedAt));
+            }
+
+            case "COMMUNITY_STORY":
+            {
+                var s = await db.CommunityStories
+                    .AsNoTracking()
+                    .Include(x => x.Author)
+                    .FirstOrDefaultAsync(x => x.Id == id, ct);
+                if (s == null) return TypedResults.NotFound();
+
+                return TypedResults.Ok(new CommunityPostDetailResponse(
+                    s.Id, "COMMUNITY_STORY", s.Title, s.Content,
+                    s.PhotoKey != null ? storage.GetPublicUrl(s.PhotoKey) : null,
+                    s.VideoKey != null ? storage.GetPublicUrl(s.VideoKey) : null,
+                    null,
+                    s.Tags, s.Author.Name, s.AuthorId,
+                    null, null, null,
+                    null, null, null,
+                    "Active", null,
+                    null, null, null, null, null, null, null,
+                    null, null, null, null, null, null, null, null,
+                    s.CreatedAt, s.UpdatedAt));
+            }
+
+            default:
+                return TypedResults.BadRequest($"Unknown content type: {type}");
+        }
     }
 }

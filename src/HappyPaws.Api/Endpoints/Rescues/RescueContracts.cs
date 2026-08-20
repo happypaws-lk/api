@@ -10,11 +10,13 @@ namespace HappyPaws.Api.Endpoints.Rescues;
 /// <param name="Description">A description of the situation and the animal's condition.</param>
 /// <param name="ConditionNotes">Optional additional notes about the animal's medical condition.</param>
 public record CreateRescueRequest(
+    [FromForm] string Title,
     [FromForm] double Latitude,
     [FromForm] double Longitude,
     [FromForm] string LocationName,
     [FromForm] string Description,
-    [FromForm] string? ConditionNotes);
+    [FromForm] string? ConditionNotes,
+    [FromForm] string? Tags);
 
 /// <summary>Form data submitted when posting a progress update on a rescue case. Send as multipart/form-data and optionally include a photo file.</summary>
 /// <param name="UpdateType">The category of update being posted.</param>
@@ -47,6 +49,7 @@ public record OverrideUrgencyRequest(Urgency Urgency);
 /// <param name="UpdatedAt">UTC timestamp of the last update.</param>
 public record RescueCaseResponse(
     Guid Id,
+    string Title,
     Guid ReporterId,
     string ReporterName,
     Guid? AssignedFosterId,
@@ -61,6 +64,7 @@ public record RescueCaseResponse(
     Urgency? OriginalAiUrgency,
     UrgencySource UrgencySource,
     CaseStatus Status,
+    List<string> Tags,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
@@ -73,10 +77,12 @@ public record RescueCaseResponse(
 /// <param name="CreatedAt">UTC timestamp when the case was reported.</param>
 public record RescueCaseSummaryResponse(
     Guid Id,
+    string Title,
     string LocationName,
     string PhotoUrl,
     Urgency Urgency,
     CaseStatus Status,
+    List<string> Tags,
     DateTimeOffset CreatedAt);
 
 /// <summary>A progress update posted on a rescue case.</summary>

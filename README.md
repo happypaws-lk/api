@@ -114,12 +114,12 @@ Follow these steps to set up the API locally.
 
    | Name | Email | Primary Role(s) | Badges | Location |
    |---|---|---|---|---|
-   | Nethmina Gunasekara | `nethminagunasekara@outlook.com` | Admin, Adopter | - | Colombo 03 |
-   | Dr. Ashini Chamodya | `ashinichamodya@gmail.com` | Veterinarian, Foster | VerifiedVet | Dehiwala |
-   | Shanuka Ravishan | `shanukaravishan@gmail.com` | Foster, Adopter | TopFoster | Kaduwela / Malabe |
-   | Sachintha Sandaruwan | `sachinthasandaruwan@gmail.com` | Transporter, Adopter | TrustedTransporter | Mount Lavinia |
-   | Chanuka Dilhara | `chanukadilhara@gmail.com` | Sponsor, Adopter | - | Maharagama |
-   | Shehan Anushka | `shehananushka@gmail.com` | Adopter | - | Moratuwa |
+   | HappyPaws Admin | `admin@happypaws.lk` | Admin, Adopter | - | Colombo 03 |
+   | HappyPaws Veterinarian | `veterinarian@happypaws.lk` | Veterinarian, Foster | VerifiedVet | Dehiwala |
+   | HappyPaws Foster | `foster@happypaws.lk` | Foster, Adopter | TopFoster | Kaduwela / Malabe |
+   | HappyPaws Transporter | `transporter@happypaws.lk` | Transporter, Adopter | TrustedTransporter | Mount Lavinia |
+   | HappyPaws Sponsor | `sponsor@happypaws.lk` | Sponsor, Adopter | - | Maharagama |
+   | HappyPaws Adopter | `adopter@happypaws.lk` | Adopter | - | Moratuwa |
 
    **Re-seeding:** The seeder is skipped if any users already exist. To reset and re-seed, clear the relevant rows and restart the server.
    ```bash

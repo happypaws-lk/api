@@ -58,7 +58,7 @@ public class UsersEndpointsTests
         using var getProfileRequest = new HttpRequestMessage(HttpMethod.Get, "/api/v1/users/me");
         getProfileRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         var getProfileResponse = await _client.SendAsync(getProfileRequest);
-        var profile = await getProfileResponse.Content.ReadFromJsonAsync<UserProfileResponse>();
+        var profile = await getProfileResponse.Content.ReadFromJsonAsync<UserProfileResponse>(TestJsonOptions.Default);
         profile!.AvatarUrl.Should().NotBeNullOrEmpty();
 
         // Delete avatar
@@ -71,7 +71,7 @@ public class UsersEndpointsTests
         using var getProfileAfterDelete = new HttpRequestMessage(HttpMethod.Get, "/api/v1/users/me");
         getProfileAfterDelete.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         var getProfileAfterDeleteResponse = await _client.SendAsync(getProfileAfterDelete);
-        var updatedProfile = await getProfileAfterDeleteResponse.Content.ReadFromJsonAsync<UserProfileResponse>();
+        var updatedProfile = await getProfileAfterDeleteResponse.Content.ReadFromJsonAsync<UserProfileResponse>(TestJsonOptions.Default);
         updatedProfile!.AvatarUrl.Should().BeNull();
     }
 }

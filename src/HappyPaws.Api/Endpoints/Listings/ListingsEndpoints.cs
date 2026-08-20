@@ -151,6 +151,8 @@ public class ListingsEndpoints : IEndpointGroup
             Id = Guid.NewGuid(),
             OwnerId = userId,
             RescueCaseId = request.RescueCaseId,
+            Title = request.Title,
+            Tags = request.Tags ?? [],
             Name = request.Name,
             Species = request.Species,
             Breed = request.Breed,
@@ -174,9 +176,9 @@ public class ListingsEndpoints : IEndpointGroup
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, ct);
 
         var response = new ListingDetailResponse(
-            listing.Id, listing.OwnerId, user.Name, listing.RescueCaseId, listing.Name, listing.Species, listing.Breed,
+            listing.Id, listing.OwnerId, user.Name, listing.RescueCaseId, listing.Title, listing.Name, listing.Species, listing.Breed,
             listing.AgeMonths, listing.AgeLabel, listing.Gender, listing.Size, listing.ActivityLevel, listing.Description,
-            listing.LocationCoords.Y, listing.LocationCoords.X, listing.LocationName, listing.Status, listing.CreatedAt, listing.UpdatedAt, []);
+            listing.LocationCoords.Y, listing.LocationCoords.X, listing.LocationName, listing.Status, listing.Tags.ToList(), listing.CreatedAt, listing.UpdatedAt, []);
 
         return TypedResults.Created($"/api/v1/listings/{listing.Id}", response);
     }
@@ -220,6 +222,8 @@ public class ListingsEndpoints : IEndpointGroup
             .Select(l => new
             {
                 l.Id,
+                l.Title,
+                l.Tags,
                 l.Name,
                 l.Species,
                 l.Breed,
@@ -236,7 +240,7 @@ public class ListingsEndpoints : IEndpointGroup
             .ToListAsync(ct);
 
         var responses = listings.Select(l => new ListingResponse(
-            l.Id, l.Name, l.Species, l.Breed, l.AgeMonths, l.AgeLabel, l.Gender, l.Size, l.ActivityLevel, l.LocationName, l.Status,
+            l.Id, l.Title, l.Name, l.Species, l.Breed, l.AgeMonths, l.AgeLabel, l.Gender, l.Size, l.ActivityLevel, l.LocationName, l.Status, l.Tags.ToList(),
             l.CoverPhotoKey is not null ? storageService.GetPublicUrl(l.CoverPhotoKey) : null,
             l.CreatedAt)).ToList();
 
@@ -258,6 +262,8 @@ public class ListingsEndpoints : IEndpointGroup
                 l.OwnerId,
                 OwnerName = l.Owner.Name,
                 l.RescueCaseId,
+                l.Title,
+                l.Tags,
                 l.Name,
                 l.Species,
                 l.Breed,
@@ -287,9 +293,9 @@ public class ListingsEndpoints : IEndpointGroup
             new ListingPhotoResponse(p.Id, storageService.GetPublicUrl(p.StorageKey), p.SortOrder, p.CreatedAt)).ToList();
 
         var response = new ListingDetailResponse(
-            listing.Id, listing.OwnerId, listing.OwnerName, listing.RescueCaseId, listing.Name, listing.Species, listing.Breed,
+            listing.Id, listing.OwnerId, listing.OwnerName, listing.RescueCaseId, listing.Title, listing.Name, listing.Species, listing.Breed,
             listing.AgeMonths, listing.AgeLabel, listing.Gender, listing.Size, listing.ActivityLevel, listing.Description,
-            listing.Latitude, listing.Longitude, listing.LocationName, listing.Status, listing.CreatedAt, listing.UpdatedAt, photos);
+            listing.Latitude, listing.Longitude, listing.LocationName, listing.Status, listing.Tags.ToList(), listing.CreatedAt, listing.UpdatedAt, photos);
 
         return TypedResults.Ok(response);
     }
@@ -311,6 +317,8 @@ public class ListingsEndpoints : IEndpointGroup
         if (listing.OwnerId != userId)
             return TypedResults.Forbid();
 
+        listing.Title = request.Title;
+        listing.Tags = request.Tags ?? [];
         listing.Name = request.Name;
         listing.Species = request.Species;
         listing.Breed = request.Breed;
@@ -366,19 +374,28 @@ public class ListingsEndpoints : IEndpointGroup
         Guid id,
         ClaimsPrincipal principal,
         HappyPawsDbContext db,
+        IStorageService storage,
         IOutputCacheStore cacheStore,
         CancellationToken ct)
     {
         var userId = principal.GetUserId();
 
-        var listing = await db.AnimalListings.FirstOrDefaultAsync(l => l.Id == id && l.IsActive, ct);
+        var listing = await db.AnimalListings.Include(l => l.Photos).FirstOrDefaultAsync(l => l.Id == id, ct);
         if (listing is null)
             return TypedResults.NotFound();
 
         if (listing.OwnerId != userId)
             return TypedResults.Forbid();
 
-        listing.IsActive = false;
+        foreach (var photo in listing.Photos)
+        {
+            await storage.DeleteAsync(photo.StorageKey, ct);
+        }
+
+        var apps = await db.AdoptionApplications.Where(a => a.ListingId == id).ToListAsync(ct);
+        db.AdoptionApplications.RemoveRange(apps);
+
+        db.AnimalListings.Remove(listing);
         await db.SaveChangesAsync(ct);
         await cacheStore.EvictByTagAsync("listings", ct);
 
@@ -407,7 +424,7 @@ public class ListingsEndpoints : IEndpointGroup
         var matchedListings = matchService.GetMatches(profile, availableListings);
 
         var responses = matchedListings.Select(l => new ListingResponse(
-            l.Id, l.Name, l.Species, l.Breed, l.AgeMonths, l.AgeLabel, l.Gender, l.Size, l.ActivityLevel, l.LocationName, l.Status,
+            l.Id, l.Title, l.Name, l.Species, l.Breed, l.AgeMonths, l.AgeLabel, l.Gender, l.Size, l.ActivityLevel, l.LocationName, l.Status, l.Tags.ToList(),
             l.Photos.FirstOrDefault() is not null ? storageService.GetPublicUrl(l.Photos.First().StorageKey) : null,
             l.CreatedAt)).ToList();
 

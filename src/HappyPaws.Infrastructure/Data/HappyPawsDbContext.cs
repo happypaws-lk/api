@@ -17,6 +17,7 @@ public sealed class HappyPawsDbContext : DbContext
     public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
     public DbSet<LifestyleProfile> LifestyleProfiles => Set<LifestyleProfile>();
     public DbSet<IdentityDocument> IdentityDocuments => Set<IdentityDocument>();
+    public DbSet<RoleRequest> RoleRequests => Set<RoleRequest>();
     public DbSet<SystemConfig> SystemConfigs => Set<SystemConfig>();
     public DbSet<RescueCase> RescueCases => Set<RescueCase>();
     public DbSet<CaseUpdate> CaseUpdates => Set<CaseUpdate>();
@@ -33,6 +34,8 @@ public sealed class HappyPawsDbContext : DbContext
     public DbSet<ReputationEvent> ReputationEvents => Set<ReputationEvent>();
     public DbSet<UserBadge> UserBadges => Set<UserBadge>();
     public DbSet<ModerationAction> ModerationActions => Set<ModerationAction>();
+    public DbSet<CommunityStory> CommunityStories => Set<CommunityStory>();
+    public DbSet<PostUpvote> PostUpvotes => Set<PostUpvote>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

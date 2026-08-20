@@ -9,6 +9,8 @@ public class RescueCase
     public Guid ReporterId { get; set; }
     public Guid? AssignedFosterId { get; set; }
     public Guid? UrgencyOverriddenById { get; set; }
+    public string Title { get; set; } = null!;
+    public List<string> Tags { get; set; } = [];
     public Point LocationCoords { get; set; } = null!;
     public string LocationName { get; set; } = null!;
     public string Description { get; set; } = null!;

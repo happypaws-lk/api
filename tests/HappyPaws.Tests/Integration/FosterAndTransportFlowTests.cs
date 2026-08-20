@@ -36,21 +36,36 @@ public class FosterAndTransportFlowTests
         var createRescueContent = CreateMultipartContent();
         var rescueResponse = await _client.PostAsync("/api/v1/rescues", createRescueContent);
         rescueResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-        var caseId = (await rescueResponse.Content.ReadFromJsonAsync<RescueCaseResponse>())!.Id;
+        var json = await rescueResponse.Content.ReadAsStringAsync();
+        System.IO.File.WriteAllText("dump.json", json);
+        var caseId = (await rescueResponse.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default))!.Id;
+
+        // 2.5 Admin approves case
+        var adminToken = await RegisterAndVerifyUserAsync(Role.Admin);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+        var approveResponse = await _client.PostAsync($"/api/v1/admin/cases/{caseId}/approve", null);
+        approveResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // 3. Foster accepts case
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", fosterToken);
         var acceptResponse = await _client.PostAsync($"/api/v1/rescues/{caseId}/accept", null);
         acceptResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // 4. Foster creates transport task
-        var transportReq = new CreateTransportRequest(
-            caseId,
-            6.9271, 79.8612, "Colombo Fort",
-            6.8402, 79.8511, "Dehiwala Clinic"
-        );
-        var createTransportResponse = await _client.PostAsJsonAsync("/api/v1/transports", transportReq);
+        var transportContent = new MultipartFormDataContent();
+        transportContent.Add(new ByteArrayContent(new byte[] { 0xFF, 0xD8 }), "photo", "transport.jpg");
+        transportContent.Add(new StringContent(caseId.ToString()), "CaseId");
+        transportContent.Add(new StringContent("Urgent Transport"), "Title");
+        transportContent.Add(new StringContent("6.9271"), "PickupLatitude");
+        transportContent.Add(new StringContent("79.8612"), "PickupLongitude");
+        transportContent.Add(new StringContent("Colombo Fort"), "PickupLocation");
+        transportContent.Add(new StringContent("6.8402"), "DropoffLatitude");
+        transportContent.Add(new StringContent("79.8511"), "DropoffLongitude");
+        transportContent.Add(new StringContent("Dehiwala Clinic"), "DropoffLocation");
+        
+        var createTransportResponse = await _client.PostAsync("/api/v1/transports", transportContent);
         createTransportResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-        var transportId = (await createTransportResponse.Content.ReadFromJsonAsync<TransportTaskResponse>())!.Id;
+        var transportId = (await createTransportResponse.Content.ReadFromJsonAsync<TransportTaskResponse>(TestJsonOptions.Default))!.Id;
 
         // 5. Transporter claims task
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", transporterToken);
@@ -75,6 +90,7 @@ public class FosterAndTransportFlowTests
         // 8. Foster creates listing for adoption handoff
         var listingReq = new CreateListingRequest(
             caseId,
+            "Looking for home!",
             "Rescued Puppy",
             "Dog",
             "Mixed",
@@ -84,7 +100,8 @@ public class FosterAndTransportFlowTests
             AnimalSize.Small,
             ActivityLevel.High,
             "Looking for a forever home",
-            6.8402, 79.8511, "Dehiwala Clinic"
+            6.8402, 79.8511, "Dehiwala Clinic",
+            ["Playful", "Vaccinated"]
         );
         var createListingResponse = await _client.PostAsJsonAsync("/api/v1/listings", listingReq);
         createListingResponse.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -95,28 +112,35 @@ public class FosterAndTransportFlowTests
         var content = new MultipartFormDataContent();
         var photoBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
         content.Add(new ByteArrayContent(photoBytes), "photo", "test.jpg");
+        content.Add(new StringContent("Urgent Rescue"), "Title");
         content.Add(new StringContent("6.9271"), "Latitude");
         content.Add(new StringContent("79.8612"), "Longitude");
         content.Add(new StringContent("Colombo Fort"), "LocationName");
         content.Add(new StringContent("Injured stray dog near train station"), "Description");
+        content.Add(new StringContent("Injured"), "Tags");
         return content;
     }
 
-    private async Task<string> RegisterAndVerifyUserAsync(Role role)
+        private async Task<string> RegisterAndVerifyUserAsync(Role role)
     {
-        var email = $"user{Guid.NewGuid():N}@example.com";
-        var auth = await _factory.SignupAsync(_client, $"Test {role}", email, "Password123!", role);
+        var email = "user$(Guid.NewGuid():N)@example.com";
+        await _factory.SignupAsync(_client, "Test $role", email, "Password123!", Role.Adopter);
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<HappyPaws.Infrastructure.Data.HappyPawsDbContext>();
-        var user = await db.Users.FirstAsync(u => u.Email == email);
+        var user = await db.Users.Include(u => u.Roles).FirstAsync(u => u.Email == email);
         user.IsVerified = true;
+
+        if (role != Role.Adopter)
+        {
+            user.Roles.Add(new HappyPaws.Core.Entities.UserRole { Role = role });
+        }
         await db.SaveChangesAsync();
 
         var loginResponse = await _client.PostAsJsonAsync(
             "/api/v1/auth/login",
             new LoginRequest(email, "Password123!"));
-        var loginAuth = await loginResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        var loginAuth = await loginResponse.Content.ReadFromJsonAsync<AuthResponse>(TestJsonOptions.Default);
 
         return loginAuth!.AccessToken;
     }

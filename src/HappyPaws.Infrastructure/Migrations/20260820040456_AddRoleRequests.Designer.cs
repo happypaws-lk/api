@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using HappyPaws.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HappyPaws.Infrastructure.Migrations
 {
     [DbContext(typeof(HappyPawsDbContext))]
-    partial class HappyPawsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260820040456_AddRoleRequests")]
+    partial class AddRoleRequests
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -625,32 +628,6 @@ namespace HappyPaws.Infrastructure.Migrations
                         {
                             t.HasCheckConstraint("CK_Pledge_HasTarget", "\"CaseId\" IS NOT NULL OR \"ListingId\" IS NOT NULL");
                         });
-                });
-
-            modelBuilder.Entity("HappyPaws.Core.Entities.PostUpvote", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("TargetId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("TargetType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PostUpvotes");
                 });
 
             modelBuilder.Entity("HappyPaws.Core.Entities.RefreshToken", b =>
@@ -1369,17 +1346,6 @@ namespace HappyPaws.Infrastructure.Migrations
                     b.Navigation("Listing");
 
                     b.Navigation("Sponsor");
-                });
-
-            modelBuilder.Entity("HappyPaws.Core.Entities.PostUpvote", b =>
-                {
-                    b.HasOne("HappyPaws.Core.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HappyPaws.Core.Entities.RefreshToken", b =>

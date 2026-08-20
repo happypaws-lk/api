@@ -85,6 +85,8 @@ public class BadgeEvaluationServiceTests
             db.RescueCases.Add(new RescueCase
             {
                 Id = Guid.NewGuid(),
+                Title = "Test Case",
+                Tags = [],
                 ReporterId = reporter.Id,
                 AssignedFosterId = user.Id,
                 Status = CaseStatus.Resolved,
@@ -122,10 +124,12 @@ public class BadgeEvaluationServiceTests
         var rescueCase = new RescueCase
         {
             Id = Guid.NewGuid(),
+            Title = "Test Case",
+            Tags = [],
             ReporterId = reporter.Id,
             Status = CaseStatus.Resolved,
             LocationCoords = new Point(0, 0) { SRID = 4326 },
-            LocationName = "Loc",
+            LocationName = "Test",
             Description = "Desc",
             PhotoKey = "key",
             UrgencySource = UrgencySource.RuleBased,
@@ -136,20 +140,21 @@ public class BadgeEvaluationServiceTests
         };
         db.RescueCases.Add(rescueCase);
 
-        for (var i = 0; i < 10; i++)
+        for (int i = 0; i < 50; i++)
         {
             db.TransportTasks.Add(new TransportTask
             {
                 Id = Guid.NewGuid(),
                 CaseId = rescueCase.Id,
+                Title = "Test Task",
+                Tags = [],
+                PhotoKey = "key",
                 TransporterId = user.Id,
                 Status = TransportStatus.Delivered,
-                PickupLocation = "A",
-                PickupLocationCoords = new Point(0, 0) { SRID = 4326 },
-                DropoffLocation = "B",
-                DropoffLocationCoords = new Point(1, 1) { SRID = 4326 },
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                PickupLocationCoords = new Point(0,0) { SRID = 4326 },
+                PickupLocation = "Test",
+                DropoffLocationCoords = new Point(0,0) { SRID = 4326 },
+                DropoffLocation = "Test"
             });
         }
 
@@ -177,6 +182,8 @@ public class BadgeEvaluationServiceTests
             db.RescueCases.Add(new RescueCase
             {
                 Id = Guid.NewGuid(),
+                Title = "Test Case",
+                Tags = [],
                 ReporterId = reporter.Id,
                 AssignedFosterId = user.Id,
                 Status = CaseStatus.Resolved,

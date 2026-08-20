@@ -126,6 +126,8 @@ public class RescuesEndpoints : IEndpointGroup
         var rescueCase = new RescueCase
         {
             Id = caseId,
+            Title = request.Title,
+            Tags = request.Tags?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).ToList() ?? [],
             ReporterId = userId,
             LocationCoords = new Point(request.Longitude, request.Latitude) { SRID = 4326 },
             LocationName = request.LocationName,
@@ -135,7 +137,7 @@ public class RescuesEndpoints : IEndpointGroup
             OriginalAiUrgency = classification.OriginalAiUrgency,
             UrgencySource = classification.Source,
             Urgency = classification.Urgency,
-            Status = CaseStatus.Open,
+            Status = CaseStatus.PendingApproval,
             IsActive = true
         };
 
@@ -143,49 +145,6 @@ public class RescuesEndpoints : IEndpointGroup
         await db.SaveChangesAsync(ct);
 
         var caseLocation = rescueCase.LocationCoords;
-
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                using var scope = scopeFactory.CreateScope();
-                var scopedDb = scope.ServiceProvider.GetRequiredService<HappyPawsDbContext>();
-                var scopedNotification = scope.ServiceProvider.GetRequiredService<INotificationService>();
-                var scopedConfig = scope.ServiceProvider.GetRequiredService<ISystemConfigService>();
-
-                var radiusMeters = (await scopedConfig.GetAlertRadiusKmAsync(CancellationToken.None)) * 1000.0;
-
-                var responderIds = await scopedDb.Users
-                    .AsNoTracking()
-                    .Where(u => u.IsVerified && !u.IsSuspended && u.Id != userId)
-                    .Where(u => u.LastKnownLocation != null &&
-                                u.LastKnownLocation.IsWithinDistance(caseLocation, radiusMeters))
-                    .Where(u => u.Roles.Any(r => r.Role == Role.Foster || r.Role == Role.Transporter || r.Role == Role.Veterinarian))
-                    .Select(u => u.Id)
-                    .ToListAsync();
-
-                if (responderIds.Count > 0)
-                {
-                    await scopedNotification.SendNotificationsAsync(
-                        responderIds,
-                        "rescue_nearby",
-                        "New Rescue Case Nearby",
-                        $"{classification.Urgency} urgency rescue reported at {request.LocationName}",
-                        caseId,
-                        "RescueCase",
-                        new Dictionary<string, string>
-                        {
-                            ["caseId"] = caseId.ToString(),
-                            ["urgency"] = classification.Urgency.ToString()
-                        },
-                        CancellationToken.None);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to send proximity alerts for case {CaseId}", caseId);
-            }
-        });
 
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, ct);
         var photoUrl = storageService.GetPublicUrl(key);
@@ -220,10 +179,12 @@ public class RescuesEndpoints : IEndpointGroup
             .Take(pagination.PageSize)
             .Select(rc => new RescueCaseSummaryResponse(
                 rc.Id,
+                rc.Title,
                 rc.LocationName,
                 storageService.GetPublicUrl(rc.PhotoKey),
                 rc.Urgency,
                 rc.Status,
+                rc.Tags.ToList(),
                 rc.CreatedAt))
             .ToListAsync(ct);
 
@@ -477,6 +438,7 @@ public class RescuesEndpoints : IEndpointGroup
     {
         return new RescueCaseResponse(
             rc.Id,
+            rc.Title,
             rc.ReporterId,
             reporterName,
             rc.AssignedFosterId,
@@ -491,6 +453,7 @@ public class RescuesEndpoints : IEndpointGroup
             rc.OriginalAiUrgency,
             rc.UrgencySource,
             rc.Status,
+            rc.Tags.ToList(),
             rc.CreatedAt,
             rc.UpdatedAt);
     }

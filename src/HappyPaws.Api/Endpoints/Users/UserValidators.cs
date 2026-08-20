@@ -62,3 +62,21 @@ public class AssignRoleRequestValidator : AbstractValidator<AssignRoleRequest>
         RuleFor(x => x.Role).IsInEnum();
     }
 }
+
+public class RequestEmailChangeRequestValidator : AbstractValidator<RequestEmailChangeRequest>
+{
+    public RequestEmailChangeRequestValidator()
+    {
+        RuleFor(x => x.NewEmail).NotEmpty().EmailAddress().MaximumLength(256);
+        RuleFor(x => x.CurrentPassword).NotEmpty();
+    }
+}
+
+public class ConfirmEmailChangeRequestValidator : AbstractValidator<ConfirmEmailChangeRequest>
+{
+    public ConfirmEmailChangeRequestValidator()
+    {
+        RuleFor(x => x.NewEmail).NotEmpty().EmailAddress().MaximumLength(256);
+        RuleFor(x => x.Code).NotEmpty().Length(6);
+    }
+}

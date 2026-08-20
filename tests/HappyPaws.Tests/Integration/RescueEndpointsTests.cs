@@ -43,12 +43,12 @@ public class RescueEndpointsTests
         var response = await _client.PostAsync("/api/v1/rescues", content);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var rescue = await response.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var rescue = await response.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
         rescue.Should().NotBeNull();
         rescue!.LocationName.Should().Be("Colombo Fort");
         rescue.Urgency.Should().Be(Urgency.Moderate);
         rescue.UrgencySource.Should().Be(UrgencySource.RuleBased);
-        rescue.Status.Should().Be(CaseStatus.Open);
+        rescue.Status.Should().Be(CaseStatus.PendingApproval);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class RescueEndpointsTests
         var response = await _client.GetAsync("/api/v1/rescues?page=1&pageSize=10");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<PagedResult<RescueCaseSummaryResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<PagedResult<RescueCaseSummaryResponse>>(TestJsonOptions.Default);
         result.Should().NotBeNull();
         result!.Items.Should().NotBeEmpty();
     }
@@ -89,13 +89,13 @@ public class RescueEndpointsTests
         var token = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         var createResponse = await _client.PostAsync("/api/v1/rescues", CreateMultipartContent());
-        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
         _client.DefaultRequestHeaders.Authorization = null;
 
         var response = await _client.GetAsync($"/api/v1/rescues/{created!.Id}");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var rescue = await response.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var rescue = await response.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
         rescue!.Id.Should().Be(created.Id);
     }
 
@@ -105,7 +105,11 @@ public class RescueEndpointsTests
         var reporterToken = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", reporterToken);
         var createResponse = await _client.PostAsync("/api/v1/rescues", CreateMultipartContent());
-        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
+
+        var adminToken = await RegisterAndVerifyUserAsync(Role.Admin);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+        await _client.PostAsync($"/api/v1/admin/cases/{created!.Id}/approve", null);
 
         var fosterToken = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", fosterToken);
@@ -113,7 +117,7 @@ public class RescueEndpointsTests
         var response = await _client.PostAsync($"/api/v1/rescues/{created!.Id}/accept", null);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var rescue = await response.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var rescue = await response.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
         rescue!.Status.Should().Be(CaseStatus.InProgress);
         rescue.AssignedFosterId.Should().NotBeNull();
     }
@@ -124,7 +128,11 @@ public class RescueEndpointsTests
         var reporterToken = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", reporterToken);
         var createResponse = await _client.PostAsync("/api/v1/rescues", CreateMultipartContent());
-        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
+
+        var adminToken = await RegisterAndVerifyUserAsync(Role.Admin);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+        await _client.PostAsync($"/api/v1/admin/cases/{created!.Id}/approve", null);
 
         var foster1Token = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", foster1Token);
@@ -143,7 +151,7 @@ public class RescueEndpointsTests
         var token = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         var createResponse = await _client.PostAsync("/api/v1/rescues", CreateMultipartContent());
-        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
 
         var updateContent = new MultipartFormDataContent();
         updateContent.Add(new StringContent("Note"), "UpdateType");
@@ -152,7 +160,7 @@ public class RescueEndpointsTests
         var response = await _client.PostAsync($"/api/v1/rescues/{created!.Id}/updates", updateContent);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var update = await response.Content.ReadFromJsonAsync<CaseUpdateResponse>();
+        var update = await response.Content.ReadFromJsonAsync<CaseUpdateResponse>(TestJsonOptions.Default);
         update!.UpdateType.Should().Be(UpdateType.Note);
         update.UpdateText.Should().Be("Animal is being fed and resting");
     }
@@ -163,7 +171,7 @@ public class RescueEndpointsTests
         var reporterToken = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", reporterToken);
         var createResponse = await _client.PostAsync("/api/v1/rescues", CreateMultipartContent());
-        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
 
         var otherToken = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", otherToken);
@@ -183,7 +191,7 @@ public class RescueEndpointsTests
         var token = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         var createResponse = await _client.PostAsync("/api/v1/rescues", CreateMultipartContent());
-        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
 
         var updateContent = new MultipartFormDataContent();
         updateContent.Add(new StringContent("StatusUpdate"), "UpdateType");
@@ -194,7 +202,7 @@ public class RescueEndpointsTests
         var response = await _client.GetAsync($"/api/v1/rescues/{created.Id}/updates");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var updates = await response.Content.ReadFromJsonAsync<List<CaseUpdateResponse>>();
+        var updates = await response.Content.ReadFromJsonAsync<List<CaseUpdateResponse>>(TestJsonOptions.Default);
         updates.Should().HaveCount(1);
     }
 
@@ -204,7 +212,7 @@ public class RescueEndpointsTests
         var reporterToken = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", reporterToken);
         var createResponse = await _client.PostAsync("/api/v1/rescues", CreateMultipartContent());
-        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
 
         var adminToken = await RegisterAndVerifyUserAsync(Role.Admin);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
@@ -214,7 +222,7 @@ public class RescueEndpointsTests
             new OverrideUrgencyRequest(Urgency.Critical));
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var rescue = await response.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var rescue = await response.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
         rescue!.Urgency.Should().Be(Urgency.Critical);
         rescue.UrgencySource.Should().Be(UrgencySource.ManualOverride);
     }
@@ -225,7 +233,7 @@ public class RescueEndpointsTests
         var reporterToken = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", reporterToken);
         var createResponse = await _client.PostAsync("/api/v1/rescues", CreateMultipartContent());
-        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>();
+        var created = await createResponse.Content.ReadFromJsonAsync<RescueCaseResponse>(TestJsonOptions.Default);
 
         var fosterToken = await RegisterAndVerifyUserAsync(Role.Foster);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", fosterToken);
@@ -242,10 +250,12 @@ public class RescueEndpointsTests
         var content = new MultipartFormDataContent();
         var photoBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
         content.Add(new ByteArrayContent(photoBytes), "photo", "test.jpg");
+        content.Add(new StringContent("Urgent Rescue Case"), "Title");
         content.Add(new StringContent("6.9271"), "Latitude");
         content.Add(new StringContent("79.8612"), "Longitude");
         content.Add(new StringContent("Colombo Fort"), "LocationName");
         content.Add(new StringContent("Injured stray dog near train station"), "Description");
+        content.Add(new StringContent("Injured, Critical"), "Tags");
         return content;
     }
 
@@ -271,7 +281,7 @@ public class RescueEndpointsTests
         var loginResponse = await _client.PostAsJsonAsync(
             "/api/v1/auth/login",
             new LoginRequest(email, "Password123!"));
-        var loginAuth = await loginResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        var loginAuth = await loginResponse.Content.ReadFromJsonAsync<AuthResponse>(TestJsonOptions.Default);
 
         return loginAuth!.AccessToken;
     }

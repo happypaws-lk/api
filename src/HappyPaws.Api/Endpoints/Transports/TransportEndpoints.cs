@@ -17,6 +17,10 @@ public class TransportsEndpoints : IEndpointGroup
     {
         group.MapPost("/", CreateTransportAsync)
             .RequireAuthorization("Verified")
+            .DisableAntiforgery()
+            .RequireRateLimiting("UploadLimiter")
+            .AddEndpointFilter(new RequestSizeLimitFilter(10_485_760))
+            .AddEndpointFilter<HtmlSanitizationFilter<CreateTransportRequest>>()
             .AddEndpointFilter<ValidationFilter<CreateTransportRequest>>()
             .WithName("CreateTransport")
             .WithSummary("Create a transport task for a rescue case")
@@ -56,12 +60,17 @@ public class TransportsEndpoints : IEndpointGroup
             .ProducesValidationProblem();
     }
 
-    private static async Task<Results<Created<TransportTaskResponse>, NotFound<string>, ForbidHttpResult>> CreateTransportAsync(
-        CreateTransportRequest request,
+    private static async Task<Results<Created<TransportTaskResponse>, NotFound<string>, ForbidHttpResult, BadRequest<string>>> CreateTransportAsync(
+        IFormFile photo,
+        [AsParameters] CreateTransportRequest request,
         ClaimsPrincipal principal,
         HappyPawsDbContext db,
+        IStorageService storageService,
         CancellationToken ct)
     {
+        if (photo.Length > 10 * 1024 * 1024)
+            return TypedResults.BadRequest("Photo must not exceed 10MB");
+
         var userId = principal.GetUserId();
         var roles = principal.GetRoles();
 
@@ -72,10 +81,25 @@ public class TransportsEndpoints : IEndpointGroup
         if (rescueCase is null)
             return TypedResults.NotFound("Rescue case not found.");
 
+        var taskId = Guid.NewGuid();
+        var extension = Path.GetExtension(photo.FileName).ToLowerInvariant();
+        var key = $"transports/{taskId}/{Guid.NewGuid()}{extension}";
+
+        await using var stream = photo.OpenReadStream();
+        await storageService.UploadAsync(key, stream, photo.ContentType, cancellationToken: ct);
+
         var task = new TransportTask
         {
-            Id = Guid.NewGuid(),
+            Id = taskId,
             CaseId = request.CaseId,
+            Title = request.Title,
+            PhotoKey = key,
+            SpecialInstructions = request.SpecialInstructions,
+            PickupTimeStart = request.PickupTimeStart,
+            PickupTimeEnd = request.PickupTimeEnd,
+            PickupContactName = request.PickupContactName,
+            DropoffContactName = request.DropoffContactName,
+            Tags = request.Tags?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).ToList() ?? [],
             PickupLocationCoords = new Point(request.PickupLongitude, request.PickupLatitude) { SRID = 4326 },
             PickupLocation = request.PickupLocation,
             DropoffLocationCoords = new Point(request.DropoffLongitude, request.DropoffLatitude) { SRID = 4326 },
@@ -86,11 +110,12 @@ public class TransportsEndpoints : IEndpointGroup
         db.TransportTasks.Add(task);
         await db.SaveChangesAsync(ct);
 
-        return TypedResults.Created($"/api/v1/transports/{task.Id}", MapToResponse(task, null));
+        return TypedResults.Created($"/api/v1/transports/{task.Id}", MapToResponse(task, null, storageService.GetPublicUrl(task.PhotoKey)));
     }
 
     private static async Task<Ok<List<TransportTaskResponse>>> ListTransportsAsync(
         HappyPawsDbContext db,
+        IStorageService storageService,
         CancellationToken ct)
     {
         var tasks = await db.TransportTasks
@@ -99,13 +124,14 @@ public class TransportsEndpoints : IEndpointGroup
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync(ct);
 
-        return TypedResults.Ok(tasks.Select(t => MapToResponse(t, null)).ToList());
+        return TypedResults.Ok(tasks.Select(t => MapToResponse(t, null, storageService.GetPublicUrl(t.PhotoKey))).ToList());
     }
 
     private static async Task<Results<Ok<TransportTaskResponse>, NotFound, Conflict<string>, ForbidHttpResult>> ClaimTransportAsync(
         Guid id,
         ClaimsPrincipal principal,
         HappyPawsDbContext db,
+        IStorageService storageService,
         CancellationToken ct)
     {
         var userId = principal.GetUserId();
@@ -121,7 +147,7 @@ public class TransportsEndpoints : IEndpointGroup
         if (task.Status != TransportStatus.Pending)
         {
             if (task.TransporterId == userId)
-                return TypedResults.Ok(MapToResponse(task, principal.Identity?.Name));
+                return TypedResults.Ok(MapToResponse(task, principal.Identity?.Name, storageService.GetPublicUrl(task.PhotoKey)));
             return TypedResults.Conflict("Task is already claimed.");
         }
 
@@ -130,7 +156,7 @@ public class TransportsEndpoints : IEndpointGroup
         await db.SaveChangesAsync(ct);
 
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, ct);
-        return TypedResults.Ok(MapToResponse(task, user.Name));
+        return TypedResults.Ok(MapToResponse(task, user.Name, storageService.GetPublicUrl(task.PhotoKey)));
     }
 
     private static async Task<Results<Ok<TransportTaskResponse>, NotFound, Conflict<string>, ForbidHttpResult>> UpdateStatusAsync(
@@ -140,6 +166,7 @@ public class TransportsEndpoints : IEndpointGroup
         HappyPawsDbContext db,
         IReputationService reputationService,
         IBadgeEvaluationService badgeEvaluationService,
+        IStorageService storageService,
         CancellationToken ct)
     {
         var userId = principal.GetUserId();
@@ -166,14 +193,16 @@ public class TransportsEndpoints : IEndpointGroup
             await badgeEvaluationService.EvaluateAndAwardBadgesAsync(userId, ct);
         }
 
-        return TypedResults.Ok(MapToResponse(task, task.Transporter?.Name));
+        return TypedResults.Ok(MapToResponse(task, task.Transporter?.Name, storageService.GetPublicUrl(task.PhotoKey)));
     }
 
-    private static TransportTaskResponse MapToResponse(TransportTask t, string? transporterName)
+    private static TransportTaskResponse MapToResponse(TransportTask t, string? transporterName, string photoUrl)
     {
         return new TransportTaskResponse(
             t.Id,
             t.CaseId,
+            t.Title,
+            photoUrl,
             t.TransporterId,
             transporterName ?? string.Empty,
             t.PickupLocationCoords.Y,
@@ -182,6 +211,12 @@ public class TransportsEndpoints : IEndpointGroup
             t.DropoffLocationCoords.Y,
             t.DropoffLocationCoords.X,
             t.DropoffLocation,
+            t.SpecialInstructions,
+            t.PickupTimeStart,
+            t.PickupTimeEnd,
+            t.PickupContactName,
+            t.DropoffContactName,
+            t.Tags.ToList(),
             t.Status,
             t.CreatedAt,
             t.UpdatedAt);

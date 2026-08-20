@@ -8,6 +8,8 @@ public class AnimalListing
     public Guid Id { get; set; }
     public Guid OwnerId { get; set; }
     public Guid? RescueCaseId { get; set; }
+    public string Title { get; set; } = null!;
+    public List<string> Tags { get; set; } = [];
     public string Name { get; set; } = null!;
     public string Species { get; set; } = null!;
     public string Breed { get; set; } = null!;

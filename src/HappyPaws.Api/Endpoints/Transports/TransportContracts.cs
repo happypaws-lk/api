@@ -1,4 +1,5 @@
 using HappyPaws.Core.Enums;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HappyPaws.Api.Endpoints.Transports;
 
@@ -11,13 +12,20 @@ namespace HappyPaws.Api.Endpoints.Transports;
 /// <param name="DropoffLongitude">WGS84 longitude of the drop-off location.</param>
 /// <param name="DropoffLocation">Human-readable name of the drop-off location.</param>
 public record CreateTransportRequest(
-    Guid CaseId,
-    double PickupLatitude,
-    double PickupLongitude,
-    string PickupLocation,
-    double DropoffLatitude,
-    double DropoffLongitude,
-    string DropoffLocation
+    [FromForm] Guid CaseId,
+    [FromForm] string Title,
+    [FromForm] double PickupLatitude,
+    [FromForm] double PickupLongitude,
+    [FromForm] string PickupLocation,
+    [FromForm] double DropoffLatitude,
+    [FromForm] double DropoffLongitude,
+    [FromForm] string DropoffLocation,
+    [FromForm] string? SpecialInstructions,
+    [FromForm] DateTimeOffset? PickupTimeStart,
+    [FromForm] DateTimeOffset? PickupTimeEnd,
+    [FromForm] string? PickupContactName,
+    [FromForm] string? DropoffContactName,
+    [FromForm] string? Tags
 );
 
 /// <summary>A transport task for moving a rescued animal between locations.</summary>
@@ -37,6 +45,8 @@ public record CreateTransportRequest(
 public record TransportTaskResponse(
     Guid Id,
     Guid CaseId,
+    string Title,
+    string PhotoUrl,
     Guid? TransporterId,
     string TransporterName,
     double PickupLatitude,
@@ -45,6 +55,12 @@ public record TransportTaskResponse(
     double DropoffLatitude,
     double DropoffLongitude,
     string DropoffLocation,
+    string? SpecialInstructions,
+    DateTimeOffset? PickupTimeStart,
+    DateTimeOffset? PickupTimeEnd,
+    string? PickupContactName,
+    string? DropoffContactName,
+    List<string> Tags,
     TransportStatus Status,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt

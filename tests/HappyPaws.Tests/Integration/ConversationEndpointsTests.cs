@@ -36,7 +36,7 @@ public class ConversationEndpointsTests
 
         // Login again to get a new token with IsVerified = true
         var loginResponse = await _client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, "Password123!"));
-        var loginAuth = await loginResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        var loginAuth = await loginResponse.Content.ReadFromJsonAsync<AuthResponse>(TestJsonOptions.Default);
 
         return (loginAuth!.AccessToken, user.Id);
     }
@@ -53,7 +53,7 @@ public class ConversationEndpointsTests
         var response = await _client.PostAsJsonAsync("/api/v1/conversations", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var conversation = await response.Content.ReadFromJsonAsync<ConversationResponse>();
+        var conversation = await response.Content.ReadFromJsonAsync<ConversationResponse>(TestJsonOptions.Default);
         conversation.Should().NotBeNull();
         conversation!.ParticipantId.Should().Be(userId2);
     }
@@ -82,7 +82,7 @@ public class ConversationEndpointsTests
         _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token1);
         var request = new CreateConversationRequest(userId2, null, null);
         var convResponse = await _client.PostAsJsonAsync("/api/v1/conversations", request);
-        var conversation = await convResponse.Content.ReadFromJsonAsync<ConversationResponse>();
+        var conversation = await convResponse.Content.ReadFromJsonAsync<ConversationResponse>(TestJsonOptions.Default);
         var convId = conversation!.Id;
 
         var handler = _factory.Server.CreateHandler();

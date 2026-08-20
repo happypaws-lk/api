@@ -49,3 +49,14 @@ public class ReputationAdjustRequestValidator : AbstractValidator<ReputationAdju
         RuleFor(x => x.Reason).NotEmpty().MaximumLength(1000);
     }
 }
+
+/// <summary>
+/// Validates that a role-request rejection reason is provided and within the character limit.
+/// </summary>
+public class RoleRequestRejectRequestValidator : AbstractValidator<RoleRequestRejectRequest>
+{
+    public RoleRequestRejectRequestValidator()
+    {
+        RuleFor(x => x.Reason).NotEmpty().MaximumLength(500);
+    }
+}

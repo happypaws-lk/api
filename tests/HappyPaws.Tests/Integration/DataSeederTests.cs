@@ -27,7 +27,7 @@ public class DataSeederTests
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
 
         // Verify users exist (either seeded on app startup or via seeder call)
-        if (!await db.Users.AnyAsync(u => u.Email == "nethminagunasekara@outlook.com"))
+        if (!await db.Users.AnyAsync(u => u.Email == "admin@happypaws.lk"))
         {
             await DataSeeder.SeedAsync(db, hasher);
         }
@@ -41,12 +41,12 @@ public class DataSeederTests
             .Include(u => u.Devices)
             .ToListAsync();
 
-        users.Should().Contain(u => u.Email == "nethminagunasekara@outlook.com");
-        users.Should().Contain(u => u.Email == "ashinichamodya@gmail.com");
-        users.Should().Contain(u => u.Email == "shanukaravishan@gmail.com");
-        users.Should().Contain(u => u.Email == "sachinthasandaruwan@gmail.com");
-        users.Should().Contain(u => u.Email == "chanukadilhara@gmail.com");
-        users.Should().Contain(u => u.Email == "shehananushka@gmail.com");
+        users.Should().Contain(u => u.Email == "admin@happypaws.lk" && u.Name == "HappyPaws Admin");
+        users.Should().Contain(u => u.Email == "veterinarian@happypaws.lk" && u.Name == "HappyPaws Veterinarian");
+        users.Should().Contain(u => u.Email == "foster@happypaws.lk" && u.Name == "HappyPaws Foster");
+        users.Should().Contain(u => u.Email == "transporter@happypaws.lk" && u.Name == "HappyPaws Transporter");
+        users.Should().Contain(u => u.Email == "sponsor@happypaws.lk" && u.Name == "HappyPaws Sponsor");
+        users.Should().Contain(u => u.Email == "adopter@happypaws.lk" && u.Name == "HappyPaws Adopter");
 
         // 2. Verify all users have Lifestyle Profiles
         var profiles = await db.LifestyleProfiles.ToListAsync();

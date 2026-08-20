@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using FluentValidation;
 using HappyPaws.Api.Authorization;
@@ -34,11 +35,17 @@ EnvLoaded:
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 // 1. Configure Serilog
 builder.Host.UseSerilog((context, loggerConfig) =>
 {
     loggerConfig
         .ReadFrom.Configuration(context.Configuration)
+        .MinimumLevel.Override("Microsoft.Hosting.Lifetime", Serilog.Events.LogEventLevel.Warning)
         .Enrich.WithSensitiveDataMasking(options => { })
         .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
 });
@@ -196,12 +203,15 @@ var firebaseServiceAccountJsonBase64 = builder.Configuration["Firebase:ServiceAc
 if (!string.IsNullOrEmpty(firebaseServiceAccountJsonBase64))
 {
     var serviceAccountJson = Encoding.UTF8.GetString(Convert.FromBase64String(firebaseServiceAccountJsonBase64));
+if (FirebaseAdmin.FirebaseApp.DefaultInstance == null)
+{
     FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions
     {
 #pragma warning disable CS0618
         Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromJson(serviceAccountJson)
 #pragma warning restore CS0618
     });
+}
 }
 
 var app = builder.Build();
@@ -217,6 +227,7 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
 
 if (app.Configuration.GetValue<bool>("Features:EnableApiDocs"))
@@ -225,7 +236,6 @@ if (app.Configuration.GetValue<bool>("Features:EnableApiDocs"))
     app.MapScalarApiReference();
 }
 
-app.UseHttpsRedirection();
 app.UseResponseCompression();
 app.UseCors("DefaultCors");
 app.UseRateLimiter();
@@ -266,5 +276,7 @@ using (var scope = app.Services.CreateScope())
         await HappyPaws.Infrastructure.Data.Seeder.DataSeeder.SeedAsync(db, hasher);
     }
 }
+
+app.LogApplicationUrls();
 
 app.Run();

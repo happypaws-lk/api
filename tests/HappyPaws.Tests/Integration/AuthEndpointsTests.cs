@@ -33,7 +33,7 @@ public class AuthEndpointsTests
         var verifyResponse = await _client.PostAsJsonAsync(
             "/api/v1/auth/signup/verify-code", new SignupVerifyCodeRequest(email, otp));
         verifyResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var verifyResult = await verifyResponse.Content.ReadFromJsonAsync<SignupVerifyCodeResponse>();
+        var verifyResult = await verifyResponse.Content.ReadFromJsonAsync<SignupVerifyCodeResponse>(TestJsonOptions.Default);
         verifyResult!.SignupToken.Should().NotBeNullOrEmpty();
 
         var completeResponse = await _client.PostAsJsonAsync(
@@ -41,7 +41,7 @@ public class AuthEndpointsTests
             new SignupCompleteRequest(verifyResult.SignupToken, "Test User", "Password123!"));
         completeResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var auth = await completeResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        var auth = await completeResponse.Content.ReadFromJsonAsync<AuthResponse>(TestJsonOptions.Default);
         auth.Should().NotBeNull();
         auth!.AccessToken.Should().NotBeNullOrEmpty();
         auth.RefreshToken.Should().NotBeNullOrEmpty();
@@ -93,7 +93,7 @@ public class AuthEndpointsTests
             "/api/v1/auth/login", new LoginRequest(email, "Password123!"));
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>();
+        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(TestJsonOptions.Default);
         auth!.AccessToken.Should().NotBeNullOrEmpty();
     }
 
@@ -119,7 +119,7 @@ public class AuthEndpointsTests
             "/api/v1/auth/refresh", new RefreshRequest(auth.RefreshToken));
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var newAuth = await response.Content.ReadFromJsonAsync<AuthResponse>();
+        var newAuth = await response.Content.ReadFromJsonAsync<AuthResponse>(TestJsonOptions.Default);
         newAuth!.AccessToken.Should().NotBeNullOrEmpty();
         newAuth.RefreshToken.Should().NotBe(auth.RefreshToken);
     }
@@ -142,7 +142,7 @@ public class AuthEndpointsTests
         secondRefresh.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
         // The new token from firstRefresh should also be revoked
-        var newAuth = await firstRefresh.Content.ReadFromJsonAsync<AuthResponse>();
+        var newAuth = await firstRefresh.Content.ReadFromJsonAsync<AuthResponse>(TestJsonOptions.Default);
         var thirdRefresh = await _client.PostAsJsonAsync(
             "/api/v1/auth/refresh", new RefreshRequest(newAuth!.RefreshToken));
         thirdRefresh.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

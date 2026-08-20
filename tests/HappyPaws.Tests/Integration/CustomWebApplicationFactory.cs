@@ -93,12 +93,12 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
 
         var verifyResponse = await client.PostAsJsonAsync("/api/v1/auth/signup/verify-code",
             new SignupVerifyCodeRequest(email, otp));
-        var verifyResult = await verifyResponse.Content.ReadFromJsonAsync<SignupVerifyCodeResponse>();
+        var verifyResult = await verifyResponse.Content.ReadFromJsonAsync<SignupVerifyCodeResponse>(TestJsonOptions.Default);
 
         var completeResponse = await client.PostAsJsonAsync("/api/v1/auth/signup/complete",
             new SignupCompleteRequest(verifyResult!.SignupToken, name, password, role));
 
-        return (await completeResponse.Content.ReadFromJsonAsync<AuthResponse>())!;
+        return (await completeResponse.Content.ReadFromJsonAsync<AuthResponse>(TestJsonOptions.Default))!;
     }
 
     public async Task InitializeAsync()
